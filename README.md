@@ -85,7 +85,7 @@ uint maturity = now + 30 days;
 
 uint collateral = exchange.calcCollateral(
     eth_usd_feed, 
-    10.mul(volumeBase), 
+    10 * volumeBase, 
     OptionsExchange.OptionType.CALL, 
     strikePrice, 
     maturity
@@ -99,7 +99,7 @@ After checking that the writer has enough unallocated balance to provide as coll
 ```solidity
 uint id = exchange.writeOptions(
     eth_usd_feed, 
-    10.mul(volumeBase), 
+    10 * volumeBase, 
     OptionsExchange.OptionType.CALL, 
     strikePrice, 
     maturity
@@ -114,7 +114,7 @@ ERC20 token = ERC20(tokenAddress);
 uint balance = token.balanceOf(owner); // equal to written volume
 
 address to = 0xDEF...;
-token.transfer(to, 5.mul(volumeBase)); // considering 'msg.sender == owner'
+token.transfer(to, 5 * volumeBase); // considering 'msg.sender == owner'
 ```
 
 Options are aggregated by their underlying, strike price and maturity, each of which will resolve to a specific ERC20 token contract address. Take advantage of already existent option token contracts when writing options for increased liquidity.
@@ -195,7 +195,7 @@ In order to burn options, for instance to close a position before maturity and r
 
 ```solidity
 OptionToken token = OptionToken(tokenAddress);
-uint amount = 5.mul(volumeBase);
+uint amount = 5 * volumeBase;
 token.burn(amount);
 ```
 
