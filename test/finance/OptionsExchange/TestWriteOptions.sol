@@ -7,7 +7,7 @@ import "../../../contracts/utils/MoreMath.sol";
 import "../../common/actors/OptionsTrader.sol";
 import "../../common/utils/MoreAssert.sol";
 
-contract TestOptionIssuance is Base {
+contract TestWriteOptions is Base {
 
     function testWriteWithoutCollateral() public {
         
@@ -48,7 +48,7 @@ contract TestOptionIssuance is Base {
         Assert.equal(exchange.getBookLength(), 2, "book length");
     }
 
-    function testWriteAndDistribution() public {
+    function testWriteAndDistribute() public {
 
         uint ct = exchange.calcCollateral(
             address(0), 
