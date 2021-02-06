@@ -289,9 +289,10 @@ The main goal of this project is to deploy Options Exchange to mainnet, however 
 
 There are a few major technical challenges that will need to get dealt with if the project gains traction and is deployed to mainnet:
 
-* Development of a front-end application
-* Introduction of liquidity pools
-* Improvement of governance functionality
+* Development of a dapp front-end application to make the exchange accessible to non-developers
+* Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models
+* Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
+* Improvement the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
 
 ### Support mainnet
 
