@@ -1,0 +1,154 @@
+pragma solidity >=0.6.0;
+
+import "../deployment/Deployer.sol";
+import "../deployment/ManagedContract.sol";
+import "../governance/ProtocolSettings.sol";
+import "../utils/ERC20.sol";
+import "../interfaces/TimeProvider.sol";
+import "../utils/SafeMath.sol";
+import "../utils/MoreMath.sol";
+import "./CreditProvider.sol";
+
+contract CreditToken is ManagedContract, ERC20 {
+
+    using SafeMath for uint;
+
+    struct WithdrawQueueItem {
+        address addr;
+        uint value;
+        address nextAddr;
+    }
+
+    TimeProvider private time;
+    ProtocolSettings private settings;
+    CreditProvider private creditProvider;
+
+    mapping(address => uint) private creditDates;
+    mapping(address => WithdrawQueueItem) private queue;
+
+    address private issuer;
+    address private headAddr;
+    address private tailAddr;
+
+    constructor(address deployer) public {
+
+        Deployer(deployer).setContractAddress("CreditToken");
+    }
+
+    function initialize(Deployer deployer) override internal {
+        
+        time = TimeProvider(deployer.getContractAddress("TimeProvider"));
+        settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
+        creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
+        issuer = deployer.getContractAddress("CreditIssuer");
+    }
+
+    function setIssuer(address _issuer) public {
+
+        require(issuer == address(0), "issuer already set");
+        issuer = _issuer;
+    }
+
+    function issue(address to, uint value) public {
+
+        require(msg.sender == issuer, "issuance unallowed");
+        addBalance(to, value);
+        _totalSupply = _totalSupply.add(value);
+    }
+
+    function burn(uint value) public {
+
+        require(msg.sender == issuer, "burn unallowed");
+        removeBalance(msg.sender, value);
+        _totalSupply = _totalSupply.sub(value);
+    }
+
+    function balanceOf(address owner) override public view returns (uint bal) {
+
+        bal = 0;
+        if (balances[owner] > 0) {
+            bal = settings.applyCreditInterestRate(balances[owner], creditDates[owner]);
+        }
+    }
+
+    function requestWithdraw(uint value) public {
+
+        uint sent;
+        if (headAddr == address(0)) {
+            (sent,) = withdrawTokens(msg.sender, value);
+        }
+        if (sent < value) {
+            enqueueWithdraw(msg.sender, value.sub(sent));
+        }
+    }
+
+    function processWithdraws() public {
+        
+        while (headAddr != address(0)) {
+            (uint sent, bool dequeue) = withdrawTokens(
+                queue[headAddr].addr,
+                queue[headAddr].value
+            );
+            if (dequeue) {
+                dequeueWithdraw();
+            } else {
+                queue[headAddr].value = queue[headAddr].value.sub(sent);
+                break;
+            }
+        }
+    }
+
+    function addBalance(address owner, uint value) override internal {
+
+        balances[owner] = balanceOf(owner).add(value);
+        creditDates[owner] = time.getNow();
+    }
+
+    function removeBalance(address owner, uint value) override internal {
+
+        balances[owner] = balanceOf(owner).sub(value);
+        creditDates[owner] = time.getNow();
+    }
+
+    function enqueueWithdraw(address owner, uint value) private {
+
+        queue[owner] = WithdrawQueueItem(owner, value, address(0));
+        if (headAddr == address(0)) {
+            headAddr = owner;
+        } else {
+            queue[tailAddr].nextAddr = owner;
+        }
+        tailAddr = owner;
+    }
+
+    function dequeueWithdraw() private {
+
+        address aux = headAddr;
+        headAddr = queue[headAddr].nextAddr;
+        if (headAddr == address(0)) {
+            tailAddr = address(0);
+        }
+        delete queue[aux];
+    }
+
+    function withdrawTokens(address owner, uint value) private returns(uint sent, bool dequeue) {
+
+        if (value > 0) {
+
+            value = MoreMath.min(balanceOf(owner), value);
+            uint b = creditProvider.totalTokenStock();
+
+            if (b >= value) {
+                sent = value;
+                dequeue = true;
+            } else {
+                sent = b;
+            }
+
+            if (sent > 0) {
+                removeBalance(owner, sent);
+                creditProvider.grantTokens(owner, sent);
+            }
+        }
+    }
+}
