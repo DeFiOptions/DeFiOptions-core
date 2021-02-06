@@ -35,7 +35,7 @@ Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/ma
   * [Validate code](https://github.com/TCGV/DeFiOptions/blob/master/README.md#validate-code)
   * [Open challenges](https://github.com/TCGV/DeFiOptions/blob/master/README.md#open-challenges)
   * [Support mainnet](https://github.com/TCGV/DeFiOptions/blob/master/README.md#support-mainnet)
-* [Licensing](https://github.com/TCGV/DeFiOptions/blob/master/README.md#licensing)
+* [Licensing](https://github.com/TCGV/DeFiOptions/blob/master/LICENSE)
 
 ## Coding Reference
 
@@ -304,27 +304,3 @@ The goal is to collect `10 ETH`. Donations will be strictly used to support depl
 As an incentive, upon deployment to mainnet credit tokens will be issued to all addresses from which donations are received considering the highest ETH price recorded since the donation up to the deployment date plus a 100% gratitude reward.
 
 If the project doesn't reach its validation and donation goals all collected ETH will be returned to original senders, discounted only by the transaction processing fee.
-
-## Licensing
-
-This code is released under the MIT License:
-
-Copyright (c) TCGV.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
