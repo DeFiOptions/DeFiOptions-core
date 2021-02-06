@@ -257,16 +257,16 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol) | [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)         | [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)              | [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol) | [0x15708beacc98a32b40227a8385c9f3c5abffa422](https://etherscan.io/address/0x15708beacc98a32b40227a8385c9f3c5abffa422) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)         | [0xee53535e2fafc4f8e435d4071cf1422460a938f9](https://etherscan.io/address/0xee53535e2fafc4f8e435d4071cf1422460a938f9) |
+| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4](https://etherscan.io/address/0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4) |
+| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1](https://etherscan.io/address/0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1) |
+| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)              | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
 ```solidity
-ERC20Mock fakecoin = ERC20Mock(0x123...);
+ERC20Mock fakecoin = ERC20Mock(0xdd8...);
 address to = 0xABC
 uint value = 1500e8;
 fakecoin.issue(to, value);
