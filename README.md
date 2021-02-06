@@ -22,19 +22,19 @@ Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/ma
 
 ## Table of contents
 
-* [Coding Reference](https://github.com/TCGV/DeFiOptions/blob/master/README.md#coding-Reference)
-  * [Making a deposit](https://github.com/TCGV/DeFiOptions/blob/master/README.md#making-a-deposit)
-  * [Writing options](https://github.com/TCGV/DeFiOptions/blob/master/README.md#writing-options)
-  * [Collateral allocation](https://github.com/TCGV/DeFiOptions/blob/master/README.md#collateral-allocation)
-  * [Liquidating positions](https://github.com/TCGV/DeFiOptions/blob/master/README.md#liquidating-positions)
-  * [Burning options](https://github.com/TCGV/DeFiOptions/blob/master/README.md#burning-options)
-  * [Underlying feeds](https://github.com/TCGV/DeFiOptions/blob/master/README.md#underlying-feeds)
-  * [Credit tokens](https://github.com/TCGV/DeFiOptions/blob/master/README.md#credit-tokens)
-* [Kovan addresses](https://github.com/TCGV/DeFiOptions/blob/master/README.md#kovan-addresses)
-* [Get involved](https://github.com/TCGV/DeFiOptions/blob/master/README.md#get-involved)
-  * [Validate code](https://github.com/TCGV/DeFiOptions/blob/master/README.md#validate-code)
-  * [Open challenges](https://github.com/TCGV/DeFiOptions/blob/master/README.md#open-challenges)
-  * [Support mainnet](https://github.com/TCGV/DeFiOptions/blob/master/README.md#support-mainnet)
+* [Coding Reference](https://github.com/TCGV/DeFiOptions#coding-Reference)
+  * [Making a deposit](https://github.com/TCGV/DeFiOptions#making-a-deposit)
+  * [Writing options](https://github.com/TCGV/DeFiOptions#writing-options)
+  * [Collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation)
+  * [Liquidating positions](https://github.com/TCGV/DeFiOptions#liquidating-positions)
+  * [Burning options](https://github.com/TCGV/DeFiOptions#burning-options)
+  * [Underlying feeds](https://github.com/TCGV/DeFiOptions#underlying-feeds)
+  * [Credit tokens](https://github.com/TCGV/DeFiOptions#credit-tokens)
+* [Kovan addresses](https://github.com/TCGV/DeFiOptions#kovan-addresses)
+* [Get involved](https://github.com/TCGV/DeFiOptions#get-involved)
+  * [Validate code](https://github.com/TCGV/DeFiOptions#validate-code)
+  * [Open challenges](https://github.com/TCGV/DeFiOptions#open-challenges)
+  * [Support mainnet](https://github.com/TCGV/DeFiOptions#support-mainnet)
 * [Licensing](https://github.com/TCGV/DeFiOptions/blob/master/LICENSE)
 
 ## Coding Reference
@@ -227,7 +227,7 @@ The exchange depends on these functions to calculate options intrinsic value, co
 * The `getCode` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e10-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
 * The `getLatestPrice` function retrieves the latest quote for the option underlying, for calculating its intrinsic value.
 * The `getPrice` function on the other hand retrieves the first price for the underlying registered in the blockchain after a specific timestamp position, and is used to liquidate the option token contract at maturity.
-* The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/TCGV/DeFiOptions/blob/master/README.md#collateral-allocation) section.
+* The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation) section.
 * The `calcLowerVolatility` and `calcUpperVolatility` apply, respectively, the k<sub>lower</sub> and k<sub>upper</sub> constants to the volatility passed as a parameter, also used for calculating collateral requirements, and for liquidating positions as well.
 
 This repository provides a [Chainlink](https://chain.link/) based implementation of the `UnderlyingFeed` interface which allows any Chainlink USD fiat paired currency (ex: ETH, BTC, LINK, EUR) to be used as underlying for issuing options:
@@ -257,11 +257,11 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol) | [0x15708beacc98a32b40227a8385c9f3c5abffa422](https://etherscan.io/address/0x15708beacc98a32b40227a8385c9f3c5abffa422) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)         | [0xee53535e2fafc4f8e435d4071cf1422460a938f9](https://etherscan.io/address/0xee53535e2fafc4f8e435d4071cf1422460a938f9) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4](https://etherscan.io/address/0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1](https://etherscan.io/address/0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)              | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol) | [0x15708beacc98a32b40227a8385c9f3c5abffa422](https://kovan.etherscan.io/address/0x15708beacc98a32b40227a8385c9f3c5abffa422) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)         | [0xee53535e2fafc4f8e435d4071cf1422460a938f9](https://kovan.etherscan.io/address/0xee53535e2fafc4f8e435d4071cf1422460a938f9) |
+| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4](https://kovan.etherscan.io/address/0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4) |
+| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1](https://kovan.etherscan.io/address/0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1) |
+| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)              | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
