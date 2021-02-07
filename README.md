@@ -10,7 +10,7 @@ A dynamic approach was implemented for ensuring collateral for writing options, 
 
 The exchange accepts stablecoin deposits as collateral for issuing ERC20 option tokens. [Chainlink](https://chain.link/) based price feeds provide the exchange onchain underlying price and volatility updates.
 
-Upon maturity each option contract is liquidated, cash settled by the credit provider contract and destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
+Upon maturity each [option contract](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionToken.sol) is liquidated, cash settled by the credit provider contract and destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
 
 Registered debt will accrue interest until it's repaid by the borrower. Payment occurs either automatically when any of the borrower's open option positions matures and is cash settled (pending debt will be discounted from profits) or manually if the borrower makes a new stablecoin deposit.
 
@@ -292,7 +292,7 @@ There are a few major technical challenges that will need to get dealt with if t
 * Development of a dapp front-end application to make the exchange accessible to non-developers
 * Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models
 * Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
-* Improvement the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
+* Improvement of the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
 
 ### Support mainnet
 
