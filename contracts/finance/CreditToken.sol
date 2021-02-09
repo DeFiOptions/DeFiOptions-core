@@ -112,13 +112,21 @@ contract CreditToken is ManagedContract, ERC20 {
 
     function enqueueWithdraw(address owner, uint value) private {
 
-        queue[owner] = WithdrawQueueItem(owner, value, address(0));
-        if (headAddr == address(0)) {
-            headAddr = owner;
+        if (queue[owner].addr == owner) {
+            
+            queue[owner].value = value;
+
         } else {
-            queue[tailAddr].nextAddr = owner;
+
+            queue[owner] = WithdrawQueueItem(owner, value, address(0));
+            if (headAddr == address(0)) {
+                headAddr = owner;
+            } else {
+                queue[tailAddr].nextAddr = owner;
+            }
+            tailAddr = owner;
+
         }
-        tailAddr = owner;
     }
 
     function dequeueWithdraw() private {
