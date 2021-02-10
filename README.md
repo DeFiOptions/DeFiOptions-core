@@ -276,7 +276,7 @@ fakecoin.issue(to, value);
 
 Did you like this project and wanna get involved? There are three ways in which you can contribute! See below.
 
-Before starting simply [shoot me a message](mailto:thomas.vilhena+defioptions@gmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute o we can arrange a plan accordingly.</i>
+Before starting simply [shoot me a message](mailto:thomas.vilhena+defioptions@gmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute so we can arrange a plan accordingly.</i>
 
 ### Validate code
 
