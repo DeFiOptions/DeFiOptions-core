@@ -41,7 +41,10 @@ contract TestWriteOptions is Base {
         MoreAssert.equal(bob.calcCollateral(), 10 * ct + 6 * uint(step), cBase, "collateral '6' transfered");
 
         OptionToken tk = OptionToken(exchange.resolveToken(id));
+        
+        Assert.equal(tk.writtenVolume(address(bob)), 10 * volumeBase, "bob written volume");
         Assert.equal(tk.balanceOf(address(bob)), 4 * volumeBase, "bob options");
+        Assert.equal(tk.writtenVolume(address(alice)), 0, "alice written volume");
         Assert.equal(tk.balanceOf(address(alice)), 6 * volumeBase, "alice options");
         Assert.equal(tk.totalSupply(), 10 * volumeBase, "total supply");
 
@@ -92,6 +95,7 @@ contract TestWriteOptions is Base {
         Assert.equal(tk.balanceOf(address(h3)), 200 * volumeBase, "h3 options");
         Assert.equal(tk.balanceOf(address(h4)), 300 * volumeBase, "h4 options");
 
+        Assert.equal(tk.writtenVolume(address(bob)), 1100 * volumeBase, "bob written volume");
         Assert.equal(exchange.getBookLength(), 4, "book length t2");
     }
 
@@ -109,6 +113,7 @@ contract TestWriteOptions is Base {
 
         OptionToken tk = OptionToken(exchange.resolveToken(id));
 
+        Assert.equal(tk.writtenVolume(address(bob)), 10 * volumeBase, "bob written volume");
         Assert.equal(tk.balanceOf(address(bob)), 5 * volumeBase, "bob options");
         Assert.equal(tk.balanceOf(address(alice)), 5 * volumeBase, "alice options");
         Assert.equal(tk.totalSupply(), 10 * volumeBase, "total supply");
@@ -117,6 +122,7 @@ contract TestWriteOptions is Base {
 
         MoreAssert.equal(bob.calcCollateral(), 5 * ct + 5 * uint(step), cBase, "collateral after burn");
 
+        Assert.equal(tk.writtenVolume(address(bob)), 5 * volumeBase, "bob written volume");
         Assert.equal(tk.balanceOf(address(bob)), 0, "bob options");
         Assert.equal(tk.balanceOf(address(alice)), 5 * volumeBase, "alice options");
         Assert.equal(tk.totalSupply(), 5 * volumeBase, "total supply");
@@ -138,15 +144,17 @@ contract TestWriteOptions is Base {
         OptionsTrader h1 = new OptionsTrader(address(exchange), address(time));
 
         uint id1 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
+        OptionToken tk = OptionToken(exchange.resolveToken(id1));
+        Assert.equal(tk.writtenVolume(address(bob)), 100 * volumeBase, "bob written volume");
         bob.transferOptions(address(h1), id1, 100);
 
         uint id2 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
+        Assert.equal(tk.writtenVolume(address(bob)), 200 * volumeBase, "bob written volume");
         bob.transferOptions(address(h1), id2, 100);
 
         uint id3 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
+        Assert.equal(tk.writtenVolume(address(bob)), 300 * volumeBase, "bob written volume");
         bob.transferOptions(address(h1), id3, 100);
-
-        OptionToken tk = OptionToken(exchange.resolveToken(id1));
         
         Assert.equal(id1, id2, "same Id (2)");
         Assert.equal(id1, id3, "same Id (3)");

@@ -26,7 +26,7 @@ contract OptionsExchange is ManagedContract {
         address udlFeed;
         uint lowerVol;
         uint upperVol;
-        uint issued;
+        uint written;
         uint holding;
         OptionData option;
     }
@@ -108,6 +108,11 @@ contract OptionsExchange is ManagedContract {
         ensureFunds(msg.sender);
     }
 
+    function writtenVolume(string calldata code, address owner) external view returns (uint) {
+
+        return findOrder(book[owner], code).written;
+    }
+
     function transferOwnership(
         string calldata code,
         address from,
@@ -129,7 +134,7 @@ contract OptionsExchange is ManagedContract {
             toOrd = orders[ord.id];
             toOrd.id = serial++;
             toOrd.owner = address(to);
-            toOrd.issued = 0;
+            toOrd.written = 0;
             toOrd.holding = 0;
             orders[toOrd.id] = toOrd;
             book[to].push(toOrd.id);
@@ -158,9 +163,9 @@ contract OptionsExchange is ManagedContract {
         OrderData memory ord = findOrder(book[owner], code);
         
         require(isValid(ord), "order not found");
-        require(ord.issued >= volume && ord.holding >= volume, "invalid volume");
+        require(ord.written >= volume && ord.holding >= volume, "invalid volume");
         
-        orders[ord.id].issued = orders[ord.id].issued.sub(volume);
+        orders[ord.id].written = orders[ord.id].written.sub(volume);
         orders[ord.id].holding = orders[ord.id].holding.sub(volume);
 
         if (shouldRemove(ord.id)) {
@@ -189,7 +194,7 @@ contract OptionsExchange is ManagedContract {
             require(orders[id].id == id, "invalid order id");
             require(orders[id].option.maturity <= _now, "maturity not reached");
 
-            if (orders[id].issued > 0) {
+            if (orders[id].written > 0) {
                 value.add(liquidateOptions(id));
             } else {
                 removeOrder(code, id);
@@ -205,11 +210,11 @@ contract OptionsExchange is ManagedContract {
     function liquidateOptions(uint id) public returns (uint value) {
         
         OrderData memory ord = orders[id];
-        require(ord.id == id && ord.issued > 0, "invalid order id");
+        require(ord.id == id && ord.written > 0, "invalid order id");
 
         address token = resolveToken(id);
         string memory code = OptionToken(token).getCode();
-        uint iv = uint(calcIntrinsicValue(ord)).mul(ord.issued);
+        uint iv = uint(calcIntrinsicValue(ord)).mul(ord.written);
         
         if (getUdlNow(ord) >= ord.option.maturity) {
             
@@ -271,7 +276,7 @@ contract OptionsExchange is ManagedContract {
             if (isValid(ord)) {
                 collateral = collateral.add(
                     calcIntrinsicValue(ord).mul(
-                        int(ord.issued).sub(int(ord.holding))
+                        int(ord.written).sub(int(ord.holding))
                     )
                 ).add(int(calcCollateral(ord.upperVol, ord)));
             }
@@ -338,7 +343,7 @@ contract OptionsExchange is ManagedContract {
 
         OrderData memory result = findOrder(book[msg.sender], code);
         if (isValid(result)) {
-            orders[result.id].issued = orders[result.id].issued.add(volume);
+            orders[result.id].written = orders[result.id].written.add(volume);
             orders[result.id].holding = orders[result.id].holding.add(volume);
             id = result.id;
         } else {
@@ -422,15 +427,15 @@ contract OptionsExchange is ManagedContract {
         uint collateral = calcCollateral(ord.owner);
         require(collateral > bal, 'unfit for liquidation');
 
-        uint volume = collateral.sub(bal).mul(volumeBase).mul(ord.issued).div(
+        uint volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
             calcCollateral(ord.upperVol.sub(ord.lowerVol), ord).add(iv)
         );
         
-        volume = MoreMath.min(volume, ord.issued);
+        volume = MoreMath.min(volume, ord.written);
         value = calcCollateral(ord.lowerVol, ord)
-            .mul(volume).div(ord.issued).div(volumeBase);
+            .mul(volume).div(ord.written).div(volumeBase);
         
-        orders[ord.id].issued = orders[ord.id].issued.sub(volume);
+        orders[ord.id].written = orders[ord.id].written.sub(volume);
         if (shouldRemove(ord.id)) {
             removeOrder(code, ord.id);
         }
@@ -440,7 +445,7 @@ contract OptionsExchange is ManagedContract {
 
     function shouldRemove(uint id) private view returns (bool) {
 
-        return orders[id].issued == 0 && orders[id].holding == 0;
+        return orders[id].written == 0 && orders[id].holding == 0;
     }
     
     function removeOrder(string memory code, uint id) private {
@@ -477,7 +482,7 @@ contract OptionsExchange is ManagedContract {
     
     function calcCollateral(uint vol, OrderData memory ord) private view returns (uint) {
         
-        return (vol.mul(ord.issued).mul(MoreMath.sqrt(daysToMaturity(ord)))).div(sqrtTimeBase);
+        return (vol.mul(ord.written).mul(MoreMath.sqrt(daysToMaturity(ord)))).div(sqrtTimeBase);
     }
     
     function calcIntrinsicValue(OrderData memory ord) private view returns (int value) {

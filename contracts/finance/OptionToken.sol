@@ -79,6 +79,11 @@ contract OptionToken is ERC20 {
         selfdestruct(msg.sender);
     }
 
+    function writtenVolume(address owner) external view returns (uint) {
+
+        return OptionsExchange(issuer).writtenVolume(code, owner);
+    }
+
     function addBalance(address owner, uint value) override internal {
 
         if (balanceOf(owner) == 0) {
