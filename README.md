@@ -1,6 +1,6 @@
 # DeFiOptions
 
-Experimental DeFi options trading smart contracts enabling long and short positions for call and put european style options.
+Experimental DeFi options trading smart contracts enabling long and short positions for call and put tokenized, collateralized, cash settable european style options.
 
 <p align="center">
 <img src="https://github.com/TCGV/DeFiOptions/blob/master/diagram.PNG?raw=true" width="500" />
