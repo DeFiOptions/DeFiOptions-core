@@ -24,7 +24,7 @@ contract TestCloseProposal is Base {
             )
         );
         
-        Assert.isFalse(success, 'close should fail');
+        Assert.isFalse(success, "close should fail");
     }
 
     function testCloseProposalAfterTransferingGovTokens() public {
@@ -47,12 +47,12 @@ contract TestCloseProposal is Base {
 
         p.close();
         
-        Assert.isTrue(p.getStatus() == Proposal.Status.APPROVED, 'proposal APPROVED');
+        Assert.isTrue(p.getStatus() == Proposal.Status.APPROVED, "proposal APPROVED");
 
         (uint ir2, uint b2,) = settings.getDebtInterestRate();
-        Assert.notEqual(ir1, ir2, 'old interest rate');
-        Assert.notEqual(b1, b2, 'old interest rate base');
-        Assert.equal(ir2, newInterestRate, 'new interest rate');
-        Assert.equal(b2, newInterestRateBase, 'new interest rate base');
+        Assert.notEqual(ir1, ir2, "old interest rate");
+        Assert.notEqual(b1, b2, "old interest rate base");
+        Assert.equal(ir2, newInterestRate, "new interest rate");
+        Assert.equal(b2, newInterestRateBase, "new interest rate base");
     }
 }

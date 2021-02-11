@@ -9,19 +9,19 @@ contract TestExchangeDeposit is Base {
 
     function testBalances() public {
         
-        Assert.equal(bob.calcSurplus(), 0, 'bob initial surplus');
-        Assert.equal(alice.calcSurplus(), 0, 'alice initial surplus');
+        Assert.equal(bob.calcSurplus(), 0, "bob initial surplus");
+        Assert.equal(alice.calcSurplus(), 0, "alice initial surplus");
         
         depositTokens(address(bob), 10 finney);
-        Assert.equal(erc20.balanceOf(address(bob)), 0, 'bob balance');
-        Assert.equal(erc20.balanceOf(address(creditProvider)), 10 finney, 'creditProvider balance');
+        Assert.equal(erc20.balanceOf(address(bob)), 0, "bob balance");
+        Assert.equal(erc20.balanceOf(address(creditProvider)), 10 finney, "creditProvider balance");
         
         depositTokens(address(alice), 50 finney);
-        Assert.equal(erc20.balanceOf(address(alice)), 0, 'alice balance');
-        Assert.equal(erc20.balanceOf(address(creditProvider)), 60 finney, 'creditProvider balance');
+        Assert.equal(erc20.balanceOf(address(alice)), 0, "alice balance");
+        Assert.equal(erc20.balanceOf(address(creditProvider)), 60 finney, "creditProvider balance");
         
-        Assert.equal(bob.calcSurplus(), 10 finney, 'bob final surplus');
-        Assert.equal(alice.calcSurplus(), 50 finney, 'alice final surplus');
+        Assert.equal(bob.calcSurplus(), 10 finney, "bob final surplus");
+        Assert.equal(alice.calcSurplus(), 50 finney, "alice final surplus");
     }
     
     function testSurplus() public {
@@ -43,6 +43,6 @@ contract TestExchangeDeposit is Base {
 
         bob.withdrawTokens();
         Assert.equal(bob.calcSurplus(), 0, "check surplus after withdraw");
-        MoreAssert.equal(erc20.balanceOf(address(bob)), sp, cBase, 'check tokens after withdraw');
+        MoreAssert.equal(erc20.balanceOf(address(bob)), sp, cBase, "check tokens after withdraw");
     }
 }

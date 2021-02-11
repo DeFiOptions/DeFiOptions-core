@@ -256,8 +256,8 @@ contract ProtocolSettings is ManagedContract {
 
         if (msg.sender != owner) {
             Proposal p = Proposal(msg.sender);
-            require(govToken.isRegisteredProposal(msg.sender), 'proposal not registered');
-            require(p.isExecutionAllowed(), 'execution not allowed');
+            require(govToken.isRegisteredProposal(msg.sender), "proposal not registered");
+            require(p.isExecutionAllowed(), "execution not allowed");
         }
     }
 }

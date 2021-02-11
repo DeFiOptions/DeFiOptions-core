@@ -158,7 +158,7 @@ contract CreditProvider is ManagedContract {
     
     function removeBalance(address owner, uint value) private {
         
-        require(balances[owner] >= value, 'insufficient balance');
+        require(balances[owner] >= value, "insufficient balance");
         balances[owner] = balances[owner].sub(value);
     }
 

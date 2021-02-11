@@ -19,8 +19,8 @@ contract TestDailyVolatility is Base {
         uint vol5d = feed.getDailyVolatility(5 days);
         uint vol10d = feed.getDailyVolatility(10 days);
 
-        Assert.equal(vol5d, calcVol5d(), 'vol 5d');
-        Assert.equal(vol10d, calcVol10d(), 'vol 10d');
+        Assert.equal(vol5d, calcVol5d(), "vol 5d");
+        Assert.equal(vol10d, calcVol10d(), "vol 10d");
     }
 
     function testGetDailyVolatilityAfterPrefetching() public {
@@ -34,11 +34,11 @@ contract TestDailyVolatility is Base {
         (uint vol5d, bool c5) = feed.getDailyVolatilityCached(5 days);
         (uint vol10d, bool c10) = feed.getDailyVolatilityCached(10 days);
 
-        Assert.equal(vol5d, calcVol5d(), 'vol 5d');
-        Assert.equal(vol10d, calcVol10d(), 'vol 10d');
+        Assert.equal(vol5d, calcVol5d(), "vol 5d");
+        Assert.equal(vol10d, calcVol10d(), "vol 10d");
 
-        Assert.isFalse(c5, 'cached 5d');
-        Assert.isTrue(c10, 'cached 10d');
+        Assert.isFalse(c5, "cached 5d");
+        Assert.isTrue(c10, "cached 10d");
     }
 
     function calcVol5d() private returns(uint vol) {

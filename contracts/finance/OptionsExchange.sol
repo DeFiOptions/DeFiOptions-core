@@ -423,16 +423,8 @@ contract OptionsExchange is ManagedContract {
         private
         returns (uint value)
     {
-        uint bal = creditProvider.balanceOf(ord.owner);
-        uint collateral = calcCollateral(ord.owner);
-        require(collateral > bal, 'unfit for liquidation');
-
-        uint volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
-            calcCollateral(ord.upperVol.sub(ord.lowerVol), ord).add(iv)
-        );
-        
-        volume = MoreMath.min(volume, ord.written);
-        value = calcCollateral(ord.lowerVol, ord)
+        uint volume = calcLiquidationVolume(ord);
+        value = calcCollateral(ord.lowerVol, ord).add(iv)
             .mul(volume).div(ord.written).div(volumeBase);
         
         orders[ord.id].written = orders[ord.id].written.sub(volume);
@@ -441,6 +433,19 @@ contract OptionsExchange is ManagedContract {
         }
 
         creditProvider.processPayment(ord.owner, token, value);
+    }
+
+    function calcLiquidationVolume(OrderData memory ord) private view returns (uint volume) {
+        
+        uint bal = creditProvider.balanceOf(ord.owner);
+        uint collateral = calcCollateral(ord.owner);
+        require(collateral > bal, "unfit for liquidation");
+
+        volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
+            calcCollateral(ord.upperVol.sub(ord.lowerVol), ord)
+        );
+
+        volume = MoreMath.min(volume, ord.written);
     }
 
     function shouldRemove(uint id) private view returns (bool) {
@@ -472,7 +477,7 @@ contract OptionsExchange is ManagedContract {
     
     function ensureFunds(address owner) private view {
         
-        require(hasRequiredCollateral(owner), 'insufficient collateral');
+        require(hasRequiredCollateral(owner), "insufficient collateral");
     }
     
     function hasRequiredCollateral(address owner) private view returns (bool) {

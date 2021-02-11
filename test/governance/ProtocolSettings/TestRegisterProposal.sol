@@ -12,17 +12,17 @@ contract TestRegisterProposal is Base {
         Proposal p = createProposal(10 days);
 
         Assert.isFalse(
-            govToken.isRegisteredProposal(address(p)), 'proposal not registered'
+            govToken.isRegisteredProposal(address(p)), "proposal not registered"
         );
         
         alpha.registerProposal(p);
 
         Assert.isTrue(
-            govToken.isRegisteredProposal(address(p)), 'proposal registered'
+            govToken.isRegisteredProposal(address(p)), "proposal registered"
         );
 
-        Assert.isTrue(p.getId() > 0, 'p ID');
-        Assert.isTrue(p.getStatus() == Proposal.Status.OPEN, 'p OPEN');
+        Assert.isTrue(p.getId() > 0, "p ID");
+        Assert.isTrue(p.getStatus() == Proposal.Status.OPEN, "p OPEN");
     }
 
     function testRegisterProposalWithoutMinimumShares() public {
@@ -38,6 +38,6 @@ contract TestRegisterProposal is Base {
             )
         );
         
-        Assert.isFalse(success, 'registerProposal should fail');
+        Assert.isFalse(success, "registerProposal should fail");
     }
 }

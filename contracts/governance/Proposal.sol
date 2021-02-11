@@ -119,7 +119,7 @@ abstract contract Proposal {
         } else if (nay >= v) {
             status = Status.REJECTED;
         } else {
-            revert('quorum not reached');
+            revert("quorum not reached");
         }
 
         closed = true;

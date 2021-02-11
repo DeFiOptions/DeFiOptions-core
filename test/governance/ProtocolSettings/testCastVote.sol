@@ -26,13 +26,13 @@ contract TestCastVote is Base {
 
         p.close();
         
-        Assert.isTrue(p.getStatus() == Proposal.Status.APPROVED, 'proposal APPROVED');
+        Assert.isTrue(p.getStatus() == Proposal.Status.APPROVED, "proposal APPROVED");
 
         (uint ir2, uint b2,) = settings.getDebtInterestRate();
-        Assert.notEqual(ir1, ir2, 'old interest rate');
-        Assert.notEqual(b1, b2, 'old interest rate base');
-        Assert.equal(ir2, newInterestRate, 'new interest rate');
-        Assert.equal(b2, newInterestRateBase, 'new interest rate base');
+        Assert.notEqual(ir1, ir2, "old interest rate");
+        Assert.notEqual(b1, b2, "old interest rate base");
+        Assert.equal(ir2, newInterestRate, "new interest rate");
+        Assert.equal(b2, newInterestRateBase, "new interest rate base");
     }
 
     function testCastVoteForRejection() public {
@@ -53,12 +53,12 @@ contract TestCastVote is Base {
 
         p.close();
         
-        Assert.isTrue(p.getStatus() == Proposal.Status.REJECTED, 'proposal REJECTED');
+        Assert.isTrue(p.getStatus() == Proposal.Status.REJECTED, "proposal REJECTED");
 
         (uint ir2, uint b2,) = settings.getDebtInterestRate();
-        Assert.equal(ir1, ir2, 'old interest rate');
-        Assert.equal(b1, b2, 'old interest rate base');
-        Assert.notEqual(ir2, newInterestRate, 'new interest rate');
-        Assert.notEqual(b2, newInterestRateBase, 'new interest rate base');
+        Assert.equal(ir1, ir2, "old interest rate");
+        Assert.equal(b1, b2, "old interest rate base");
+        Assert.notEqual(ir2, newInterestRate, "new interest rate");
+        Assert.notEqual(b2, newInterestRateBase, "new interest rate base");
     }
 }

@@ -23,7 +23,7 @@ contract TestOptionLiquidation is Base {
             )
         );
         
-        Assert.isFalse(success, 'liquidate should fail');
+        Assert.isFalse(success, "liquidate should fail");
     }
 
     function testPartialLiquidationWhenIssuerLacksCollateral() public {
@@ -38,22 +38,27 @@ contract TestOptionLiquidation is Base {
 
         feed.setPrice(ethInitialPrice + step);
 
-        Assert.equal(bob.calcCollateral(), mu + uint(step), 'bob collateral before liquidation');
+        Assert.equal(bob.calcCollateral(), mu + uint(step), "bob collateral before liquidation");
 
+        string memory code = exchange.resolveCode(id);
+        uint v1 = exchange.writtenVolume(code, address(bob));
         exchange.liquidateOptions(id);
+        uint v2 = exchange.writtenVolume(code, address(bob));
 
-        MoreAssert.equal(bob.calcCollateral(), bob.balance(), cBase, 'bob final collateral');
-        Assert.equal(alice.calcCollateral(), 0, 'alice final collateral');
+        Assert.isTrue(v1 > v2, "written volume liquidation");
 
-        Assert.equal(bob.calcSurplus(), 0, 'bob final surplus');
-        Assert.equal(alice.calcSurplus(), 0, 'alice final surplus');
+        MoreAssert.equal(bob.calcCollateral(), bob.balance(), cBase, "bob final collateral");
+        Assert.equal(alice.calcCollateral(), 0, "alice final collateral");
+
+        Assert.equal(bob.calcSurplus(), 0, "bob final surplus");
+        Assert.equal(alice.calcSurplus(), 0, "alice final surplus");
 
         Assert.equal(exchange.getBookLength(), 2, "book length");
     }
 
     function testMultipleLiquidationsWhenIssuerLacksCollateral() public {
         
-        int step = 80e8;
+        int step = 20e8;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);
@@ -63,23 +68,42 @@ contract TestOptionLiquidation is Base {
 
         feed.setPrice(ethInitialPrice + 1 * step);
         uint v1 = exchange.liquidateOptions(id);
-        Assert.isTrue(v1 > 0, 'liquidation value t1');
-        Assert.equal(bob.balance(), mu - v1, 'bob balance t1');
-        MoreAssert.equal(bob.calcCollateral(), mu - v1, cBase, 'bob collateral t1');
+        Assert.isTrue(v1 > 0, "liquidation value t1");
+        Assert.equal(bob.balance(), mu - v1, "bob balance t1");
+        MoreAssert.equal(bob.calcCollateral(), mu - v1, cBase, "bob collateral t1");
 
         feed.setPrice(ethInitialPrice + 2 * step);
         uint v2 = exchange.liquidateOptions(id);
-        Assert.isTrue(v2 > 0, 'liquidation value t2');
-        Assert.equal(bob.balance(), mu - v1 - v2, 'bob balance t2');
-        MoreAssert.equal(bob.calcCollateral(), mu - v1 - v2, cBase, 'bob collateral t2');
+        Assert.isTrue(v2 > 0, "liquidation value t2");
+        Assert.equal(bob.balance(), mu - v1 - v2, "bob balance t2");
+        MoreAssert.equal(bob.calcCollateral(), mu - v1 - v2, cBase, "bob collateral t2");
 
         feed.setPrice(ethInitialPrice + 3 * step);
         uint v3 = exchange.liquidateOptions(id);
-        Assert.isTrue(v3 > 0, 'liquidation value t3');
-        Assert.equal(bob.balance(), mu - v1 - v2 - v3, 'bob balance t3');
-        MoreAssert.equal(bob.calcCollateral(), mu - v1 - v2 - v3, cBase, 'bob collateral t3');
+        Assert.isTrue(v3 > 0, "liquidation value t3");
+        Assert.equal(bob.balance(), mu - v1 - v2 - v3, "bob balance t3");
+        MoreAssert.equal(bob.calcCollateral(), mu - v1 - v2 - v3, cBase, "bob collateral t3");
 
         Assert.equal(exchange.getBookLength(), 2, "book length");
+    }
+
+    function testFullLiquidationsWhenIssuerLacksCollateral() public {
+        
+        int step = 100e8;
+
+        uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
+        depositTokens(address(bob), mu);
+        uint id = bob.writeOption(CALL, ethInitialPrice, 10 days);
+
+        bob.transferOptions(address(alice), id, 1);
+
+        feed.setPrice(ethInitialPrice + 1 * step);
+        uint v1 = exchange.liquidateOptions(id);
+        Assert.isTrue(v1 > mu, "liquidation value t1");
+        Assert.equal(bob.balance(), 0, "bob balance t1");
+        MoreAssert.equal(bob.calcCollateral(), 0, cBase, "bob collateral t1");
+
+        Assert.equal(exchange.getBookLength(), 1, "book length");
     }
 
     function testLiquidationAtMaturityOTM() public {
@@ -95,15 +119,15 @@ contract TestOptionLiquidation is Base {
         feed.setPrice(ethInitialPrice - step);
         time.setTimeOffset(10 days);
 
-        Assert.equal(bob.calcCollateral(), 0, 'bob collateral before liquidation');
+        Assert.equal(bob.calcCollateral(), 0, "bob collateral before liquidation");
 
         alice.liquidateOptions(id);
 
-        Assert.equal(bob.calcCollateral(), 0, 'bob final collateral');
-        Assert.equal(alice.calcCollateral(), 0, 'alice final collateral');
+        Assert.equal(bob.calcCollateral(), 0, "bob final collateral");
+        Assert.equal(alice.calcCollateral(), 0, "alice final collateral");
 
-        Assert.equal(bob.calcSurplus(), mu, 'bob final surplus');
-        Assert.equal(alice.calcSurplus(), 0, 'alice final surplus');
+        Assert.equal(bob.calcSurplus(), mu, "bob final surplus");
+        Assert.equal(alice.calcSurplus(), 0, "alice final surplus");
     }
 
     function testLiquidationAtMaturityITM() public {
@@ -121,16 +145,16 @@ contract TestOptionLiquidation is Base {
 
         uint iv = uint(exchange.calcIntrinsicValue(id));
 
-        Assert.equal(bob.calcCollateral(), iv, 'bob collateral before liquidation');
+        Assert.equal(bob.calcCollateral(), iv, "bob collateral before liquidation");
 
         alice.liquidateOptions(id);
 
-        Assert.equal(iv, uint(step), 'intrinsic value');
+        Assert.equal(iv, uint(step), "intrinsic value");
 
-        Assert.equal(bob.calcCollateral(), 0, 'bob final collateral');
-        Assert.equal(alice.calcCollateral(), 0, 'alice final collateral');
+        Assert.equal(bob.calcCollateral(), 0, "bob final collateral");
+        Assert.equal(alice.calcCollateral(), 0, "alice final collateral");
 
-        Assert.equal(bob.calcSurplus(), mu - iv, 'bob final surplus');
-        Assert.equal(alice.calcSurplus(), 0, 'alice final surplus');
+        Assert.equal(bob.calcSurplus(), mu - iv, "bob final surplus");
+        Assert.equal(alice.calcSurplus(), 0, "alice final surplus");
     }
 }

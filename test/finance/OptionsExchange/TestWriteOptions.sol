@@ -18,7 +18,7 @@ contract TestWriteOptions is Base {
             )
         );
         
-        Assert.isFalse(success, 'issue should fail');
+        Assert.isFalse(success, "issue should fail");
     }
 
     function testWriteAndSequentialTransfers() public {

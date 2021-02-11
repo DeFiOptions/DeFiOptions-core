@@ -169,13 +169,13 @@ The function returns the value resulting from liquidating the position (either p
 The effective volume liquidated by this function call is calculated using the minimum required volume for the writer to start meeting the collateral requirements again:
 
 <p align="center">
-<img src="https://latex.codecogs.com/svg.latex?volume%20%20%3D%20%5Cfrac%7Bcollateral%20-%20balance%7D%7B%5Cleft%20%28k_%7Bupper%7D%20-%20k_%7Blower%7D%20%5Cright%20%29%5Ctimes%20%5Csigma%20_%7Bunderlying%7D%20%5Ctimes%20%5Csqrt%7Bdays%5C%20to%5C%20maturity%7D%20&plus;%20%5Cupsilon%5Cleft%20%28%20option%20%5Cright%20%29%7D">
+<img src="https://latex.codecogs.com/svg.latex?volume%20%20%3D%20%5Cfrac%7Bcollateral%20-%20balance%7D%7B%5Cleft%20%28k_%7Bupper%7D%20-%20k_%7Blower%7D%20%5Cright%20%29%5Ctimes%20%5Csigma%20_%7Bunderlying%7D%20%5Ctimes%20%5Csqrt%7Bdays%5C%20to%5C%20maturity%7D%7D">
 </p>
 
 Here two constants are employed, k<sub>upper</sub> and k<sub>lower</sub>, whose difference enables the clearance of the collateral deficit in a simple manner. Once the liquidation volume is found, the liquidation value is calculated as:
 
 <p align="center">
-<img src="https://latex.codecogs.com/svg.latex?value%20%3D%20k_%7Blower%7D%20%5Ctimes%20%5Csigma%20_%7Bunderlying%7D%20%5Ctimes%20%5Csqrt%7Bdays%5C%20to%5C%20maturity%7D%5Ctimes%20volume">
+<img src="https://latex.codecogs.com/svg.latex?value%20%3D%20%5Cleft%20%28%20k_%7Blower%7D%20%5Ctimes%20%5Csigma%20_%7Bunderlying%7D%20%5Ctimes%20%5Csqrt%7Bdays%5C%20to%5C%20maturity%7D%20%2B%20%5Cupsilon%20%5Cright%20%29%20%5Ctimes%20volume">
 </p>
 
 Now in the second case, when the option matures, the option token contract is liquidated through its `destroy` function:

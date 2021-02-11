@@ -31,7 +31,7 @@ contract ChangeInterestRateProposal is Proposal {
 
     function execute() public override {
         
-        require(interestRate > 0, 'interest rate value not set');
+        require(interestRate > 0, "interest rate value not set");
         settings.setDebtInterestRate(interestRate, interestRateBase);
     }
 }
