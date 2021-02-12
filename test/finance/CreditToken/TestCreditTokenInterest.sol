@@ -6,8 +6,6 @@ import "../../common/utils/MoreAssert.sol";
 import "./Base.sol";
 
 contract TestCreditTokenInterestRate is Base {
-    
-    uint public initialBalance = 10 ether;
 
     function testInterestRateAtDifferentDates() public {
 

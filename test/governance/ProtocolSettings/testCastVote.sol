@@ -5,8 +5,6 @@ import "./Base.sol";
 import "../../common/samples/ChangeInterestRateProposal.sol";
 
 contract TestCastVote is Base {
-    
-    uint public initialBalance = 1 ether;
 
     function testCastVoteForApproval() public {
         

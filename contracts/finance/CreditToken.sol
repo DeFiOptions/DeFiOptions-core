@@ -56,13 +56,6 @@ contract CreditToken is ManagedContract, ERC20 {
         _totalSupply = _totalSupply.add(value);
     }
 
-    function burn(uint value) public {
-
-        require(msg.sender == issuer, "burn unallowed");
-        removeBalance(msg.sender, value);
-        _totalSupply = _totalSupply.sub(value);
-    }
-
     function balanceOf(address owner) override public view returns (uint bal) {
 
         bal = 0;
@@ -100,13 +93,21 @@ contract CreditToken is ManagedContract, ERC20 {
 
     function addBalance(address owner, uint value) override internal {
 
-        balances[owner] = balanceOf(owner).add(value);
-        creditDates[owner] = time.getNow();
+        updateBalance(owner);
+        balances[owner] = balances[owner].add(value);
     }
 
     function removeBalance(address owner, uint value) override internal {
 
-        balances[owner] = balanceOf(owner).sub(value);
+        updateBalance(owner);
+        balances[owner] = balances[owner].sub(value);
+    }
+
+    function updateBalance(address owner) private {
+
+        uint nb = balanceOf(owner);
+        _totalSupply = _totalSupply.add(nb).sub(balances[owner]);
+        balances[owner] = nb;
         creditDates[owner] = time.getNow();
     }
 

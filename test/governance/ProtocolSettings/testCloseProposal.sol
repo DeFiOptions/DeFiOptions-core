@@ -5,8 +5,6 @@ import "./Base.sol";
 import "../../common/samples/ChangeInterestRateProposal.sol";
 
 contract TestCloseProposal is Base {
-    
-    uint public initialBalance = 1 ether;
 
     function testCloseProposalBeforeQuorum() public {
         

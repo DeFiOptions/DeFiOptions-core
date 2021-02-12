@@ -4,8 +4,6 @@ import "truffle/Assert.sol";
 import "./Base.sol";
 
 contract TestRegisterProposal is Base {
-    
-    uint public initialBalance = 1 ether;
 
     function testRegisterProposalMeetingMinimumShares() public {
         
