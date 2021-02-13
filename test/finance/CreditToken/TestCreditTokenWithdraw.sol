@@ -82,7 +82,7 @@ contract TestCreditTokenWithdraw is Base {
         issuer.issueTokens(address(alpha), 100 finney);
         alpha.transfer(address(beta), 20 finney);
         
-        beta.requestWithdraw(10 finney);
+        beta.requestWithdraw(20 finney);
         alpha.requestWithdraw(20 finney);
         beta.requestWithdraw(15 finney);
 
@@ -95,6 +95,23 @@ contract TestCreditTokenWithdraw is Base {
         Assert.equal(erc20.balanceOf(address(alpha)), 20 finney, "alpha balance");
         Assert.equal(erc20.balanceOf(address(beta)), 15 finney, "beta balance");
         Assert.equal(creditProvider.totalTokenStock(), 965 finney, "token stock");
+    }
+
+    function testIncreaseQueuedWithdrawRequestValue() public {
+        
+        issuer.issueTokens(address(alpha), 100 finney);
+        alpha.transfer(address(beta), 20 finney);
+        
+        beta.requestWithdraw(10 finney);
+
+        (bool success,) = address(beta).call(
+            abi.encodePacked(
+                beta.requestWithdraw.selector,
+                abi.encode(15 finney)
+            )
+        );
+
+        Assert.isFalse(success, "requestWithdraw should fail");
     }
 
     function testRequestWithdrawThenTransferBalance() public {

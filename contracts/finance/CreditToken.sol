@@ -115,6 +115,7 @@ contract CreditToken is ManagedContract, ERC20 {
 
         if (queue[owner].addr == owner) {
             
+            require(queue[owner].value > value, "invalid value");
             queue[owner].value = value;
 
         } else {
