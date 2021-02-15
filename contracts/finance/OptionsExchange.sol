@@ -53,6 +53,8 @@ contract OptionsExchange is ManagedContract {
     uint private sqrtTimeBase;
     address private creditToken;
 
+    event CreateCode(string indexed code);
+
     event WriteOptions(string indexed code, address indexed issuer, uint volume, uint id);
 
     event LiquidateCode(string indexed code, int udlPrice, uint value);
@@ -361,6 +363,7 @@ contract OptionsExchange is ManagedContract {
                     address(creditProvider)
                 )
             );
+            emit CreateCode(code);
         }
         
         OptionToken(optionTokens[code]).issue(msg.sender, volume);
