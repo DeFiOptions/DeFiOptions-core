@@ -307,6 +307,11 @@ contract OptionsExchange is ManagedContract {
         
         return bookLength;
     }
+
+    function getVolumeBase() external view returns (uint) {
+        
+        return volumeBase;
+    }
     
     function calcLowerCollateral(uint id) external view returns (uint) {
         
