@@ -70,9 +70,11 @@ contract CreditProvider is ManagedContract {
         return balances[owner];
     }
 
-    function transferBalance(address to, uint value) public {
-        
-        transferBalanceFrom(msg.sender, to, value);
+    function transferBalance(address from, address to, uint value) public {
+
+        ensureCaller();
+        removeBalance(from, value);
+        addBalance(to, value);
     }
     
     function depositTokens(address to, address token, uint value) external {
@@ -130,7 +132,7 @@ contract CreditProvider is ManagedContract {
                 value = balanceOf(from);
             }
 
-            transferBalanceFrom(from, to, value);
+            transferBalance(from, to, value);
 
             if (credit > 0) {                
                 applyDebtInterestRate(from);
@@ -138,12 +140,6 @@ contract CreditProvider is ManagedContract {
                 addBalance(to, credit);
             }
         }
-    }
-
-    function transferBalanceFrom(address from, address to, uint value) private {
-        
-        removeBalance(from, value);
-        addBalance(to, value);
     }
     
     function addBalance(address owner, uint value) public {

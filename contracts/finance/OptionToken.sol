@@ -1,6 +1,5 @@
 pragma solidity >=0.6.0;
 
-import "../../contracts/finance/CreditProvider.sol";
 import "../../contracts/finance/OptionsExchange.sol";
 import "../utils/ERC20.sol";
 import "../utils/Arrays.sol";
@@ -10,8 +9,6 @@ contract OptionToken is ERC20 {
 
     using SafeMath for uint;
 
-    CreditProvider private creditProvider;
-
     mapping(address => bool) private processed;
 
     string private code;
@@ -20,14 +17,12 @@ contract OptionToken is ERC20 {
 
     constructor(
         string memory _code,
-        address _issuer,
-        address _creditProvider
+        address _issuer
     )
         public
     {
         code = _code;
         issuer = _issuer;
-        creditProvider = CreditProvider(_creditProvider);
     }
 
     function getCode() external view returns (string memory) {
@@ -55,7 +50,7 @@ contract OptionToken is ERC20 {
         OptionsExchange exchange = OptionsExchange(issuer);
         exchange.liquidateCode(code);
 
-        uint cpvTotal = creditProvider.balanceOf(address(this));
+        uint cpvTotal = exchange.balanceOf(address(this));
         uint cpv = cpvTotal;
         
         for (uint i = 0; i < holders.length && cpv > 0; i++) {
@@ -65,7 +60,7 @@ contract OptionToken is ERC20 {
                 
                 if (bal > 0) {
                     uint cpvVal = cpvTotal.mul(bal).div(_totalSupply);
-                    creditProvider.transferBalance(holders[i], cpvVal);
+                    exchange.transferBalance(holders[i], cpvVal);
                     cpv = cpv.sub(cpvVal);
                 }
                 
@@ -74,7 +69,7 @@ contract OptionToken is ERC20 {
         }
         
         if (cpv > 0) {
-            creditProvider.transferBalance(msg.sender, cpv);
+            exchange.transferBalance(msg.sender, cpv);
         }
         selfdestruct(msg.sender);
     }

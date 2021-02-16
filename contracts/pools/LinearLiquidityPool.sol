@@ -4,11 +4,12 @@ import "../finance/OptionsExchange.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/LiquidityPool.sol";
 import "../interfaces/UnderlyingFeed.sol";
+import "../utils/ERC20.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 
-contract LinearLiquidityPool is LiquidityPool {
+contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
     using SafeMath for uint;
     using SignedSafeMath for int;
@@ -34,11 +35,17 @@ contract LinearLiquidityPool is LiquidityPool {
     mapping(string => uint) private sellStock;
 
     Fraction private spread;
-    Fraction private unallocatedBalance;
+    Fraction private ratio;
 
-    constructor() public {
+    constructor(
+        address _time,
+        address _exchange
+    ) public {
 
-        // TODO: initialize parameters
+        time = TimeProvider(_time);
+        exchange = OptionsExchange(_exchange);
+        spread = Fraction(1000, 10000); // 10 %
+        ratio = Fraction(2000, 10000);  // 20 %
     }
 
     function addCode(string calldata code) external {
@@ -50,51 +57,67 @@ contract LinearLiquidityPool is LiquidityPool {
     function removeCode(string calldata code) external {
 
         // TODO: remove tradable option
-        emit removeCode(code);
+        emit RemoveCode(code);
     }
 
-    function queryBuy(string calldata code)
+    function depositTokens(address to, address token, uint value) override external {
+
+        uint b0 = exchange.balanceOf(to);
+        depositTokensInExchange(address(this), token, value);
+        uint b1 = exchange.balanceOf(to);
+        addBalance(to, b1.sub(b0));
+    }
+
+    function queryBuy(string memory code)
         override
-        external
+        public
         view
         returns (uint price, uint volume)
     {
         ensureValidCode(code);
-
         PricingParameters memory p = parameters[code];
-
         price = calcPrice(p, Fraction(spread.n.add(spread.d), spread.d));
-
-        volume = MoreMath.min(calcVolume(code, price), buyStock[code]);
+        volume = MoreMath.min(calcVolume(price), buyStock[code]);
     }
 
-    function querySell(string calldata code)
+    function querySell(string memory code)
         override
-        external
+        public
         view
         returns (uint price, uint volume)
     {    
         ensureValidCode(code);
-
         PricingParameters memory p = parameters[code];
-
         price = calcPrice(p, Fraction(spread.d.sub(spread.n), spread.d));
-
-        volume = MoreMath.min(calcVolume(code, price), sellStock[code]);
+        volume = MoreMath.min(calcVolume(price), sellStock[code]);
     }
 
     function buy(string calldata code, uint price, uint volume, address token) override external {
 
         ensureValidCode(code);
 
-        // TODO: valdiate request and sell options to msg.sender
+        (uint p, uint v) = queryBuy(code);
+        require(price >= p, "insufficient price");
+        require(volume <= v, "excessive volume");
+
+        uint value = p.mul(volume).div(exchange.getVolumeBase());
+        depositTokensInExchange(address(this), token, value);
+
+        // TODO: write and transfer option tokens
     }
 
-    function sell(string calldata code, uint price, uint volume, address token) override external {
+    function sell(string calldata code, uint price, uint volume) override external {
 
         ensureValidCode(code);
 
-        // TODO: valdiate request and buy options from msg.sender
+        (uint p, uint v) = querySell(code);
+        require(price <= p, "insufficient price");
+        require(volume <= v, "excessive volume");
+
+        uint value = p.mul(volume).div(exchange.getVolumeBase());
+        exchange.transferBalance(msg.sender, value);
+
+        // TODO: acquire option tokens
     }
 
     function ensureValidCode(string memory code) private view {
@@ -119,8 +142,20 @@ contract LinearLiquidityPool is LiquidityPool {
         price = price.mul(f.n).div(f.d);
     }
 
-    function calcVolume(string memory code, uint price) private view returns (uint volume) {
+    function calcVolume(uint price) private view returns (uint volume) {
 
-        volume = exchange.calcSurplus(address(this)).mul(exchange.getVolumeBase()).div(price);
+        uint bal = exchange.balanceOf(address(this)).mul(ratio.n).div(ratio.d);
+        bal = exchange.calcSurplus(address(this)).sub(bal);
+        volume = bal.mul(exchange.getVolumeBase()).div(price);
+
+        // TODO: review volume calculation considering collateral requirements
+    }
+
+    function depositTokensInExchange(address to, address token, uint value) private {
+
+        ERC20 t = ERC20(token);
+        t.transferFrom(msg.sender, address(this), value);
+        t.approve(address(exchange), value);
+        exchange.depositTokens(to, token, value);
     }
 }

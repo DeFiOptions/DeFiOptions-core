@@ -89,6 +89,12 @@ contract OptionsExchange is ManagedContract {
 
         return creditProvider.balanceOf(owner);
     }
+
+    function transferBalance(address to, uint value) external {
+
+        creditProvider.transferBalance(msg.sender, to, value);
+        ensureFunds(msg.sender);
+    }
     
     function withdrawTokens(uint value) external {
         
