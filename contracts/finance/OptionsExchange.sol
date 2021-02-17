@@ -309,6 +309,13 @@ contract OptionsExchange is ManagedContract {
         return addr;
     }
 
+    function resolveToken(string memory code) public view returns (address) {
+        
+        address addr = optionTokens[code];
+        require(addr != address(0), "token not found");
+        return addr;
+    }
+
     function getBookLength() external view returns (uint) {
         
         return bookLength;
@@ -370,8 +377,7 @@ contract OptionsExchange is ManagedContract {
             optionTokens[code] = address(
                 new OptionToken(
                     code,
-                    address(this),
-                    address(creditProvider)
+                    address(this)
                 )
             );
             emit CreateCode(code);
