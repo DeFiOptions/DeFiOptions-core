@@ -34,39 +34,51 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     mapping(string => PricingParameters) private parameters;
     mapping(string => uint) private buyStock;
     mapping(string => uint) private sellStock;
+    mapping(address => bool) private processed;
 
     address private owner;
+    address[] private holders;
     Fraction private spread;
-    Fraction private ratio;
+    Fraction private reserveRatio;
+    uint private maturity;
 
     uint timeBase = 1e18;
     uint sqrtTimeBase = 1e9;
 
     constructor(
+        address _owner,
         address _time,
-        address _exchange
-    ) public {
-
-        owner = tx.origin;
+        address _exchange,
+        uint _maturity
+    )
+        public
+    {
+        owner = _owner != address(0) ? _owner : tx.origin;
         time = TimeProvider(_time);
         exchange = OptionsExchange(_exchange);
         spread = Fraction(500, 10000); //  5 %
-        ratio = Fraction(2000, 10000); // 20 %
+        reserveRatio = Fraction(2000, 10000); // 20 %
+        maturity = _maturity;
     }
 
     function addCode(
         string calldata code,
         address udlFeed,
         uint strike,
-        uint maturity,
+        uint _maturity,
         OptionsExchange.OptionType optType,
         uint[] calldata x,
-        uint[] calldata y
+        uint[] calldata y,
+        uint _buyStock,
+        uint _sellStock
     )
         external
     {
         ensureCaller();
-        parameters[code] = PricingParameters(udlFeed, strike, maturity, optType, x, y);
+        require(_maturity < maturity, "invalid maturity");
+        parameters[code] = PricingParameters(udlFeed, strike, _maturity, optType, x, y);
+        buyStock[code] = _buyStock;
+        sellStock[code] = _sellStock;
         emit AddCode(code);
     }
     
@@ -75,6 +87,8 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         ensureCaller();
         PricingParameters memory empty;
         parameters[code] = empty;
+        delete buyStock[code];
+        delete sellStock[code];
         emit RemoveCode(code);
     }
 
@@ -83,7 +97,39 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         uint b0 = exchange.balanceOf(to);
         depositTokensInExchange(address(this), token, value);
         uint b1 = exchange.balanceOf(to);
-        addBalance(to, b1.sub(b0));
+        int expBal = exchange.calcExpectedPayout(address(this)).add(
+            int(exchange.balanceOf(address(this)))
+        );
+        uint v = b1.sub(b0).mul(_totalSupply).div(uint(expBal));
+        addBalance(to, v);
+    }
+
+    function destroy() external {
+
+        require(maturity < time.getNow(), "unfit for destruction");
+
+        uint valTotal = exchange.balanceOf(address(this));
+        uint valRemaining = valTotal;
+        
+        for (uint i = 0; i < holders.length && valRemaining > 0; i++) {
+            if (!processed[holders[i]]) {
+
+                uint bal = balanceOf(holders[i]);
+                
+                if (bal > 0) {
+                    uint valTransfer = valTotal.mul(bal).div(_totalSupply);
+                    exchange.transferBalance(holders[i], valTransfer);
+                    valRemaining = valRemaining.sub(valTransfer);
+                }
+                
+                processed[holders[i]] = true;
+            }
+        }
+
+        if (valRemaining > 0) {
+            exchange.transferBalance(msg.sender, valRemaining);
+        }
+        selfdestruct(msg.sender);
     }
 
     function queryBuy(string memory code)
@@ -178,9 +224,13 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
         // TODO: review volume calculation considering collateral requirements
 
-        uint bal = exchange.balanceOf(address(this)).mul(ratio.n).div(ratio.d);
-        bal = exchange.calcSurplus(address(this)).sub(bal);
-        volume = bal.mul(exchange.getVolumeBase()).div(price);
+        volume = calcFreeBalance().mul(exchange.getVolumeBase()).div(price);
+    }
+
+    function calcFreeBalance() private view returns (uint balance) {
+
+        balance = exchange.balanceOf(address(this)).mul(reserveRatio.n).div(reserveRatio.d);
+        balance = exchange.calcSurplus(address(this)).sub(balance);
     }
 
     function depositTokensInExchange(address to, address token, uint value) private {
@@ -189,6 +239,14 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         t.transferFrom(msg.sender, address(this), value);
         t.approve(address(exchange), value);
         exchange.depositTokens(to, token, value);
+    }
+
+    function addBalance(address _owner, uint value) override internal {
+
+        if (balanceOf(_owner) == 0) {
+            holders.push(address(_owner));
+        }
+        balances[_owner] = balanceOf(_owner).add(value);
     }
 
     function ensureValidCode(string memory code) private view {

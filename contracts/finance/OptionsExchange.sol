@@ -297,6 +297,24 @@ contract OptionsExchange is ManagedContract {
         return uint(collateral);
     }
 
+    function calcExpectedPayout(address owner) external view returns (int payout) {
+
+        for (uint i = 0; i < book[owner].length; i++) {
+
+            OrderData memory ord = orders[book[owner][i]];
+
+            if (isValid(ord)) {
+                payout = payout.add(
+                    calcIntrinsicValue(ord).mul(
+                        int(ord.holding).sub(int(ord.written))
+                    )
+                );
+            }
+        }
+
+        payout = payout.div(int(volumeBase));
+    }
+
     function resolveCode(uint id) external view returns (string memory) {
         
         return getOptionCode(orders[id]);
@@ -497,12 +515,10 @@ contract OptionsExchange is ManagedContract {
     
     function ensureFunds(address owner) private view {
         
-        require(hasRequiredCollateral(owner), "insufficient collateral");
-    }
-    
-    function hasRequiredCollateral(address owner) private view returns (bool) {
-        
-        return creditProvider.balanceOf(owner) >= calcCollateral(owner);
+        require(
+            creditProvider.balanceOf(owner) >= calcCollateral(owner),
+            "insufficient collateral"
+        );
     }
     
     function calcCollateral(uint vol, OrderData memory ord) private view returns (uint) {
