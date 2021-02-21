@@ -47,7 +47,7 @@ contract OptionsExchange is ManagedContract {
     mapping(string => uint[]) private tokensIds;
     
     uint private serial;
-    uint private bookLength;
+    uint private bookLength; // TODO: remove unused variable
     uint private volumeBase;
     uint private timeBase;
     uint private sqrtTimeBase;
@@ -146,7 +146,6 @@ contract OptionsExchange is ManagedContract {
             toOrd.holding = 0;
             orders[toOrd.id] = toOrd;
             book[to].push(toOrd.id);
-            bookLength++;
             tokensIds[code].push(toOrd.id);
         }
         
@@ -173,49 +172,57 @@ contract OptionsExchange is ManagedContract {
         require(isValid(ord), "order not found");
         require(ord.written >= volume && ord.holding >= volume, "invalid volume");
         
-        orders[ord.id].written = orders[ord.id].written.sub(volume);
-        orders[ord.id].holding = orders[ord.id].holding.sub(volume);
+        orders[ord.id].written = ord.written.sub(volume);
+        orders[ord.id].holding = ord.holding.sub(volume);
 
         if (shouldRemove(ord.id)) {
             removeOrder(code, ord.id);
         }
     }
 
-    function liquidateCode(string calldata code) external {
+    function liquidateCode(string calldata code, uint limit) external {
 
-        require(optionTokens[code] == msg.sender, "unauthorized liquidate");
-
-        int udlPrice;
         uint value;
-        uint _now;
+        int udlPrice;
+        uint iv;
+        uint len = tokensIds[code].length;
+        OrderData memory ord;
 
-        uint[] memory ids = tokensIds[code];
-        for (uint i = 0; i < ids.length; i++) {
+        if (len > 0) {
 
-            uint id = ids[i];
+            for (uint i = 0; i < len && i < limit; i++) {
+                
+                uint id = tokensIds[code][0];
+                ord = orders[id];
 
-            if (_now == 0) {
-                _now = getUdlNow(orders[id]);
-                udlPrice = getUdlPrice(orders[id]);
-            }
+                if (i == 0) {
+                    udlPrice = getUdlPrice(ord);
+                    uint _now = getUdlNow(ord);
+                    iv = uint(calcIntrinsicValue(ord));
+                    require(ord.option.maturity <= _now, "maturity not reached");
+                }
 
-            require(orders[id].id == id, "invalid order id");
-            require(orders[id].option.maturity <= _now, "maturity not reached");
+                require(ord.id == id, "invalid order id");
 
-            if (orders[id].written > 0) {
-                value.add(liquidateOptions(id));
-            } else {
-                removeOrder(code, id);
+                if (ord.written > 0) {
+                    value.add(
+                        liquidateAfterMaturity(ord, code, msg.sender, iv.mul(ord.written))
+                    );
+                } else {
+                    removeOrder(code, id);
+                }
             }
         }
 
-        delete tokensIds[code];
-        delete optionTokens[code];
+        if (len <= limit) {
+            delete tokensIds[code];
+            delete optionTokens[code];
+        }
 
         emit LiquidateCode(code, udlPrice, value);
     }
 
-    function liquidateOptions(uint id) public returns (uint value) {
+    function liquidateOptions(uint id) external returns (uint value) {
         
         OrderData memory ord = orders[id];
         require(ord.id == id && ord.written > 0, "invalid order id");
@@ -225,14 +232,7 @@ contract OptionsExchange is ManagedContract {
         uint iv = uint(calcIntrinsicValue(ord)).mul(ord.written);
         
         if (getUdlNow(ord) >= ord.option.maturity) {
-            
-            if (iv > 0) {
-                value = iv.div(volumeBase);
-                creditProvider.processPayment(ord.owner, token, value);
-            }
-        
-            removeOrder(code, id);
-            
+            value = liquidateAfterMaturity(ord, code, token, iv);
         } else {
             value = liquidateBeforeMaturity(ord, code, token, iv);
         }
@@ -334,9 +334,13 @@ contract OptionsExchange is ManagedContract {
         return addr;
     }
 
-    function getBookLength() external view returns (uint) {
+    function getBookLength() external view returns (uint len) {
         
-        return bookLength;
+        for (uint i = 0; i < serial; i++) {
+            if (isValid(orders[i])){
+                len++;
+            }
+        }
     }
 
     function getVolumeBase() external view returns (uint) {
@@ -387,7 +391,6 @@ contract OptionsExchange is ManagedContract {
         } else {
             orders[id] = ord;
             book[msg.sender].push(ord.id);
-            bookLength++;
             tokensIds[code].push(ord.id);
         }
 
@@ -452,6 +455,23 @@ contract OptionsExchange is ManagedContract {
         }
     }
 
+    function liquidateAfterMaturity(
+        OrderData memory ord,
+        string memory code,
+        address token,
+        uint iv
+    )
+        private
+        returns (uint value)
+    {
+        if (iv > 0) {
+            value = iv.div(volumeBase);
+            creditProvider.processPayment(ord.owner, token, value);
+        }
+    
+        removeOrder(code, ord.id);
+    }
+
     function liquidateBeforeMaturity(
         OrderData memory ord,
         string memory code,
@@ -496,7 +516,6 @@ contract OptionsExchange is ManagedContract {
         Arrays.removeItem(tokensIds[code], id);
         Arrays.removeItem(book[orders[id].owner], id);
         delete orders[id];
-        bookLength--;
     }
 
     function getOptionCode(OrderData memory ord) private view returns (string memory code) {

@@ -34,7 +34,6 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     mapping(string => PricingParameters) private parameters;
     mapping(string => uint) private buyStock;
     mapping(string => uint) private sellStock;
-    mapping(address => bool) private processed;
 
     address private owner;
     address[] private holders;
@@ -112,17 +111,14 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         uint valRemaining = valTotal;
         
         for (uint i = 0; i < holders.length && valRemaining > 0; i++) {
-            if (!processed[holders[i]]) {
 
-                uint bal = balanceOf(holders[i]);
-                
-                if (bal > 0) {
-                    uint valTransfer = valTotal.mul(bal).div(_totalSupply);
-                    exchange.transferBalance(holders[i], valTransfer);
-                    valRemaining = valRemaining.sub(valTransfer);
-                }
-                
-                processed[holders[i]] = true;
+            uint bal = balanceOf(holders[i]);
+            
+            if (bal > 0) {
+                uint valTransfer = valTotal.mul(bal).div(_totalSupply);
+                exchange.transferBalance(holders[i], valTransfer);
+                valRemaining = valRemaining.sub(valTransfer);
+                removeBalance(holders[i], bal);
             }
         }
 
@@ -244,7 +240,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     function addBalance(address _owner, uint value) override internal {
 
         if (balanceOf(_owner) == 0) {
-            holders.push(address(_owner));
+            holders.push(_owner);
         }
         balances[_owner] = balanceOf(_owner).add(value);
     }
