@@ -53,7 +53,7 @@ contract OptionToken is ERC20 {
     function destroy() external {
         
         OptionsExchange exchange = OptionsExchange(issuer);
-        exchange.liquidateCode(code);
+        exchange.liquidateCode(code, uint(-1));
 
         uint cpvTotal = creditProvider.balanceOf(address(this));
         uint cpv = cpvTotal;
