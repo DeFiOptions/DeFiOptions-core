@@ -103,9 +103,9 @@ contract CreditProvider is ManagedContract {
 
     function calcDebt(address addr) public view returns (uint debt) {
 
-        debt = 0;
-        if (debts[addr] > 0) {
-            debt = settings.applyDebtInterestRate(debts[addr], debtsDate[addr]);
+        debt = debts[addr];
+        if (debt > 0) {
+            debt = settings.applyDebtInterestRate(debt, debtsDate[addr]);
         }
     }
 
@@ -174,18 +174,21 @@ contract CreditProvider is ManagedContract {
 
     function burnDebt(address from, uint value) private returns (uint burnt) {
         
-        applyDebtInterestRate(from);
-        burnt = MoreMath.min(value, debts[from]);
-        setDebt(from, debts[from].sub(burnt));
+        uint d = applyDebtInterestRate(from);
+        if (d > 0) {
+            burnt = MoreMath.min(value, d);
+            setDebt(from, d.sub(burnt));
+        }
     }
 
-    function applyDebtInterestRate(address owner) private {
+    function applyDebtInterestRate(address owner) private returns (uint debt) {
 
-        if (debts[owner] > 0) {
+        uint d = debts[owner];
+        if (d > 0) {
 
-            uint debt = calcDebt(owner);
+            debt = calcDebt(owner);
 
-            if (debt > 0 && debt != debts[owner]) {
+            if (debt > 0 && debt != d) {
                 setDebt(owner, debt);
             }
         }
