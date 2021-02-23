@@ -276,10 +276,11 @@ contract OptionsExchange is ManagedContract {
     function calcCollateral(address owner) public view returns (uint) {
         
         int collateral;
+        uint[] memory ids = book[owner];
 
-        for (uint i = 0; i < book[owner].length; i++) {
+        for (uint i = 0; i < ids.length; i++) {
 
-            OrderData memory ord = orders[book[owner][i]];
+            OrderData memory ord = orders[ids[i]];
 
             if (isValid(ord)) {
                 collateral = collateral.add(
@@ -299,9 +300,11 @@ contract OptionsExchange is ManagedContract {
 
     function calcExpectedPayout(address owner) external view returns (int payout) {
 
-        for (uint i = 0; i < book[owner].length; i++) {
+        uint[] memory ids = book[owner];
 
-            OrderData memory ord = orders[book[owner][i]];
+        for (uint i = 0; i < ids.length; i++) {
+
+            OrderData memory ord = orders[ids[i]];
 
             if (isValid(ord)) {
                 payout = payout.add(
@@ -385,8 +388,8 @@ contract OptionsExchange is ManagedContract {
 
         OrderData memory result = findOrder(book[msg.sender], code);
         if (isValid(result)) {
-            orders[result.id].written = orders[result.id].written.add(volume);
-            orders[result.id].holding = orders[result.id].holding.add(volume);
+            orders[result.id].written = result.written.add(volume);
+            orders[result.id].holding = result.holding.add(volume);
             id = result.id;
         } else {
             orders[id] = ord;
@@ -394,17 +397,19 @@ contract OptionsExchange is ManagedContract {
             tokensIds[code].push(ord.id);
         }
 
-        if (optionTokens[code] == address(0)) {
-            optionTokens[code] = address(
+        address tk = optionTokens[code];
+        if (tk == address(0)) {
+            tk = address(
                 new OptionToken(
                     code,
                     address(this)
                 )
             );
+            optionTokens[code] = tk;
             emit CreateCode(code);
         }
         
-        OptionToken(optionTokens[code]).issue(msg.sender, volume);
+        OptionToken(tk).issue(msg.sender, volume);
         emit WriteOptions(code, msg.sender, volume, id);
     }
 
