@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+  
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm install -g truffle
+
+      - run: truffle test .\test\finance\OptionsExchange\TestExchangeDeposit.sol .\test\finance\OptionsExchange\TestOptionIntrinsicValue.sol .\test\finance\OptionsExchange\TestOptionLiquidation.sol .\test\finance\OptionsExchange\TestOptionTrading.sol .\test\finance\OptionsExchange\TestWriteOptions.sol --compile-all
