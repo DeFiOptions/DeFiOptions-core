@@ -4,6 +4,7 @@ import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../../../contracts/deployment/Deployer.sol";
 import "../../common/mock/ManagedContractMock.sol";
+import "../../common/mock/TimeProviderMock.sol";
 
 contract TestDeployer {
 

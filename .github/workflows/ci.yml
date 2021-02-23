@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+  
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm install -g truffle
+
+      - run: truffle test .\test\deployment\Deployer\TestDeployer.sol .\test\utils\MoreMath\TestMoreMath.sol .\test\feeds\ChainlinkFeed\TestDailyPrice.sol .\test\feeds\ChainlinkFeed\TestDailyVolatility.sol  .\test\feeds\ChainlinkFeed\TestFeedDeployment.sol --compile-all
+      - run: truffle test .\test\finance\CreditToken\TestCreditTokenInterest.sol .\test\finance\CreditToken\TestCreditTokenIssuance.sol .\test\finance\CreditToken\TestCreditTokenWithdraw.sol --compile-all
+      - run: truffle test .\test\finance\OptionsExchange\TestExchangeDeposit.sol .\test\finance\OptionsExchange\TestOptionIntrinsicValue.sol .\test\finance\OptionsExchange\TestOptionLiquidation.sol .\test\finance\OptionsExchange\TestOptionTrading.sol .\test\finance\OptionsExchange\TestWriteOptions.sol --compile-all
