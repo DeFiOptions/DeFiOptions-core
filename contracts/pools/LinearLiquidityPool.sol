@@ -24,6 +24,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         uint strike;
         uint maturity;
         OptionsExchange.OptionType optType;
+        uint t0;
         uint[] x;
         uint[] y;
     }
@@ -66,6 +67,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         uint strike,
         uint _maturity,
         OptionsExchange.OptionType optType,
+        uint t0,
         uint[] calldata x,
         uint[] calldata y,
         uint _buyStock,
@@ -75,7 +77,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     {
         ensureCaller();
         require(_maturity < maturity, "invalid maturity");
-        parameters[code] = PricingParameters(udlFeed, strike, _maturity, optType, x, y);
+        parameters[code] = PricingParameters(udlFeed, strike, _maturity, optType, t0, x, y);
         buyStock[code] = _buyStock;
         sellStock[code] = _sellStock;
         emit AddCode(code);
@@ -136,8 +138,8 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     {
         ensureValidCode(code);
         PricingParameters memory p = parameters[code];
-        price = calcPrice(p, Fraction(spread.n.add(spread.d), spread.d));
-        volume = MoreMath.min(calcVolume(price), buyStock[code]);
+        price = calcOptPrice(p, Fraction(spread.n.add(spread.d), spread.d));
+        volume = MoreMath.min(calcVolume(p, price), buyStock[code]);
     }
 
     function querySell(string memory code)
@@ -148,8 +150,8 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     {    
         ensureValidCode(code);
         PricingParameters memory p = parameters[code];
-        price = calcPrice(p, Fraction(spread.d.sub(spread.n), spread.d));
-        volume = MoreMath.min(calcVolume(price), sellStock[code]);
+        price = calcOptPrice(p, Fraction(spread.d.sub(spread.n), spread.d));
+        volume = MoreMath.min(calcVolume(p, price), sellStock[code]);
     }
 
     function buy(string calldata code, uint price, uint volume, address token) override external {
@@ -192,31 +194,54 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         tk.transferFrom(msg.sender, address(this), volume);
     }
 
-    function calcPrice(PricingParameters memory p, Fraction memory f)
+    function calcOptPrice(PricingParameters memory p, Fraction memory f)
         private
         view
         returns (uint price)
     {
+        (uint j, uint xp) = findUdlPrice(p);
+
+        uint _now = time.getNow();
+        require(_now > p.t0 && _now < p.t0.add(1 days), "invalid pricing parameters");
+        uint t = _now.sub(_now.div(1 days).mul(1 days));
+        uint p0 = calcOptPriceAt(p, j, xp);
+        uint p1 = calcOptPriceAt(p, p.x.length.div(2).add(j), xp);
+
+        price = p0.mul(1 days).add(
+            t.mul(p1.sub(p0))
+        ).mul(f.n).div(f.d).div(1 days);
+    }
+
+    function findUdlPrice(PricingParameters memory p) private view returns (uint j, uint xp) {
+
         UnderlyingFeed feed = UnderlyingFeed(p.udlFeed);
         (,int udlPrice) = feed.getLatestPrice();
         
-        uint i = 0;
-        uint xp = uint(udlPrice);
-        while (p.x[i] < xp && i < p.x.length) {
-            i++;
+        j = 0;
+        xp = uint(udlPrice);
+        while (p.x[j] < xp && j < p.x.length) {
+            j++;
         }
-        require(i > 0 && i < p.x.length, "invalid pricing parameters");
-
-        price = p.y[i].sub(p.y[i - 1]).mul(
-            xp.sub(p.x[i - 1])
-        ).div(
-            p.x[i].sub(p.x[i - 1])
-        ).add(p.y[i - 1]);
-
-        price = price.mul(f.n).div(f.d);
+        require(j > 0 && j < p.x.length, "invalid pricing parameters");
     }
 
-    function calcVolume(uint price) private view returns (uint volume) {
+    function calcOptPriceAt(
+        PricingParameters memory p,
+        uint j,
+        uint xp
+    )
+        private
+        pure
+        returns (uint price)
+    {    
+        price = p.y[j].sub(p.y[j - 1]).mul(
+            xp.sub(p.x[j - 1])
+        ).div(
+            p.x[j].sub(p.x[j - 1])
+        ).add(p.y[j - 1]);
+    }
+
+    function calcVolume(PricingParameters memory p, uint price) private view returns (uint volume) {
 
         // TODO: review volume calculation considering collateral requirements
 
