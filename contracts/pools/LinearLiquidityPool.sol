@@ -14,6 +14,8 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     using SafeMath for uint;
     using SignedSafeMath for int;
 
+    enum Operation { BUY, SELL }
+
     struct Fraction {
         uint n;
         uint d;
@@ -44,6 +46,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
     uint timeBase = 1e18;
     uint sqrtTimeBase = 1e9;
+    uint volumeBase;
 
     constructor(
         address _owner,
@@ -59,6 +62,7 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         spread = Fraction(500, 10000); //  5 %
         reserveRatio = Fraction(2000, 10000); // 20 %
         maturity = _maturity;
+        volumeBase = exchange.getVolumeBase();
     }
 
     function addCode(
@@ -138,8 +142,8 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     {
         ensureValidCode(code);
         PricingParameters memory p = parameters[code];
-        price = calcOptPrice(p, Fraction(spread.n.add(spread.d), spread.d));
-        volume = MoreMath.min(calcVolume(p, price), buyStock[code]);
+        price = calcOptPrice(p, Operation.BUY);
+        volume = MoreMath.min(calcVolume(p, price, Operation.BUY), buyStock[code]);
     }
 
     function querySell(string memory code)
@@ -150,22 +154,21 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
     {    
         ensureValidCode(code);
         PricingParameters memory p = parameters[code];
-        price = calcOptPrice(p, Fraction(spread.d.sub(spread.n), spread.d));
-        volume = MoreMath.min(calcVolume(p, price), sellStock[code]);
+        price = calcOptPrice(p, Operation.SELL);
+        volume = MoreMath.min(calcVolume(p, price, Operation.SELL), sellStock[code]);
     }
 
     function buy(string calldata code, uint price, uint volume, address token) override external {
 
         ensureValidCode(code);
 
-        (uint p, uint v) = queryBuy(code);
+        PricingParameters memory param = parameters[code];
+        uint p = calcOptPrice(param, Operation.BUY);
         require(price >= p, "insufficient price");
-        require(volume <= v, "excessive volume");
 
-        uint value = p.mul(volume).div(exchange.getVolumeBase());
+        uint value = p.mul(volume).div(volumeBase);
         depositTokensInExchange(address(this), token, value);
 
-        PricingParameters memory param = parameters[code];
         uint id = exchange.writeOptions(
             param.udlFeed,
             volume,
@@ -173,6 +176,11 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
             param.strike,
             param.maturity
         );
+        require(
+            volume <= buyStock[code] || calcFreeBalance() > 0,
+            "excessive volume"
+        );
+
         address addr = exchange.resolveToken(id);
         OptionToken tk = OptionToken(addr);
         tk.transfer(msg.sender, volume);
@@ -182,23 +190,32 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
         ensureValidCode(code);
 
-        (uint p, uint v) = querySell(code);
+        PricingParameters memory param = parameters[code];
+        uint p = calcOptPrice(param, Operation.SELL);
         require(price <= p, "insufficient price");
-        require(volume <= v, "excessive volume");
-
-        uint value = p.mul(volume).div(exchange.getVolumeBase());
-        exchange.transferBalance(msg.sender, value);
 
         address addr = exchange.resolveToken(code);
         OptionToken tk = OptionToken(addr);
         tk.transferFrom(msg.sender, address(this), volume);
+
+        uint value = p.mul(volume).div(volumeBase);
+        exchange.transferBalance(msg.sender, value);
+        
+        require(
+            volume <= sellStock[code] || calcFreeBalance() > 0,
+            "excessive volume"
+        );
     }
 
-    function calcOptPrice(PricingParameters memory p, Fraction memory f)
+    function calcOptPrice(PricingParameters memory p, Operation op)
         private
         view
         returns (uint price)
     {
+        Fraction memory f = op == Operation.BUY ?
+            Fraction(spread.n.add(spread.d), spread.d) :
+            Fraction(spread.d.sub(spread.n), spread.d);
+        
         (uint j, uint xp) = findUdlPrice(p);
 
         uint _now = time.getNow();
@@ -241,11 +258,28 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         ).add(p.y[j - 1]);
     }
 
-    function calcVolume(PricingParameters memory p, uint price) private view returns (uint volume) {
+    function calcVolume(
+        PricingParameters memory p,
+        uint price,
+        Operation op
+    )
+        private
+        view
+        returns (uint volume)
+    {
+        uint coll = exchange.calcCollateral(
+            p.udlFeed,
+            volumeBase,
+            p.optType,
+            p.strike,
+            p.maturity
+        );
 
-        // TODO: review volume calculation considering collateral requirements
-
-        volume = calcFreeBalance().mul(exchange.getVolumeBase()).div(price);
+        if (op == Operation.BUY) {
+            volume = calcFreeBalance().mul(volumeBase).div(price.sub(coll));
+        } else {
+            volume = calcFreeBalance().mul(volumeBase).div(coll.sub(price));
+        }
     }
 
     function calcFreeBalance() private view returns (uint balance) {
