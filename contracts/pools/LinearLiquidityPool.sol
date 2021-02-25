@@ -1,5 +1,6 @@
 pragma solidity >=0.6.0;
 
+import "../deployment/ManagedContract.sol";
 import "../finance/OptionsExchange.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/LiquidityPool.sol";
@@ -9,17 +10,12 @@ import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 
-contract LinearLiquidityPool is LiquidityPool, ERC20 {
+contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
 
     using SafeMath for uint;
     using SignedSafeMath for int;
 
     enum Operation { BUY, SELL }
-
-    struct Fraction {
-        uint n;
-        uint d;
-    }
 
     struct PricingParameters {
         address udlFeed;
@@ -40,29 +36,43 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
     address private owner;
     address[] private holders;
-    Fraction private spread;
-    Fraction private reserveRatio;
+    uint private spread;
+    uint private reserveRatio;
     uint private maturity;
 
-    uint timeBase = 1e18;
-    uint sqrtTimeBase = 1e9;
+    uint timeBase;
+    uint sqrtTimeBase;
     uint volumeBase;
+    uint fractionBase;
 
-    constructor(
-        address _owner,
-        address _time,
-        address _exchange,
+    constructor(address deployer) public {
+
+        Deployer(deployer).setContractAddress("LinearLiquidityPool");
+    }
+
+    function initialize(Deployer deployer) override internal {
+
+        owner = deployer.getOwner();
+        time = TimeProvider(deployer.getContractAddress("TimeProvider"));
+        exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
+
+        timeBase = 1e18;
+        sqrtTimeBase = 1e9;
+        volumeBase = exchange.getVolumeBase();
+        fractionBase = 1e6;
+    }
+
+    function setParameters(
+        uint _spread,
+        uint _reserveRatio,
         uint _maturity
     )
-        public
+        external
     {
-        owner = _owner != address(0) ? _owner : tx.origin;
-        time = TimeProvider(_time);
-        exchange = OptionsExchange(_exchange);
-        spread = Fraction(500, 10000); //  5 %
-        reserveRatio = Fraction(2000, 10000); // 20 %
+        ensureCaller();
+        spread = _spread;
+        reserveRatio = _reserveRatio;
         maturity = _maturity;
-        volumeBase = exchange.getVolumeBase();
     }
 
     function addCode(
@@ -212,21 +222,19 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         view
         returns (uint price)
     {
-        Fraction memory f = op == Operation.BUY ?
-            Fraction(spread.n.add(spread.d), spread.d) :
-            Fraction(spread.d.sub(spread.n), spread.d);
+        uint f = op == Operation.BUY ? spread.add(fractionBase) : fractionBase.sub(spread);
         
         (uint j, uint xp) = findUdlPrice(p);
 
         uint _now = time.getNow();
-        require(_now > p.t0 && _now < p.t0.add(1 days), "invalid pricing parameters");
+        require(_now >= p.t0 && _now <= p.t0.add(1 days), "invalid pricing parameters");
         uint t = _now.sub(_now.div(1 days).mul(1 days));
-        uint p0 = calcOptPriceAt(p, j, xp);
-        uint p1 = calcOptPriceAt(p, p.x.length.div(2).add(j), xp);
+        uint p0 = calcOptPriceAt(p, 0, j, xp);
+        uint p1 = calcOptPriceAt(p, p.x.length, j, xp);
 
-        price = p0.mul(1 days).add(
-            t.mul(p1.sub(p0))
-        ).mul(f.n).div(f.d).div(1 days);
+        price = p0.mul(1 days).sub(
+            t.mul(p0.sub(p1))
+        ).mul(f).div(fractionBase).div(1 days);
     }
 
     function findUdlPrice(PricingParameters memory p) private view returns (uint j, uint xp) {
@@ -244,18 +252,20 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
     function calcOptPriceAt(
         PricingParameters memory p,
+        uint offset,
         uint j,
         uint xp
     )
         private
         pure
         returns (uint price)
-    {    
-        price = p.y[j].sub(p.y[j - 1]).mul(
+    {
+        uint k = offset + j;
+        price = p.y[k].sub(p.y[k - 1]).mul(
             xp.sub(p.x[j - 1])
         ).div(
             p.x[j].sub(p.x[j - 1])
-        ).add(p.y[j - 1]);
+        ).add(p.y[k - 1]);
     }
 
     function calcVolume(
@@ -276,15 +286,17 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
         );
 
         if (op == Operation.BUY) {
-            volume = calcFreeBalance().mul(volumeBase).div(price.sub(coll));
+            volume = coll <= price ? uint(-1) :
+                calcFreeBalance().mul(volumeBase).div(coll.sub(price));
         } else {
-            volume = calcFreeBalance().mul(volumeBase).div(coll.sub(price));
+            volume = price <= coll ? uint(-1) :
+                calcFreeBalance().mul(volumeBase).div(price.sub(coll));
         }
     }
 
     function calcFreeBalance() private view returns (uint balance) {
 
-        balance = exchange.balanceOf(address(this)).mul(reserveRatio.n).div(reserveRatio.d);
+        balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
         balance = exchange.calcSurplus(address(this)).sub(balance);
     }
 
@@ -311,6 +323,6 @@ contract LinearLiquidityPool is LiquidityPool, ERC20 {
 
     function ensureCaller() private view {
 
-        require(msg.sender == owner, "unauthorized caller");
+        require(owner == address(0) || msg.sender == owner, "unauthorized caller");
     }
 }

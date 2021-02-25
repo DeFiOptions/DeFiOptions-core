@@ -12,13 +12,13 @@ contract Deployer {
         address proxyAddr;
     }
 
-    mapping(string => address) contractMap;
-    mapping(string => string) aliases;
+    mapping(string => address) private contractMap;
+    mapping(string => string) private aliases;
 
-    address owner;
-    address original;
-    ContractData[] contracts;
-    bool deployed;
+    address private owner;
+    address private original;
+    ContractData[] private contracts;
+    bool private deployed;
 
     constructor(address _owner, address _original) public {
 
