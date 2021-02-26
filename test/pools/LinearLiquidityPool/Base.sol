@@ -72,7 +72,7 @@ contract Base {
     function depositTokens(address to, uint value) internal {
         
         erc20.issue(address(this), value);
-        erc20.approve(address(exchange), value);
+        erc20.approve(address(pool), value);
         pool.depositTokens(to, address(erc20), value);
     }
 

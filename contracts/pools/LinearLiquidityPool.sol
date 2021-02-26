@@ -228,7 +228,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
 
         uint _now = time.getNow();
         require(_now >= p.t0 && _now <= p.t0.add(1 days), "invalid pricing parameters");
-        uint t = _now.sub(_now.div(1 days).mul(1 days));
+        uint t = _now.sub(p.t0);
         uint p0 = calcOptPriceAt(p, 0, j, xp);
         uint p1 = calcOptPriceAt(p, p.x.length, j, xp);
 
@@ -297,7 +297,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
     function calcFreeBalance() private view returns (uint balance) {
 
         balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
-        balance = exchange.calcSurplus(address(this)).sub(balance);
+        uint sp = exchange.calcSurplus(address(this));
+        balance = sp > balance ? sp.sub(balance) : 0;
     }
 
     function depositTokensInExchange(address to, address token, uint value) private {

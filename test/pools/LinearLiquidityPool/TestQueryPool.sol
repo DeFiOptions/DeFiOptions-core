@@ -2,8 +2,6 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "./Base.sol";
-import "../../../contracts/utils/MoreMath.sol";
-import "../../common/utils/MoreAssert.sol";
 
 contract TestQueryPool is Base {
 
@@ -11,7 +9,71 @@ contract TestQueryPool is Base {
     uint[] y;
     string code = "ETHM-EC-55e9-2592e3";
 
-    function testQueryBuyWithoutFunds() public {
+    function testQueryWithoutFunds() public {
+
+        addCode();
+
+        queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy ATM");
+        querySellAndAssert(applySellSpread(y[3]), 200 * volumeBase, "sell ATM");
+
+        feed.setPrice(525e8);
+
+        queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy OTM");
+        querySellAndAssert(applySellSpread(y[3]), 200 * volumeBase, "sell OTM");
+
+        feed.setPrice(575e8);
+
+        queryBuyAndAssert(applyBuySpread((y[3] + y[4]) / 2), 0, "buy ITM");
+        querySellAndAssert(applySellSpread((y[3] + y[4]) / 2), 200 * volumeBase, "sell ITM");
+    }
+
+    function testQueryWithFunds() public {
+
+        uint balance = 50 * calcCollateral();
+        uint freeBalance = 80 * balance / 100;
+        depositTokens(address(bob), balance);
+
+        addCode();
+
+        time.setFixedTime(1 days);
+
+        uint p0 = applyBuySpread(y[10]);
+        queryBuyAndAssert(p0, freeBalance * volumeBase / (calcCollateral() - p0), "buy ATM");
+        querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell ATM");
+
+        feed.setPrice(525e8);
+
+        uint p1 = applyBuySpread(y[10]);
+        queryBuyAndAssert(p1, freeBalance * volumeBase / (calcCollateral() - p1), "buy OTM");
+        querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell OTM");
+
+        feed.setPrice(575e8);
+
+        uint p2 = applyBuySpread((y[10] + y[11]) / 2);
+        queryBuyAndAssert(p2, freeBalance * volumeBase / (calcCollateral() - p2), "buy ITM");
+        querySellAndAssert(applySellSpread((y[10] + y[11]) / 2), 200 * volumeBase, "sell ITM");
+    }
+
+    function testQueryHalfway() public {
+
+        uint balance = 1000 * calcCollateral();
+        depositTokens(address(bob), balance);
+
+        addCode();
+
+        time.setFixedTime(15 hours);
+
+        feed.setPrice(575e8);
+
+        uint p0 = (y[3] + y[4]) / 2;
+        uint p1 = (y[10] + y[11]) / 2;
+        uint p = p0 - (15 * (p0 - p1) / 24);
+
+        queryBuyAndAssert(applyBuySpread(p), 100 * volumeBase, "buy halfway");
+        querySellAndAssert(applySellSpread(p), 200 * volumeBase, "sell halfway");
+    }
+
+    function addCode() private {
 
         x = [400e8, 450e8, 500e8, 550e8, 600e8, 650e8, 700e8];
         y = [
@@ -31,13 +93,40 @@ contract TestQueryPool is Base {
             100 * volumeBase, // buy stock
             200 * volumeBase  // sell stock
         );
+    }
 
-        (uint pb1, uint vb1) = pool.queryBuy(code);
-        Assert.equal(pb1, applyBuySpread(y[3]), "buy price ATM");
-        Assert.equal(vb1, 0, "buy volume ATM");
+    function queryBuyAndAssert(
+        uint expectPrice,
+        uint expectedVolume,
+        string memory message
+    )
+        private
+    {    
+        (uint ps, uint vs) = pool.queryBuy(code);
+        Assert.equal(ps, expectPrice, message);
+        Assert.equal(vs, expectedVolume, message);
+    }
 
-        (uint ps1, uint vs1) = pool.querySell(code);
-        Assert.equal(ps1, applySellSpread(y[3]), "sell price ATM");
-        Assert.equal(vs1, 200 * volumeBase, "sell volume ATM");
+    function querySellAndAssert(
+        uint expectPrice,
+        uint expectedVolume,
+        string memory message
+    )
+        private
+    {    
+        (uint ps, uint vs) = pool.querySell(code);
+        Assert.equal(ps, expectPrice, message);
+        Assert.equal(vs, expectedVolume, message);
+    }
+
+    function calcCollateral() private view returns (uint) {
+
+        return exchange.calcCollateral(
+            address(feed), 
+            volumeBase,
+            OptionsExchange.OptionType.CALL,
+            550e8, // strike,
+            30 days // maturity
+        );
     }
 }
