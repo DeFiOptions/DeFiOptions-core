@@ -40,10 +40,10 @@ contract TestOptionLiquidation is Base {
 
         Assert.equal(bob.calcCollateral(), mu + uint(step), "bob collateral before liquidation");
 
-        string memory code = exchange.resolveCode(id);
-        uint v1 = exchange.writtenVolume(code, address(bob));
+        string memory symbol = exchange.resolveSymbol(id);
+        uint v1 = exchange.writtenVolume(symbol, address(bob));
         exchange.liquidateOptions(id);
-        uint v2 = exchange.writtenVolume(code, address(bob));
+        uint v2 = exchange.writtenVolume(symbol, address(bob));
 
         Assert.isTrue(v1 > v2, "written volume liquidation");
 

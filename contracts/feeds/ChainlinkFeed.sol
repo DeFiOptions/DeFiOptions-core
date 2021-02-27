@@ -23,11 +23,11 @@ contract ChainlinkFeed is UnderlyingFeed {
     mapping(uint => Sample) private dailyPrices;
     mapping(uint => mapping(uint => uint)) private dailyVolatilities;
 
-    string private code;
+    string private _symbol;
     Sample[] private samples;
 
     constructor(
-        string memory _code,
+        string memory _sb,
         address _aggregator,
         address _time,
         uint[] memory _timestamps,
@@ -35,7 +35,7 @@ contract ChainlinkFeed is UnderlyingFeed {
     )
         public
     {
-        code = _code;
+        _symbol = _sb;
         aggregator = AggregatorV3Interface(_aggregator);
         time = TimeProvider(_time);
         initialize(_timestamps, _prices);
@@ -59,9 +59,9 @@ contract ChainlinkFeed is UnderlyingFeed {
         }
     }
 
-    function getCode() override external view returns (string memory) {
+    function symbol() override external view returns (string memory) {
 
-        return code;
+        return _symbol;
     }
 
     function getLatestPrice() override external view returns (uint timestamp, int price) {
@@ -150,7 +150,7 @@ contract ChainlinkFeed is UnderlyingFeed {
 
         } else {
 
-            vol = decodeValue(dailyVolatilities[timespan][today()]);
+            vol = desymbolValue(dailyVolatilities[timespan][today()]);
             cached = true;
 
         }
@@ -211,7 +211,7 @@ contract ChainlinkFeed is UnderlyingFeed {
         return v | (uint(1) << 255);
     }
 
-    function decodeValue(uint v) private pure returns (uint) {
+    function desymbolValue(uint v) private pure returns (uint) {
         return v & (~(uint(1) << 255));
     }
 

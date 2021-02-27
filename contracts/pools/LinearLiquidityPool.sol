@@ -25,14 +25,16 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         uint t0;
         uint[] x;
         uint[] y;
+        uint buyStock;
+        uint sellStock;
     }
 
     TimeProvider private time;
     OptionsExchange private exchange;
 
     mapping(string => PricingParameters) private parameters;
-    mapping(string => uint) private buyStock;
-    mapping(string => uint) private sellStock;
+    mapping(string => uint) private written;
+    mapping(string => uint) private holding;
 
     address private owner;
     address[] private holders;
@@ -75,8 +77,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         maturity = _maturity;
     }
 
-    function addCode(
-        string calldata code,
+    function addSymbol(
+        string calldata symbol,
         address udlFeed,
         uint strike,
         uint _maturity,
@@ -84,27 +86,35 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         uint t0,
         uint[] calldata x,
         uint[] calldata y,
-        uint _buyStock,
-        uint _sellStock
+        uint buyStock,
+        uint sellStock
     )
         external
     {
         ensureCaller();
         require(_maturity < maturity, "invalid maturity");
-        parameters[code] = PricingParameters(udlFeed, strike, _maturity, optType, t0, x, y);
-        buyStock[code] = _buyStock;
-        sellStock[code] = _sellStock;
-        emit AddCode(code);
+        parameters[symbol] = PricingParameters(
+            udlFeed,
+            strike,
+            _maturity,
+            optType,
+            t0,
+            x,
+            y,
+            buyStock,
+            sellStock
+        );
+        emit AddSymbol(symbol);
     }
     
-    function removeCode(string calldata code) external {
+    function removeSymbol(string calldata symbol) external {
 
         ensureCaller();
         PricingParameters memory empty;
-        parameters[code] = empty;
-        delete buyStock[code];
-        delete sellStock[code];
-        emit RemoveCode(code);
+        parameters[symbol] = empty;
+        delete written[symbol];
+        delete holding[symbol];
+        emit RemoveSymbol(symbol);
     }
 
     function depositTokens(address to, address token, uint value) override external {
@@ -117,6 +127,109 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         );
         uint v = b1.sub(b0).mul(_totalSupply).div(uint(expBal));
         addBalance(to, v);
+    }
+
+    function queryBuy(string memory symbol)
+        override
+        public
+        view
+        returns (uint price, uint volume)
+    {
+        ensureValidSymbol(symbol);
+        PricingParameters memory param = parameters[symbol];
+        price = calcOptPrice(param, Operation.BUY);
+        volume = MoreMath.min(
+            calcVolume(param, price, Operation.BUY),
+            param.buyStock.sub(written[symbol])
+        );
+    }
+
+    function querySell(string memory symbol)
+        override
+        public
+        view
+        returns (uint price, uint volume)
+    {    
+        ensureValidSymbol(symbol);
+        PricingParameters memory param = parameters[symbol];
+        price = calcOptPrice(param, Operation.SELL);
+        volume = MoreMath.min(
+            calcVolume(param, price, Operation.SELL),
+            param.sellStock.sub(holding[symbol])
+        );
+    }
+
+    function buy(string calldata symbol, uint price, uint volume, address token)
+        override
+        external
+        returns (address addr)
+    {
+        ensureValidSymbol(symbol);
+
+        PricingParameters memory param = parameters[symbol];
+        uint p = calcOptPrice(param, Operation.BUY);
+        require(price >= p, "insufficient price");
+
+        uint value = p.mul(volume).div(volumeBase);
+        depositTokensInExchange(msg.sender, token, value);
+
+        uint _holding = holding[symbol];
+        if (volume > _holding) {
+
+            uint _written = written[symbol];
+            uint toWrite = volume.sub(_holding);
+            require(_written.add(toWrite) <= param.buyStock, "excessive volume");
+            written[symbol] = _written.add(toWrite);
+
+            exchange.writeOptions(
+                param.udlFeed,
+                toWrite,
+                param.optType,
+                param.strike,
+                param.maturity
+            );
+
+            require(calcFreeBalance() > 0, "excessive volume");
+        }
+
+        if (_holding > 0) {
+            uint diff = MoreMath.min(_holding, volume);
+            holding[symbol] = _holding.sub(diff);
+        }
+
+        addr = exchange.resolveToken(symbol);
+        OptionToken tk = OptionToken(addr);
+        tk.transfer(msg.sender, volume);
+    }
+
+    function sell(string calldata symbol, uint price, uint volume) override external {
+
+        ensureValidSymbol(symbol);
+
+        PricingParameters memory param = parameters[symbol];
+        uint p = calcOptPrice(param, Operation.SELL);
+        require(price <= p, "insufficient price");
+
+        address addr = exchange.resolveToken(symbol);
+        OptionToken tk = OptionToken(addr);
+        tk.transferFrom(msg.sender, address(this), volume);
+
+        uint value = p.mul(volume).div(volumeBase);
+        exchange.transferBalance(msg.sender, value);
+        require(calcFreeBalance() > 0, "excessive volume");
+        
+        uint _holding = holding[symbol].add(volume);
+        uint _written = written[symbol];
+
+        if (_written > 0) {
+            uint toBurn = MoreMath.min(_written, volume);
+            tk.burn(toBurn);
+            written[symbol] = _written.sub(toBurn);
+            _holding = _holding.sub(toBurn);
+        }
+
+        require(_holding <= param.sellStock, "excessive volume");
+        holding[symbol] = _holding;
     }
 
     function destroy() external {
@@ -142,82 +255,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
             exchange.transferBalance(msg.sender, valRemaining);
         }
         selfdestruct(msg.sender);
-    }
-
-    function queryBuy(string memory code)
-        override
-        public
-        view
-        returns (uint price, uint volume)
-    {
-        ensureValidCode(code);
-        PricingParameters memory p = parameters[code];
-        price = calcOptPrice(p, Operation.BUY);
-        volume = MoreMath.min(calcVolume(p, price, Operation.BUY), buyStock[code]);
-    }
-
-    function querySell(string memory code)
-        override
-        public
-        view
-        returns (uint price, uint volume)
-    {    
-        ensureValidCode(code);
-        PricingParameters memory p = parameters[code];
-        price = calcOptPrice(p, Operation.SELL);
-        volume = MoreMath.min(calcVolume(p, price, Operation.SELL), sellStock[code]);
-    }
-
-    function buy(string calldata code, uint price, uint volume, address token)
-        override
-        external
-        returns (address addr)
-    {
-        ensureValidCode(code);
-
-        PricingParameters memory param = parameters[code];
-        uint p = calcOptPrice(param, Operation.BUY);
-        require(price >= p, "insufficient price");
-
-        uint value = p.mul(volume).div(volumeBase);
-        depositTokensInExchange(msg.sender, token, value);
-
-        uint id = exchange.writeOptions(
-            param.udlFeed,
-            volume,
-            param.optType,
-            param.strike,
-            param.maturity
-        );
-        require(
-            volume <= buyStock[code] || calcFreeBalance() > 0,
-            "excessive volume"
-        );
-
-        addr = exchange.resolveToken(id);
-        OptionToken tk = OptionToken(addr);
-        tk.transfer(msg.sender, volume);
-    }
-
-    function sell(string calldata code, uint price, uint volume) override external {
-
-        ensureValidCode(code);
-
-        PricingParameters memory param = parameters[code];
-        uint p = calcOptPrice(param, Operation.SELL);
-        require(price <= p, "insufficient price");
-
-        address addr = exchange.resolveToken(code);
-        OptionToken tk = OptionToken(addr);
-        tk.transferFrom(msg.sender, address(this), volume);
-
-        uint value = p.mul(volume).div(volumeBase);
-        exchange.transferBalance(msg.sender, value);
-        
-        require(
-            volume <= sellStock[code] || calcFreeBalance() > 0,
-            "excessive volume"
-        );
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)
@@ -320,9 +357,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         balances[_owner] = balanceOf(_owner).add(value);
     }
 
-    function ensureValidCode(string memory code) private view {
+    function ensureValidSymbol(string memory symbol) private view {
 
-        require(parameters[code].udlFeed !=  address(0), "invalid code");
+        require(parameters[symbol].udlFeed !=  address(0), "invalid symbol");
     }
 
     function ensureCaller() private view {

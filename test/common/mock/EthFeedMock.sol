@@ -20,7 +20,7 @@ contract EthFeedMock is UnderlyingFeed, ManagedContract {
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
     }
 
-    function getCode() override external view returns (string memory) {
+    function symbol() override external view returns (string memory) {
 
         return "ETHM";
     }

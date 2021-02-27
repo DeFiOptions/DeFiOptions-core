@@ -51,17 +51,17 @@ contract PoolTrader {
         );
     }
     
-    function buyFromPool(string calldata code, uint price, uint volume, address token)
+    function buyFromPool(string calldata symbol, uint price, uint volume, address token)
         external
         returns (address)
     {    
         erc20.approve(address(pool), price * volume / volumeBase);
-        return pool.buy(code, price, volume, token);
+        return pool.buy(symbol, price, volume, token);
     }
     
-    function sellToPool(string calldata code, uint price, uint volume) external {
+    function sellToPool(string calldata symbol, uint price, uint volume) external {
         
-        ERC20(exchange.resolveToken(code)).approve(address(pool), price * volume / volumeBase);
-        pool.sell(code, price, volume);
+        ERC20(exchange.resolveToken(symbol)).approve(address(pool), price * volume / volumeBase);
+        pool.sell(symbol, price, volume);
     }
 }

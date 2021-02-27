@@ -9,19 +9,19 @@ contract OptionToken is ERC20 {
 
     using SafeMath for uint;
 
-    string private code;
+    string private _symbol;
     address private issuer;
     address[] private holders;
 
-    constructor(string memory _code, address _issuer) public {
+    constructor(string memory _sb, address _issuer) public {
         
-        code = _code;
+        _symbol = _sb;
         issuer = _issuer;
     }
 
-    function getCode() external view returns (string memory) {
+    function symbol() external view returns (string memory) {
 
-        return code;
+        return _symbol;
     }
 
     function issue(address to, uint value) external {
@@ -36,18 +36,18 @@ contract OptionToken is ERC20 {
         require(balanceOf(msg.sender) >= value, "burn unallowed");
         removeBalance(msg.sender, value);
         _totalSupply = _totalSupply.sub(value);
-        OptionsExchange(issuer).burnOptions(code, msg.sender, value);
+        OptionsExchange(issuer).burnOptions(_symbol, msg.sender, value);
     }
 
     function writtenVolume(address owner) external view returns (uint) {
 
-        return OptionsExchange(issuer).writtenVolume(code, owner);
+        return OptionsExchange(issuer).writtenVolume(_symbol, owner);
     }
 
     function destroy() external {
         
         OptionsExchange exchange = OptionsExchange(issuer);
-        exchange.liquidateCode(code, uint(-1));
+        exchange.liquidateSymbol(_symbol, uint(-1));
 
         uint valTotal = exchange.balanceOf(address(this));
         uint valRemaining = valTotal;
@@ -80,7 +80,7 @@ contract OptionToken is ERC20 {
 
     function emitTransfer(address from, address to, uint value) override internal {
 
-        OptionsExchange(issuer).transferOwnership(code, from, to, value);
+        OptionsExchange(issuer).transferOwnership(_symbol, from, to, value);
         emit Transfer(from, to, value);
     }
 }

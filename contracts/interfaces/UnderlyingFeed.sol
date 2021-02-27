@@ -2,7 +2,7 @@ pragma solidity >=0.6.0;
 
 interface UnderlyingFeed {
 
-    function getCode() external view returns (string memory);
+    function symbol() external view returns (string memory);
 
     function getLatestPrice() external view returns (uint timestamp, int price);
 

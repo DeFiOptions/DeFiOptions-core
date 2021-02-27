@@ -7,7 +7,7 @@ contract TestQueryPool is Base {
 
     function testQueryWithoutFunds() public {
 
-        addCode();
+        addSymbol();
 
         queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy ATM");
         querySellAndAssert(applySellSpread(y[3]), 200 * volumeBase, "sell ATM");
@@ -29,7 +29,7 @@ contract TestQueryPool is Base {
         uint freeBalance = 80 * balance / 100;
         depositTokens(address(bob), balance);
 
-        addCode();
+        addSymbol();
 
         time.setFixedTime(1 days);
 
@@ -55,7 +55,7 @@ contract TestQueryPool is Base {
         uint balance = 1000 * calcCollateralUnit();
         depositTokens(address(bob), balance);
 
-        addCode();
+        addSymbol();
 
         time.setFixedTime(15 hours);
 
@@ -76,7 +76,7 @@ contract TestQueryPool is Base {
     )
         private
     {    
-        (uint ps, uint vs) = pool.queryBuy(code);
+        (uint ps, uint vs) = pool.queryBuy(symbol);
         Assert.equal(ps, expectPrice, message);
         Assert.equal(vs, expectedVolume, message);
     }
@@ -88,7 +88,7 @@ contract TestQueryPool is Base {
     )
         private
     {    
-        (uint ps, uint vs) = pool.querySell(code);
+        (uint ps, uint vs) = pool.querySell(symbol);
         Assert.equal(ps, expectPrice, message);
         Assert.equal(vs, expectedVolume, message);
     }

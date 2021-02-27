@@ -44,7 +44,7 @@ contract Base {
 
     uint[] x;
     uint[] y;
-    string code = "ETHM-EC-55e9-2592e3";
+    string symbol = "ETHM-EC-55e9-2592e3";
     
     function beforeEachDeploy() public {
 
@@ -101,7 +101,7 @@ contract Base {
         return (v * (fractionBase - spread)) / fractionBase;
     }
 
-    function addCode() internal {
+    function addSymbol() internal {
 
         x = [400e8, 450e8, 500e8, 550e8, 600e8, 650e8, 700e8];
         y = [
@@ -109,8 +109,8 @@ contract Base {
             25e8,  35e8,  45e8,  45e8, 105e8, 165e8, 225e8
         ];
         
-        pool.addCode(
-            code,
+        pool.addSymbol(
+            symbol,
             address(feed),
             strike,
             maturity,

@@ -93,8 +93,8 @@ library SafeMath {
      * division by zero. The result is rounded towards zero.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
+     * `revert` opsymbol (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opsymbol to revert (consuming all remaining gas).
      *
      * Requirements:
      *
@@ -109,8 +109,8 @@ library SafeMath {
      * division by zero. The result is rounded towards zero.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
+     * `revert` opsymbol (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opsymbol to revert (consuming all remaining gas).
      *
      * Requirements:
      *
@@ -129,8 +129,8 @@ library SafeMath {
      * Reverts when dividing by zero.
      *
      * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
+     * opsymbol (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opsymbol to revert (consuming all remaining gas).
      *
      * Requirements:
      *
@@ -145,8 +145,8 @@ library SafeMath {
      * Reverts with custom message when dividing by zero.
      *
      * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
+     * opsymbol (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opsymbol to revert (consuming all remaining gas).
      *
      * Requirements:
      *
