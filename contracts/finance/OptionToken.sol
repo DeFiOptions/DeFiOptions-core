@@ -39,6 +39,11 @@ contract OptionToken is ERC20 {
         OptionsExchange(issuer).burnOptions(code, msg.sender, value);
     }
 
+    function writtenVolume(address owner) external view returns (uint) {
+
+        return OptionsExchange(issuer).writtenVolume(code, owner);
+    }
+
     function destroy() external {
         
         OptionsExchange exchange = OptionsExchange(issuer);
@@ -63,11 +68,6 @@ contract OptionToken is ERC20 {
             exchange.transferBalance(msg.sender, valRemaining);
         }
         selfdestruct(msg.sender);
-    }
-
-    function writtenVolume(address owner) external view returns (uint) {
-
-        return OptionsExchange(issuer).writtenVolume(code, owner);
     }
 
     function addBalance(address owner, uint value) override internal {
