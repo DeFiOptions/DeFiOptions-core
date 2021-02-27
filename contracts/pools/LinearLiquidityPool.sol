@@ -109,9 +109,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
 
     function depositTokens(address to, address token, uint value) override external {
 
-        uint b0 = exchange.balanceOf(to);
-        depositTokensInExchange(address(this), token, value);
-        uint b1 = exchange.balanceOf(to);
+        uint b0 = exchange.balanceOf(address(this));
+        depositTokensInExchange(msg.sender, token, value);
+        uint b1 = exchange.balanceOf(address(this));
         int expBal = exchange.calcExpectedPayout(address(this)).add(
             int(exchange.balanceOf(address(this)))
         );
@@ -168,8 +168,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         volume = MoreMath.min(calcVolume(p, price, Operation.SELL), sellStock[code]);
     }
 
-    function buy(string calldata code, uint price, uint volume, address token) override external {
-
+    function buy(string calldata code, uint price, uint volume, address token)
+        override
+        external
+        returns (address addr)
+    {
         ensureValidCode(code);
 
         PricingParameters memory param = parameters[code];
@@ -177,7 +180,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         require(price >= p, "insufficient price");
 
         uint value = p.mul(volume).div(volumeBase);
-        depositTokensInExchange(address(this), token, value);
+        depositTokensInExchange(msg.sender, token, value);
 
         uint id = exchange.writeOptions(
             param.udlFeed,
@@ -191,7 +194,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
             "excessive volume"
         );
 
-        address addr = exchange.resolveToken(id);
+        addr = exchange.resolveToken(id);
         OptionToken tk = OptionToken(addr);
         tk.transfer(msg.sender, volume);
     }
@@ -301,12 +304,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         balance = sp > balance ? sp.sub(balance) : 0;
     }
 
-    function depositTokensInExchange(address to, address token, uint value) private {
+    function depositTokensInExchange(address sender, address token, uint value) private {
 
         ERC20 t = ERC20(token);
-        t.transferFrom(msg.sender, address(this), value);
+        t.transferFrom(sender, address(this), value);
         t.approve(address(exchange), value);
-        exchange.depositTokens(to, token, value);
+        exchange.depositTokens(address(this), token, value);
     }
 
     function addBalance(address _owner, uint value) override internal {

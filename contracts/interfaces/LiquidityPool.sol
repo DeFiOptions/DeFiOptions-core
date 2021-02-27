@@ -12,7 +12,9 @@ interface LiquidityPool {
 
     function querySell(string calldata code) external view returns (uint price, uint volume);
 
-    function buy(string calldata code, uint price, uint volume, address token) external;
+    function buy(string calldata code, uint price, uint volume, address token)
+        external
+        returns (address addr);
 
     function sell(string calldata code, uint price, uint volume) external;
 

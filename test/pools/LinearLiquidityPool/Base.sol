@@ -7,7 +7,7 @@ import "../../../contracts/finance/OptionsExchange.sol";
 import "../../../contracts/finance/OptionToken.sol";
 import "../../../contracts/pools/LinearLiquidityPool.sol";
 import "../../../contracts/governance/ProtocolSettings.sol";
-import "../../common/actors/OptionsTrader.sol";
+import "../../common/actors/PoolTrader.sol";
 import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
@@ -34,11 +34,15 @@ contract Base {
 
     LinearLiquidityPool pool;
     
-    OptionsTrader bob;
-    OptionsTrader alice;
+    PoolTrader bob;
+    PoolTrader alice;
     
     OptionsExchange.OptionType CALL = OptionsExchange.OptionType.CALL;
     OptionsExchange.OptionType PUT = OptionsExchange.OptionType.PUT;
+
+    uint[] x;
+    uint[] y;
+    string code = "ETHM-EC-55e9-2592e3";
     
     function beforeEachDeploy() public {
 
@@ -51,9 +55,6 @@ contract Base {
         pool = LinearLiquidityPool(deployer.getContractAddress("LinearLiquidityPool"));
         deployer.deploy();
 
-        bob = new OptionsTrader(address(exchange), address(time));
-        alice = new OptionsTrader(address(exchange), address(time));
-
         pool.setParameters(
             spread,
             reserveRatio,
@@ -64,6 +65,10 @@ contract Base {
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         settings.setDefaultUdlFeed(address(feed));
+        settings.setUdlFeed(address(feed), 1);
+
+        bob = new PoolTrader(address(erc20), address(pool));
+        alice = new PoolTrader(address(erc20), address(pool));
 
         feed.setPrice(ethInitialPrice);
         time.setFixedTime(0);
@@ -86,11 +91,44 @@ contract Base {
         OptionToken(token).destroy();
     }
 
-    function applyBuySpread(uint x) internal view returns (uint) {
-        return (x * (spread + fractionBase)) / fractionBase;
+    function applyBuySpread(uint v) internal view returns (uint) {
+        return (v * (spread + fractionBase)) / fractionBase;
     }
 
-    function applySellSpread(uint x) internal view returns (uint) {
-        return (x * (fractionBase - spread)) / fractionBase;
+    function applySellSpread(uint v) internal view returns (uint) {
+        return (v * (fractionBase - spread)) / fractionBase;
+    }
+
+    function addCode() internal {
+
+        x = [400e8, 450e8, 500e8, 550e8, 600e8, 650e8, 700e8];
+        y = [
+            30e8,  40e8,  50e8,  50e8, 110e8, 170e8, 230e8,
+            25e8,  35e8,  45e8,  45e8, 105e8, 165e8, 225e8
+        ];
+        
+        pool.addCode(
+            code,
+            address(feed),
+            550e8, // strike
+            30 days, // maturity
+            CALL,
+            time.getNow(),
+            x,
+            y,
+            100 * volumeBase, // buy stock
+            200 * volumeBase  // sell stock
+        );
+    }
+
+    function calcCollateralUnit() internal view returns (uint) {
+
+        return exchange.calcCollateral(
+            address(feed), 
+            volumeBase,
+            CALL,
+            550e8, // strike,
+            30 days // maturity
+        );
     }
 }
