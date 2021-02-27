@@ -15,6 +15,8 @@ import "../../common/mock/TimeProviderMock.sol";
 contract Base {
     
     int ethInitialPrice = 550e8;
+    uint strike = 550e8;
+    uint maturity = 30 days;
     
     uint err = 1; // rounding error
     uint cBase = 1e8; // comparison base
@@ -67,8 +69,8 @@ contract Base {
         settings.setDefaultUdlFeed(address(feed));
         settings.setUdlFeed(address(feed), 1);
 
-        bob = new PoolTrader(address(erc20), address(pool));
-        alice = new PoolTrader(address(erc20), address(pool));
+        bob = new PoolTrader(address(erc20), address(exchange), address(pool));
+        alice = new PoolTrader(address(erc20), address(exchange), address(pool));
 
         feed.setPrice(ethInitialPrice);
         time.setFixedTime(0);
@@ -110,8 +112,8 @@ contract Base {
         pool.addCode(
             code,
             address(feed),
-            550e8, // strike
-            30 days, // maturity
+            strike,
+            maturity,
             CALL,
             time.getNow(),
             x,
@@ -127,8 +129,8 @@ contract Base {
             address(feed), 
             volumeBase,
             CALL,
-            550e8, // strike,
-            30 days // maturity
+            strike,
+            maturity
         );
     }
 }

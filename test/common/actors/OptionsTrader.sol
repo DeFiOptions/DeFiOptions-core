@@ -48,13 +48,13 @@ contract OptionsTrader {
         uint volume,
         OptionsExchange.OptionType optType,
         int strike, 
-        uint timeTomaturity
+        uint timeToMaturity
     )
         public
         returns (uint id)
     {
         id = exchange.writeOptions(
-            address(0), volume * volumeBase, optType, uint(strike), time.getNow() + timeTomaturity
+            address(0), volume * volumeBase, optType, uint(strike), time.getNow() + timeToMaturity
         );
     }
 
