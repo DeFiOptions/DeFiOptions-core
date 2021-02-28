@@ -23,7 +23,7 @@ contract PoolTrader {
     
     function balance() external view returns (uint) {
         
-        return erc20.balanceOf(addr);
+        return erc20.balanceOf(addr) + exchange.balanceOf(addr);
     }
     
     function approve(address spender, uint value) external {
@@ -51,12 +51,12 @@ contract PoolTrader {
         );
     }
     
-    function buyFromPool(string calldata symbol, uint price, uint volume, address token)
+    function buyFromPool(string calldata symbol, uint price, uint volume)
         external
         returns (address)
     {    
         erc20.approve(address(pool), price * volume / volumeBase);
-        return pool.buy(symbol, price, volume, token);
+        return pool.buy(symbol, price, volume, address(erc20));
     }
     
     function sellToPool(string calldata symbol, uint price, uint volume) external {
