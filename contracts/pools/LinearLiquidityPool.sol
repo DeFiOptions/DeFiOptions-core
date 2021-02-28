@@ -61,7 +61,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
         volumeBase = exchange.getVolumeBase();
-        fractionBase = 1e6;
+        fractionBase = 1e9;
     }
 
     function setParameters(
@@ -122,11 +122,16 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         uint b0 = exchange.balanceOf(address(this));
         depositTokensInExchange(msg.sender, token, value);
         uint b1 = exchange.balanceOf(address(this));
-        int expBal = exchange.calcExpectedPayout(address(this)).add(
-            int(exchange.balanceOf(address(this)))
-        );
-        uint v = b1.sub(b0).mul(_totalSupply).div(uint(expBal));
+        int expBal = exchange.calcExpectedPayout(address(this)).add(int(b1));
+
+        uint ts = _totalSupply;
+        uint p = b1.sub(b0).mul(fractionBase).div(uint(expBal));
+        uint v = ts > 0 ?
+            ts.mul(p).div(fractionBase.sub(p)) : 
+            uint(expBal);
+
         addBalance(to, v);
+        _totalSupply = ts.add(v);
     }
 
     function queryBuy(string memory symbol)
@@ -300,7 +305,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         pure
         returns (uint price)
     {
-        uint k = offset + j;
+        uint k = offset.add(j);
         price = p.y[k].sub(p.y[k - 1]).mul(
             xp.sub(p.x[j - 1])
         ).div(

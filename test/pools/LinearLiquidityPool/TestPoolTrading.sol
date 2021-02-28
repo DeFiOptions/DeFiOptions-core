@@ -11,7 +11,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         (uint buyPrice,) = pool.queryBuy(symbol);
@@ -38,7 +38,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         (uint buyPrice,) = pool.queryBuy(symbol);
@@ -60,7 +60,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         (uint buyPrice,) = pool.queryBuy(symbol);
@@ -84,7 +84,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         alice.depositInExchange(5 * cUnit);
@@ -113,7 +113,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         alice.depositInExchange(5 * cUnit);
@@ -140,7 +140,7 @@ contract TestPoolTrading is Base {
 
         uint cUnit = calcCollateralUnit();
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         alice.depositInExchange(5 * cUnit);
@@ -166,7 +166,7 @@ contract TestPoolTrading is Base {
         uint cUnit = calcCollateralUnit();
         uint volume = 15 * volumeBase / 10;
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         (uint buyPrice,) = pool.queryBuy(symbol);
@@ -194,7 +194,7 @@ contract TestPoolTrading is Base {
         uint cUnit = calcCollateralUnit();
         uint volume = 2 * volumeBase;
 
-        depositTokens(address(bob), 10 * cUnit);
+        depositInPool(address(bob), 10 * cUnit);
         erc20.issue(address(alice), 5 * cUnit);
 
         alice.depositInExchange(2 * cUnit);
@@ -205,7 +205,7 @@ contract TestPoolTrading is Base {
         alice.sellToPool(symbol, sellPrice, volume);
 
         (uint buyPrice,) = pool.queryBuy(symbol);
-        address addr = alice.buyFromPool(symbol, buyPrice, volume);
+        alice.buyFromPool(symbol, buyPrice, volume);
 
         uint diff = (buyPrice - sellPrice) * volume / volumeBase;
 

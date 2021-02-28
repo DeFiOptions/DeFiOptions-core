@@ -19,13 +19,13 @@ contract Base {
     uint maturity = 30 days;
     
     uint err = 1; // rounding error
-    uint cBase = 1e8; // comparison base
+    uint cBase = 1e6; // comparison base
     uint volumeBase = 1e9;
     uint timeBase = 1 hours;
 
-    uint spread = 5e4; // 5%
-    uint reserveRatio = 20e4; // 20%
-    uint fractionBase = 1e6;
+    uint spread = 5e7; // 5%
+    uint reserveRatio = 20e7; // 20%
+    uint fractionBase = 1e9;
 
     EthFeedMock feed;
     ERC20Mock erc20;
@@ -76,21 +76,11 @@ contract Base {
         time.setFixedTime(0);
     }
 
-    function depositTokens(address to, uint value) internal {
+    function depositInPool(address to, uint value) internal {
         
         erc20.issue(address(this), value);
         erc20.approve(address(pool), value);
         pool.depositTokens(to, address(erc20), value);
-    }
-
-    function destroyOptionToken(uint id) internal {
-
-        OptionToken(exchange.resolveToken(id)).destroy();
-    }
-
-    function destroyOptionToken(address token) internal {
-
-        OptionToken(token).destroy();
     }
 
     function applyBuySpread(uint v) internal view returns (uint) {

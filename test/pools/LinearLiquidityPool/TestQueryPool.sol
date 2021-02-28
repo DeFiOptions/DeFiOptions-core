@@ -27,7 +27,7 @@ contract TestQueryPool is Base {
 
         uint balance = 50 * calcCollateralUnit();
         uint freeBalance = 80 * balance / 100;
-        depositTokens(address(bob), balance);
+        depositInPool(address(bob), balance);
 
         addSymbol();
 
@@ -53,7 +53,7 @@ contract TestQueryPool is Base {
     function testQueryHalfway() public {
 
         uint balance = 1000 * calcCollateralUnit();
-        depositTokens(address(bob), balance);
+        depositInPool(address(bob), balance);
 
         addSymbol();
 
