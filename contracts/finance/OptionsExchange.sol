@@ -12,6 +12,7 @@ import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./CreditProvider.sol";
 import "./OptionToken.sol";
+import "./OptionTokenFactory.sol";
 
 contract OptionsExchange is ManagedContract {
 
@@ -40,6 +41,7 @@ contract OptionsExchange is ManagedContract {
     TimeProvider private time;
     ProtocolSettings private settings;
     CreditProvider private creditProvider;
+    OptionTokenFactory private factory;
 
     mapping(uint => OrderData) private orders;
     mapping(address => uint[]) private book;
@@ -70,6 +72,7 @@ contract OptionsExchange is ManagedContract {
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = deployer.getContractAddress("CreditToken");
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
+        factory = OptionTokenFactory(deployer.getContractAddress("OptionTokenFactory"));
 
         serial = 1;
         volumeBase = 1e9;
@@ -399,12 +402,7 @@ contract OptionsExchange is ManagedContract {
 
         address tk = optionTokens[symbol];
         if (tk == address(0)) {
-            tk = address(
-                new OptionToken(
-                    symbol,
-                    address(this)
-                )
-            );
+            tk = factory.create(symbol);
             optionTokens[symbol] = tk;
             emit CreateSymbol(symbol);
         }

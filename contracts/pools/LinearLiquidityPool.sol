@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "../deployment/ManagedContract.sol";
 import "../finance/OptionsExchange.sol";
+import "../finance/RedeemableToken.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/LiquidityPool.sol";
 import "../interfaces/UnderlyingFeed.sol";
@@ -10,7 +11,7 @@ import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 
-contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
+contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken {
 
     using SafeMath for uint;
     using SignedSafeMath for int;
@@ -30,14 +31,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
     }
 
     TimeProvider private time;
-    OptionsExchange private exchange;
 
     mapping(string => PricingParameters) private parameters;
     mapping(string => uint) private written;
     mapping(string => uint) private holding;
 
     address private owner;
-    address[] private holders;
     uint private spread;
     uint private reserveRatio;
     uint private maturity;
@@ -75,6 +74,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
         spread = _spread;
         reserveRatio = _reserveRatio;
         maturity = _maturity;
+    }
+
+    function redeemAllowed() override public returns (bool) {
+        
+        return time.getNow() >= maturity;
     }
 
     function addSymbol(
@@ -235,31 +239,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, ERC20 {
 
         require(_holding <= param.sellStock, "excessive volume");
         holding[symbol] = _holding;
-    }
-
-    function destroy() external {
-
-        require(maturity < time.getNow(), "unfit for destruction");
-
-        uint valTotal = exchange.balanceOf(address(this));
-        uint valRemaining = valTotal;
-        
-        for (uint i = 0; i < holders.length && valRemaining > 0; i++) {
-
-            uint bal = balanceOf(holders[i]);
-            
-            if (bal > 0) {
-                uint valTransfer = valTotal.mul(bal).div(_totalSupply);
-                exchange.transferBalance(holders[i], valTransfer);
-                valRemaining = valRemaining.sub(valTransfer);
-                removeBalance(holders[i], bal);
-            }
-        }
-
-        if (valRemaining > 0) {
-            exchange.transferBalance(msg.sender, valRemaining);
-        }
-        selfdestruct(msg.sender);
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)
