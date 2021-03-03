@@ -106,6 +106,7 @@ contract Base {
             maturity,
             CALL,
             time.getNow(),
+            time.getNow() + 1 days,
             x,
             y,
             100 * volumeBase, // buy stock

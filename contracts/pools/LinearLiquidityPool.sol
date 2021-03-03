@@ -24,6 +24,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint maturity;
         OptionsExchange.OptionType optType;
         uint t0;
+        uint t1;
         uint[] x;
         uint[] y;
         uint buyStock;
@@ -88,6 +89,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint _maturity,
         OptionsExchange.OptionType optType,
         uint t0,
+        uint t1,
         uint[] calldata x,
         uint[] calldata y,
         uint buyStock,
@@ -103,6 +105,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             _maturity,
             optType,
             t0,
+            t1,
             x,
             y,
             buyStock,
@@ -251,14 +254,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         (uint j, uint xp) = findUdlPrice(p);
 
         uint _now = time.getNow();
-        require(_now >= p.t0 && _now <= p.t0.add(1 days), "invalid pricing parameters");
+        uint dt = p.t1.sub(p.t0);
+        require(_now >= p.t0 && _now <= p.t1, "invalid pricing parameters");
         uint t = _now.sub(p.t0);
         uint p0 = calcOptPriceAt(p, 0, j, xp);
         uint p1 = calcOptPriceAt(p, p.x.length, j, xp);
 
-        price = p0.mul(1 days).sub(
+        price = p0.mul(dt).sub(
             t.mul(p0.sub(p1))
-        ).mul(f).div(fractionBase).div(1 days);
+        ).mul(f).div(fractionBase).div(dt);
     }
 
     function findUdlPrice(PricingParameters memory p) private view returns (uint j, uint xp) {
