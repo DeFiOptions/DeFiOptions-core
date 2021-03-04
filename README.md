@@ -24,7 +24,7 @@ Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/ma
 
 ## Table of contents
 
-* [Coding Reference](https://github.com/TCGV/DeFiOptions#coding-Reference)
+* [Coding Reference](https://github.com/TCGV/DeFiOptions#coding-reference)
   * [Making a deposit](https://github.com/TCGV/DeFiOptions#making-a-deposit)
   * [Writing options](https://github.com/TCGV/DeFiOptions#writing-options)
   * [Collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation)
@@ -32,6 +32,7 @@ Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/ma
   * [Burning options](https://github.com/TCGV/DeFiOptions#burning-options)
   * [Underlying feeds](https://github.com/TCGV/DeFiOptions#underlying-feeds)
   * [Credit tokens](https://github.com/TCGV/DeFiOptions#credit-tokens)
+  * [Linear liquidity pool](https://github.com/TCGV/DeFiOptions#linear-liquidity-pool)
 * [Kovan addresses](https://github.com/TCGV/DeFiOptions#kovan-addresses)
 * [Get involved](https://github.com/TCGV/DeFiOptions#get-involved)
   * [Validate code](https://github.com/TCGV/DeFiOptions#validate-code)
@@ -210,7 +211,7 @@ Both the `calcCollateral` and the `writeOptions` exchange functions receive the 
 ```solidity
 interface UnderlyingFeed {
 
-    function getCode() external view returns (string memory);
+    function symbol() external view returns (string memory);
 
     function getLatestPrice() external view returns (uint timestamp, int price);
 
@@ -226,7 +227,7 @@ interface UnderlyingFeed {
 
 The exchange depends on these functions to calculate options intrinsic value, collateral requirements and to liquidate positions.
 
-* The `getCode` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e10-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
+* The `symbol` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e10-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
 * The `getLatestPrice` function retrieves the latest quote for the option underlying, for calculating its intrinsic value.
 * The `getPrice` function on the other hand retrieves the first price for the underlying registered in the blockchain after a specific timestamp position, and is used to liquidate the option token contract at maturity.
 * The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation) section.
@@ -253,17 +254,83 @@ In case there aren't sufficient stablecoin tokens available to fulfil the reques
 
 The exchange will ensure funds for burning credit tokens when debtors repay their debts (for instance when an option token contract is liquidated and the debtor receives profits, which are instantly discounted for pending debts before becoming available to the debtor) or through options settlement processing fees, which by default are not charged, but can be configured upon demand.
 
+### Linear liquidity pool
+
+This project provides a liquidity pool implementation that uses linear interpolation for calculating buy/sell option prices. The diagram below illustrates how the linear interpolation liquidity pool fits in the options exchange trading environment, how market agents interact with it, and provides some context on the pool pricing model:
+
+<p align="center">
+<img src="https://github.com/TCGV/DeFiOptions/blob/master/linear-liquidity-pool.PNG?raw=true" width="500" />
+</p>
+
+The pool holds a pricing parameters data structure for each tradable option which contains a discretized pricing curve calculated off-chain based on a traditional option pricing model (ex: Monte Carlo) that’s “uploaded” to the pool storage. The pool pricing function receives the underlying price (fetched from the underlying price feed) and the current timestamp as inputs, then it interpolates the discrete curve to obtain the desired option’s target price.
+
+#### Interface
+
+The following liquidity pool interface is provided for those willing to interact with the options exchange environment:
+
+```solidity
+interface LiquidityPool {
+
+    event AddSymbol(string indexed symbol);
+    
+    event RemoveSymbol(string indexed symbol);
+
+    function depositTokens(address to, address token, uint value) external;
+
+    function queryBuy(string calldata symbol) external view returns (uint price, uint volume);
+
+    function querySell(string calldata symbol) external view returns (uint price, uint volume);
+
+    function buy(string calldata symbol, uint price, uint volume, address token)
+        external
+        returns (address addr);
+
+    function sell(string calldata symbol, uint price, uint volume) external;
+}
+```
+
+Liquidity providers can call the `depositTokens` function for depositing compatible stablecoin tokens into the pool and receive pool tokens in return following a “post-money” valuation strategy, i.e., proportionally to their contribution to the total amount of capital allocated in the pool including the expected value of open option positions. This allows new liquidity providers to enter the pool at any time without harm to pre-existent providers.
+
+Funds are locked in the pool until it reaches the pre-defined liquidation date, whereupon the pool ceases operations and profits are distributed to liquidity providers proportionally to their participation in the total supply of pool tokens.
+
+#### Buying from the pool
+
+Traders should first call the `queryBuy` function which receives an option symbol and returns both the spread-adjusted “buy” price and available volume for purchase from the pool, and then call the `buy` function specifying the option symbol, queried “buy” price, desired volume for purhcase and the address of the stablecoin used as payment:
+
+```solidity
+(uint buyPrice,) = pool.queryBuy(symbol);
+uint volume = 1 * volumeBase;
+stablecoin.approve(address(pool), price * volume / volumeBase);
+pool.buy(symbol, price, volume, address(stablecoin));
+```
+
+#### Selling to the pool
+
+Likewise traders should first call the `querySell` function which receives an option symbol and returns both the spread-adjusted “sell” price and available volume the pool is able to purchase, and then call the `sell` function specifying the option symbol, queried “sell” price and the pre-approved option token transfer volume being sold:
+
+```solidity
+(uint sellPrice,) = pool.querySell(symbol);
+uint volume = 1 * volumeBase;
+
+OptionToken token OptionToken(exchange.resolveToken(symbol));
+token.approve(address(pool), price * volume / volumeBase);
+pool.sell(symbol, price, volume);
+```
+
+Upon a successful transaction payment for the transferred option tokens is provided in the form of balance transferred from the pool account to the `msg.sender` account within the options exchange.
+
 ## Kovan addresses
 
 The Options Exchange is available on kovan testnet for validation. Contract addresses are provided in the following table:
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol) | [0x15708beacc98a32b40227a8385c9f3c5abffa422](https://kovan.etherscan.io/address/0x15708beacc98a32b40227a8385c9f3c5abffa422) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)         | [0xee53535e2fafc4f8e435d4071cf1422460a938f9](https://kovan.etherscan.io/address/0xee53535e2fafc4f8e435d4071cf1422460a938f9) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4](https://kovan.etherscan.io/address/0xA7fb51007A7ba3F4cC9B5500722C55A007BBBaB4) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)  | [0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1](https://kovan.etherscan.io/address/0x9f9C4f51fDe9caA9A07638C67551035b7a7E37F1) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)              | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
@@ -294,7 +361,7 @@ The main goal of this project is to deploy Options Exchange to mainnet, however 
 There are a few major technical challenges that will need to get dealt with if the project gains traction and is deployed to mainnet:
 
 * Development of a dapp front-end application to make the exchange accessible to non-developers
-* Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models
+* ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
 * Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
 * Improvement of the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
 
