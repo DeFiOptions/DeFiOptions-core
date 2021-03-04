@@ -33,6 +33,9 @@ Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/ma
   * [Underlying feeds](https://github.com/TCGV/DeFiOptions#underlying-feeds)
   * [Credit tokens](https://github.com/TCGV/DeFiOptions#credit-tokens)
   * [Linear liquidity pool](https://github.com/TCGV/DeFiOptions#linear-liquidity-pool)
+    * [Pool interface](https://github.com/TCGV/DeFiOptions#pool-interface)
+    * [Buying from the pool](https://github.com/TCGV/DeFiOptions#buying-from-the-pool)
+    * [Selling to the pool](https://github.com/TCGV/DeFiOptions#selling-to-the-pool)
 * [Kovan addresses](https://github.com/TCGV/DeFiOptions#kovan-addresses)
 * [Get involved](https://github.com/TCGV/DeFiOptions#get-involved)
   * [Validate code](https://github.com/TCGV/DeFiOptions#validate-code)
@@ -264,7 +267,7 @@ This project provides a liquidity pool implementation that uses linear interpola
 
 The pool holds a pricing parameters data structure for each tradable option which contains a discretized pricing curve calculated off-chain based on a traditional option pricing model (ex: Monte Carlo) that’s “uploaded” to the pool storage. The pool pricing function receives the underlying price (fetched from the underlying price feed) and the current timestamp as inputs, then it interpolates the discrete curve to obtain the desired option’s target price.
 
-#### Interface
+#### Pool interface
 
 The following liquidity pool interface is provided for those willing to interact with the options exchange environment:
 
