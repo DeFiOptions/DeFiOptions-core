@@ -66,12 +66,12 @@ contract TestWriteOptions is Base {
         Assert.equal(exchange.getBookLength(), 1, "book length t0");
 
         OptionsTrader h1 = new OptionsTrader(address(exchange), address(time));
-        OptionsTrader h2 = new OptionsTrader(address(exchange), address(time));
+        address address_h2 = address(0x0000000000000000000000000000000000000001);
         OptionsTrader h3 = new OptionsTrader(address(exchange), address(time));
         OptionsTrader h4 = new OptionsTrader(address(exchange), address(time));
 
         bob.transferOptions(address(h1), id, 100);
-        bob.transferOptions(address(h2), id, 200);
+        bob.transferOptions(address_h2, id, 200);
         bob.transferOptions(address(h3), id, 300);
         bob.transferOptions(address(h4), id, 400);
 
@@ -79,19 +79,19 @@ contract TestWriteOptions is Base {
 
         Assert.equal(tk.balanceOf(address(bob)), 100 * volumeBase, "bob options");
         Assert.equal(tk.balanceOf(address(h1)), 100 * volumeBase, "h1 options");
-        Assert.equal(tk.balanceOf(address(h2)), 200 * volumeBase, "h2 options");
+        Assert.equal(tk.balanceOf(address_h2), 200 * volumeBase, "h2 options");
         Assert.equal(tk.balanceOf(address(h3)), 300 * volumeBase, "h3 options");
         Assert.equal(tk.balanceOf(address(h4)), 400 * volumeBase, "h4 options");
 
         Assert.equal(exchange.getBookLength(), 5, "book length t1");
 
-        h1.transferOptions(address(h2), id, 100);
-        h3.transferOptions(address(h2), id, 100);
-        h4.transferOptions(address(h2), id, 100);
+        h1.transferOptions(address_h2, id, 100);
+        h3.transferOptions(address_h2, id, 100);
+        h4.transferOptions(address_h2, id, 100);
 
         Assert.equal(tk.balanceOf(address(bob)), 100 * volumeBase, "bob options");
         Assert.equal(tk.balanceOf(address(h1)), 0, "h1 options");
-        Assert.equal(tk.balanceOf(address(h2)), 500 * volumeBase, "h2 options");
+        Assert.equal(tk.balanceOf(address_h2), 500 * volumeBase, "h2 options");
         Assert.equal(tk.balanceOf(address(h3)), 200 * volumeBase, "h3 options");
         Assert.equal(tk.balanceOf(address(h4)), 300 * volumeBase, "h4 options");
 
