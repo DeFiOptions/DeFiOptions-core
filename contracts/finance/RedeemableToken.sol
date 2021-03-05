@@ -1,6 +1,7 @@
 pragma solidity >=0.6.0;
 
 import "../../contracts/finance/OptionsExchange.sol";
+import "../../contracts/utils/Arrays.sol";
 import "../../contracts/utils/ERC20.sol";
 import "../../contracts/utils/SafeMath.sol";
 
@@ -14,18 +15,23 @@ abstract contract RedeemableToken is ERC20 {
 
     function redeemAllowed() virtual public returns(bool);
 
-    function redeem(uint i) virtual public returns (uint) {
+    function redeem(uint index) external returns (uint) {
 
-        require(redeemAllowed());
+        require(redeemAllowed(), "redeem not allowed");
 
         uint v = exchange.balanceOf(address(this));
-        (uint bal, uint val) = redeem(v, v, _totalSupply, i);
+        (uint bal, uint val) = redeem(v,  _totalSupply, index);
         _totalSupply = _totalSupply.sub(bal);
 
         return val;
     }
 
-    function destroy() virtual public {
+    function destroy() external {
+
+        destroy(uint(-1));
+    }
+
+    function destroy(uint limit) public {
 
         require(redeemAllowed());
 
@@ -34,10 +40,12 @@ abstract contract RedeemableToken is ERC20 {
         uint supplyTotal = _totalSupply;
         uint supplyRemaining = _totalSupply;
         
-        for (uint i = 0; i < holders.length && valRemaining > 0; i++) {
-            (uint bal, uint val) = redeem(valTotal, valTotal, supplyTotal, i);
+        for (uint i = holders.length - 1; i != uint(-1) && limit != 0 && valRemaining > 0; i--) {
+            (uint bal, uint val) = redeem(valTotal, supplyTotal, i);
             valRemaining = valRemaining.sub(val);
             supplyRemaining = supplyRemaining.sub(bal);
+            Arrays.removeAtIndex(holders, i);
+            limit--;
         }
         
         if (valRemaining > 0) {
@@ -51,16 +59,16 @@ abstract contract RedeemableToken is ERC20 {
         }
     }
 
-    function redeem(uint valTotal, uint valRemaining, uint supplyTotal, uint i) 
+    function redeem(uint valTotal, uint supplyTotal, uint i) 
         private
         returns (uint bal, uint val)
     {
         bal = balanceOf(holders[i]);
         
         if (bal > 0) {
-            val = valTotal.mul(bal).div(supplyTotal);
+            uint b = 1e3;
+            val = MoreMath.round(valTotal.mul(bal.mul(b)).div(supplyTotal), b);
             exchange.transferBalance(holders[i], val);
-            valRemaining = valRemaining.sub(val);
             removeBalance(holders[i], bal);
         }
     }

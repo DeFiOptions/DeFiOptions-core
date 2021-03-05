@@ -8,6 +8,12 @@ library Arrays {
         array.pop();
     }
 
+    function removeAtIndex(address[] storage array, uint index) internal {
+
+        array[index] = array[array.length - 1];
+        array.pop();
+    }
+
     function removeItem(uint[] storage array, uint item) internal returns (bool) {
 
         for (uint i = 0; i < array.length; i++) {

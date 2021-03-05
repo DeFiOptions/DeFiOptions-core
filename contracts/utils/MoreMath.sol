@@ -8,6 +8,11 @@ library MoreMath {
     using SafeMath for uint;
     using SignedSafeMath for int;
 
+    function round(uint v, uint b) internal pure returns (uint) {
+
+        return v.div(b).add((v % b) >= b.div(2) ? 1 : 0);
+    }
+
     function powAndMultiply(uint n, uint d, uint e, uint f) internal pure returns (uint) {
         
         if (e == 0) {

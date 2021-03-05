@@ -343,7 +343,7 @@ contract OptionsExchange is ManagedContract {
     function getBookLength() external view returns (uint len) {
         
         for (uint i = 0; i < serial; i++) {
-            if (isValid(orders[i])){
+            if (isValid(orders[i])) {
                 len++;
             }
         }

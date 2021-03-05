@@ -133,9 +133,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         uint ts = _totalSupply;
         uint p = b1.sub(b0).mul(fractionBase).div(uint(expBal));
+
+        uint b = 1e3;
         uint v = ts > 0 ?
-            ts.mul(p).div(fractionBase.sub(p)) : 
-            uint(expBal);
+            ts.mul(p).mul(b).div(fractionBase.sub(p)) : 
+            uint(expBal).mul(b);
+        v = MoreMath.round(v, b);
 
         addBalance(to, v);
         _totalSupply = ts.add(v);
