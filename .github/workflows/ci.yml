@@ -18,4 +18,4 @@ jobs:
       - uses: actions/setup-node@v1
       - run: npm install -g truffle
 
-      - run: truffle test .\test\finance\OptionsExchange\TestExchangeDeposit.sol .\test\finance\OptionsExchange\TestOptionIntrinsicValue.sol .\test\finance\OptionsExchange\TestOptionLiquidation.sol .\test\finance\OptionsExchange\TestOptionTrading.sol .\test\finance\OptionsExchange\TestWriteOptions.sol --compile-all
+      - run: truffle test .\test\finance\OptionsExchange\TestExchangeDeposit.sol .\test\finance\OptionsExchange\TestExpectedPayout.sol .\test\finance\OptionsExchange\TestOptionIntrinsicValue.sol .\test\finance\OptionsExchange\TestOptionLiquidation.sol .\test\finance\OptionsExchange\TestOptionTrading.sol .\test\finance\OptionsExchange\TestWriteOptions.sol --compile-all
