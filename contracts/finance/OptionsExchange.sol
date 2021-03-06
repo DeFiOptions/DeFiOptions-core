@@ -53,7 +53,6 @@ contract OptionsExchange is ManagedContract {
     uint private volumeBase;
     uint private timeBase;
     uint private sqrtTimeBase;
-    address private creditToken;
 
     event CreateSymbol(string indexed symbol);
 
@@ -70,7 +69,6 @@ contract OptionsExchange is ManagedContract {
 
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
-        creditToken = deployer.getContractAddress("CreditToken");
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         factory = OptionTokenFactory(deployer.getContractAddress("OptionTokenFactory"));
 
