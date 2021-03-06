@@ -267,6 +267,8 @@ This project provides a liquidity pool implementation that uses linear interpola
 
 The pool holds a pricing parameters data structure for each tradable option which contains a discretized pricing curve calculated off-chain based on a traditional option pricing model (ex: Monte Carlo) that’s “uploaded” to the pool storage. The pool pricing function receives the underlying price (fetched from the underlying price feed) and the current timestamp as inputs, then it interpolates the discrete curve to obtain the desired option’s target price.
 
+A fixed spread is applied on top of the option’s target price for deriving its buy price above the target price, and sell price below the target price. This spread can be freely defined by the pool operator and should be high enough for ensuring the pool is profitable, but not too high as to demotivate traders.
+
 #### Pool interface
 
 The following liquidity pool interface is provided for those willing to interact with the options exchange environment:
@@ -298,7 +300,7 @@ Funds are locked in the pool until it reaches the pre-defined liquidation date, 
 
 #### Buying from the pool
 
-Traders should first call the `queryBuy` function which receives an option symbol and returns both the spread-adjusted “buy” price and available volume for purchase from the pool, and then call the `buy` function specifying the option symbol, queried “buy” price, desired volume for purhcase and the address of the stablecoin used as payment:
+Traders should first call the `queryBuy` function which receives an option symbol and returns both the spread-adjusted “buy” price and available volume for purchase from the pool, and then call the `buy` function specifying the option symbol, queried “buy” price, desired volume for purchase and the address of the stablecoin used as payment:
 
 ```solidity
 (uint buyPrice,) = pool.queryBuy(symbol);
@@ -328,11 +330,11 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0000000000000000000000000000000000000000](https://kovan.etherscan.io/address/0x0000000000000000000000000000000000000000) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x0E5C5820a8Af77f0FCd62178477B0c00e6F4E348](https://kovan.etherscan.io/address/0x0E5C5820a8Af77f0FCd62178477B0c00e6F4E348) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0xA0488f71Bf637d5637121990Ea26a1FE8D011cfc](https://kovan.etherscan.io/address/0xA0488f71Bf637d5637121990Ea26a1FE8D011cfc) |
+| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xBcf4e0b7e44adF21af6837435C3cf9948c2A1555](https://kovan.etherscan.io/address/0xBcf4e0b7e44adF21af6837435C3cf9948c2A1555) |
+| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xAb9ad644B09acBccA34C94691A008328828C2B0F](https://kovan.etherscan.io/address/0xAb9ad644B09acBccA34C94691A008328828C2B0F) |
+| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x98CBDc6C1C135A78EbEaB3E4CC032753117e190c](https://kovan.etherscan.io/address/0x98CBDc6C1C135A78EbEaB3E4CC032753117e190c) |
 | [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
