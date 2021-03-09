@@ -330,9 +330,9 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x0E5C5820a8Af77f0FCd62178477B0c00e6F4E348](https://kovan.etherscan.io/address/0x0E5C5820a8Af77f0FCd62178477B0c00e6F4E348) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0xA0488f71Bf637d5637121990Ea26a1FE8D011cfc](https://kovan.etherscan.io/address/0xA0488f71Bf637d5637121990Ea26a1FE8D011cfc) |
-| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xBcf4e0b7e44adF21af6837435C3cf9948c2A1555](https://kovan.etherscan.io/address/0xBcf4e0b7e44adF21af6837435C3cf9948c2A1555) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0xef1029a23cbaf78823a89b4f793c293163a65fcb](https://kovan.etherscan.io/address/0xef1029a23cbaf78823a89b4f793c293163a65fcb) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x286e5ce4c2231279750aa79eff7c097f85e309e9](https://kovan.etherscan.io/address/0x286e5ce4c2231279750aa79eff7c097f85e309e9) |
+| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x5e40a65621d14102e2fa532694bcd640bdd53cfb](https://kovan.etherscan.io/address/0x5e40a65621d14102e2fa532694bcd640bdd53cfb) |
 | [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xAb9ad644B09acBccA34C94691A008328828C2B0F](https://kovan.etherscan.io/address/0xAb9ad644B09acBccA34C94691A008328828C2B0F) |
 | [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x98CBDc6C1C135A78EbEaB3E4CC032753117e190c](https://kovan.etherscan.io/address/0x98CBDc6C1C135A78EbEaB3E4CC032753117e190c) |
 | [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |

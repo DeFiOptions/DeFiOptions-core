@@ -8,7 +8,10 @@ const GovToken = artifacts.require("GovToken");
 
 const CreditToken = artifacts.require("CreditToken");
 const CreditProvider = artifacts.require("CreditProvider");
+const OptionTokenFactory = artifacts.require("OptionTokenFactory");
 const OptionsExchange = artifacts.require("OptionsExchange");
+
+const LinearLiquidityPool = artifacts.require("LinearLiquidityPool");
 
 module.exports = async function(deployer) {
 
@@ -19,5 +22,7 @@ module.exports = async function(deployer) {
   await deployer.deploy(CreditToken, Deployer.address);
   await deployer.deploy(GovToken, Deployer.address);
   await deployer.deploy(CreditProvider, Deployer.address);
+  await deployer.deploy(OptionTokenFactory, Deployer.address);
   await deployer.deploy(OptionsExchange, Deployer.address);
+  await deployer.deploy(LinearLiquidityPool, Deployer.address);
 };
