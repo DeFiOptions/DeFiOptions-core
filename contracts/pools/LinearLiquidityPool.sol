@@ -42,10 +42,10 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private reserveRatio;
     uint private maturity;
 
-    uint timeBase;
-    uint sqrtTimeBase;
-    uint volumeBase;
-    uint fractionBase;
+    uint private timeBase;
+    uint private sqrtTimeBase;
+    uint private volumeBase;
+    uint private fractionBase;
 
     constructor(address deployer) public {
 
@@ -308,20 +308,37 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         view
         returns (uint volume)
     {
-        uint coll = exchange.calcCollateral(
-            p.udlFeed,
-            volumeBase,
-            p.optType,
-            p.strike,
-            p.maturity
-        );
+        uint fb = calcFreeBalance();
 
         if (op == Operation.BUY) {
+
+            uint coll = exchange.calcCollateral(
+                p.udlFeed,
+                volumeBase,
+                p.optType,
+                p.strike,
+                p.maturity
+            );
+
             volume = coll <= price ? uint(-1) :
-                calcFreeBalance().mul(volumeBase).div(coll.sub(price));
+                fb.mul(volumeBase).div(coll.sub(price));
+
         } else {
-            volume = price <= coll ? uint(-1) :
-                calcFreeBalance().mul(volumeBase).div(price.sub(coll));
+            
+            uint iv = uint(exchange.calcIntrinsicValue(
+                p.udlFeed,
+                p.optType,
+                p.strike,
+                p.maturity
+            ));
+
+            volume = price <= iv ? uint(-1) :
+                fb.mul(volumeBase).div(price.sub(iv));
+
+            volume = MoreMath.min(
+                volume, 
+                exchange.balanceOf(address(this)).mul(volumeBase).div(price)
+            );
         }
     }
 

@@ -10,17 +10,17 @@ contract TestQueryPool is Base {
         addSymbol();
 
         queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy ATM");
-        querySellAndAssert(applySellSpread(y[3]), 200 * volumeBase, "sell ATM");
+        querySellAndAssert(applySellSpread(y[3]), 0, "sell ATM");
 
         feed.setPrice(525e8);
 
         queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy OTM");
-        querySellAndAssert(applySellSpread(y[3]), 200 * volumeBase, "sell OTM");
+        querySellAndAssert(applySellSpread(y[3]), 0, "sell OTM");
 
         feed.setPrice(575e8);
 
         queryBuyAndAssert(applyBuySpread((y[3] + y[4]) / 2), 0, "buy ITM");
-        querySellAndAssert(applySellSpread((y[3] + y[4]) / 2), 200 * volumeBase, "sell ITM");
+        querySellAndAssert(applySellSpread((y[3] + y[4]) / 2), 0, "sell ITM");
     }
 
     function testQueryWithFunds() public {

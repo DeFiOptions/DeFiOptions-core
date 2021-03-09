@@ -367,6 +367,21 @@ contract OptionsExchange is ManagedContract {
         return calcIntrinsicValue(orders[id]);
     }
 
+    function calcIntrinsicValue(
+        address udlFeed,
+        OptionType optType,
+        uint strike, 
+        uint maturity
+    )
+        external
+        view
+        returns (int)
+    {
+        OrderData memory ord = createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
+
+        return calcIntrinsicValue(ord);
+    }
+
     function createOrder(
         address udlFeed,
         uint volume,
