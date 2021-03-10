@@ -46,6 +46,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private sqrtTimeBase;
     uint private volumeBase;
     uint private fractionBase;
+    string[] private symbols;
 
     constructor(address deployer) public {
 
@@ -99,6 +100,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     {
         ensureCaller();
         require(_maturity < maturity, "invalid maturity");
+        require(x.length > 0 && x.length.mul(2) == y.length, "invalid pricing surface");
+
+        if (parameters[symbol].x.length == 0) {
+            symbols.push(symbol);
+        }
+
         parameters[symbol] = PricingParameters(
             udlFeed,
             strike,
@@ -111,6 +118,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             buyStock,
             sellStock
         );
+
         emit AddSymbol(symbol);
     }
     
@@ -121,6 +129,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         parameters[symbol] = empty;
         delete written[symbol];
         delete holding[symbol];
+        Arrays.removeItem(symbols, symbol);
         emit RemoveSymbol(symbol);
     }
 
@@ -142,6 +151,19 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         addBalance(to, v);
         _totalSupply = ts.add(v);
+    }
+    
+    function listSymbols() override external returns (string memory available) {
+
+        for (uint i = 0; i < symbols.length; i++) {
+            if (parameters[symbols[i]].maturity > time.getNow()) {
+                if (bytes(available).length == 0) {
+                    available = symbols[i];
+                } else {
+                    available = string(abi.encodePacked(available, "\n", symbols[i]));
+                }
+            }
+        }
     }
 
     function queryBuy(string memory symbol)

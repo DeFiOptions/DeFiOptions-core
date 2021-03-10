@@ -1,4 +1,5 @@
 pragma solidity >=0.6.0;
+pragma experimental ABIEncoderV2;
 
 interface LiquidityPool {
 
@@ -7,6 +8,8 @@ interface LiquidityPool {
     event RemoveSymbol(string indexed symbol);
 
     function depositTokens(address to, address token, uint value) external;
+
+    function listSymbols() external returns (string memory);
 
     function queryBuy(string calldata symbol) external view returns (uint price, uint volume);
 

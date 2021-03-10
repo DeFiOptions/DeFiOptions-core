@@ -25,11 +25,13 @@ contract ChainlinkFeed is UnderlyingFeed {
 
     string private _symbol;
     Sample[] private samples;
+    uint private offset;
 
     constructor(
         string memory _sb,
         address _aggregator,
         address _time,
+        uint _offset,
         uint[] memory _timestamps,
         int[] memory _prices
     )
@@ -38,6 +40,7 @@ contract ChainlinkFeed is UnderlyingFeed {
         _symbol = _sb;
         aggregator = AggregatorV3Interface(_aggregator);
         time = TimeProvider(_time);
+        offset = _offset;
         initialize(_timestamps, _prices);
     }
 
@@ -217,6 +220,6 @@ contract ChainlinkFeed is UnderlyingFeed {
 
     function today() private view returns(uint) {
 
-        return time.getNow().div(1 days).mul(1 days);
+        return time.getNow().sub(offset).div(1 days).mul(1 days);
     }
 }

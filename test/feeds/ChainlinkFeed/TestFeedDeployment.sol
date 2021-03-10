@@ -20,7 +20,8 @@ contract TestFeedDeployment is Base {
         feed = new ChainlinkFeed(
             "ETH/USD",
             address(mock), 
-            DeployedAddresses.TimeProviderMock(), 
+            DeployedAddresses.TimeProviderMock(),
+            0,
             timestamps3d, 
             prices3d
         );
@@ -52,7 +53,8 @@ contract TestFeedDeployment is Base {
         feed = new ChainlinkFeed(
             "ETH/USD",
             address(mock), 
-            DeployedAddresses.TimeProviderMock(), 
+            DeployedAddresses.TimeProviderMock(),
+            0,
             timestamps3d, 
             prices3d
         );

@@ -39,4 +39,17 @@ library Arrays {
 
         return false;
     }
+
+    function removeItem(string[] storage array, string memory item) internal returns (bool) {
+
+        for (uint i = 0; i < array.length; i++) {
+            if (keccak256(bytes(array[i])) == keccak256(bytes(item))) {
+                array[i] = array[array.length - 1];
+                array.pop();
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
