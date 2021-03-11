@@ -340,20 +340,28 @@ contract OptionsExchange is ManagedContract {
 
     function getBook(address owner)
         external view
-        returns (string memory symbols, string memory holding, string memory written)
+        returns (
+            string memory symbols,
+            uint[] memory holding,
+            uint[] memory written,
+            int[] memory iv
+        )
     {
         uint[] memory ids = book[owner];
+        holding = new uint[](ids.length);
+        written = new uint[](ids.length);
+        iv = new int[](ids.length);
+
         for (uint i = 0; i < ids.length; i++) {
             OrderData memory ord = orders[ids[i]];
             if (i == 0) {
                 symbols = getOptionSymbol(ord);
-                holding = MoreMath.toString(ord.holding);
-                written = MoreMath.toString(ord.written);
             } else {
                 symbols = string(abi.encodePacked(symbols, "\n", getOptionSymbol(ord)));
-                holding = string(abi.encodePacked(holding, "\n", MoreMath.toString(ord.holding)));
-                written = string(abi.encodePacked(written, "\n", MoreMath.toString(ord.written)));
             }
+            holding[i] = ord.holding;
+            written[i] = ord.written;
+            iv[i] = calcIntrinsicValue(ord);
         }
     }
 

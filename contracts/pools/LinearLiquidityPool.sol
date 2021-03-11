@@ -237,6 +237,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         addr = exchange.resolveToken(symbol);
         OptionToken tk = OptionToken(addr);
         tk.transfer(msg.sender, volume);
+
+        emit Buy(symbol, price, volume, token);
     }
 
     function sell(string calldata symbol, uint price, uint volume) override external {
@@ -267,6 +269,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         require(_holding <= param.sellStock, "excessive volume");
         holding[symbol] = _holding;
+
+        emit Sell(symbol, price, volume);
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)

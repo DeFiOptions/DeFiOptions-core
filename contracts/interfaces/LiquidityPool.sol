@@ -7,6 +7,10 @@ interface LiquidityPool {
     
     event RemoveSymbol(string indexed symbol);
 
+    event Buy(string indexed symbol, uint price, uint volume, address token);
+    
+    event Sell(string indexed symbol, uint price, uint volume);
+
     function depositTokens(address to, address token, uint value) external;
 
     function listSymbols() external returns (string memory);
@@ -20,5 +24,4 @@ interface LiquidityPool {
         returns (address addr);
 
     function sell(string calldata symbol, uint price, uint volume) external;
-
 }
