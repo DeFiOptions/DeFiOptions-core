@@ -83,6 +83,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         return time.getNow() >= maturity;
     }
 
+    function apy() override external view returns (uint) {
+
+        return 0; // TODO: calculate pool APY
+    }
+
     function addSymbol(
         string calldata symbol,
         address udlFeed,

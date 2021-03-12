@@ -10,6 +10,8 @@ interface LiquidityPool {
     
     event Sell(string indexed symbol, uint price, uint volume);
 
+    function apy() external view returns (uint);
+
     function depositTokens(address to, address token, uint value) external;
 
     function listSymbols() external returns (string memory);
