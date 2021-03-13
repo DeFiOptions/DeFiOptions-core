@@ -43,6 +43,18 @@ contract CreditToken is ManagedContract, ERC20 {
         issuer = deployer.getContractAddress("CreditIssuer");
     }
 
+    function name() override external view returns (string memory) {
+        return "Credit Token";
+    }
+
+    function symbol() override external view returns (string memory) {
+        return "CREDTK";
+    }
+
+    function decimals() override external view returns (uint8) {
+        return 8;
+    }
+
     function setIssuer(address _issuer) public {
 
         require(issuer == address(0), "issuer already set");

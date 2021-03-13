@@ -1,8 +1,9 @@
 pragma solidity >=0.6.0;
 
+import "../interfaces/IERC20Details.sol";
 import "../utils/SafeMath.sol";
 
-contract ERC20 {
+abstract contract ERC20 is IERC20Details {
 
     using SafeMath for uint;
 

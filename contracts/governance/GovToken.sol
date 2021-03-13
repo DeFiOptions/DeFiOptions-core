@@ -34,6 +34,18 @@ contract GovToken is ManagedContract, ERC20 {
         serial = 1;
     }
 
+    function name() override external view returns (string memory) {
+        return "Governance Token";
+    }
+
+    function symbol() override external view returns (string memory) {
+        return "GOVTK";
+    }
+
+    function decimals() override external view returns (uint8) {
+        return 9;
+    }
+
     function setInitialSupply(address owner, uint supply) public {
         
         require(_totalSupply == 0, "initial supply already set");

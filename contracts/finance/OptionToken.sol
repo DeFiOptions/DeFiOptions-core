@@ -18,9 +18,17 @@ contract OptionToken is RedeemableToken {
         exchange = OptionsExchange(_issuer);
     }
 
-    function symbol() external view returns (string memory) {
+    function name() override external view returns (string memory) {
+        return string(abi.encodePacked("Option Redeemable Token: ", _symbol));
+    }
+
+    function symbol() override external view returns (string memory) {
 
         return _symbol;
+    }
+
+    function decimals() override external view returns (uint8) {
+        return 9;
     }
 
     function issue(address to, uint value) external {
