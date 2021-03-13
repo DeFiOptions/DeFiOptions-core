@@ -158,7 +158,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         _totalSupply = ts.add(v);
     }
     
-    function listSymbols() override external returns (string memory available) {
+    function listSymbols() override external view returns (string memory available) {
 
         for (uint i = 0; i < symbols.length; i++) {
             if (parameters[symbols[i]].maturity > time.getNow()) {
@@ -323,11 +323,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         returns (uint price)
     {
         uint k = offset.add(j);
-        price = p.y[k].sub(p.y[k - 1]).mul(
-            xp.sub(p.x[j - 1])
-        ).div(
-            p.x[j].sub(p.x[j - 1])
-        ).add(p.y[k - 1]);
+        int yA = int(p.y[k]);
+        int yB = int(p.y[k - 1]);
+        price = uint(
+            yA.sub(yB).mul(
+                int(xp.sub(p.x[j - 1]))
+            ).div(
+                int(p.x[j].sub(p.x[j - 1]))
+            ).add(yB)
+        );
     }
 
     function calcVolume(

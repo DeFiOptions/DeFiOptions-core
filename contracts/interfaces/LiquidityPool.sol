@@ -14,7 +14,7 @@ interface LiquidityPool {
 
     function depositTokens(address to, address token, uint value) external;
 
-    function listSymbols() external returns (string memory);
+    function listSymbols() external view returns (string memory);
 
     function queryBuy(string calldata symbol) external view returns (uint price, uint volume);
 
