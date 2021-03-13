@@ -335,7 +335,7 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 | [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x5e40a65621d14102e2fa532694bcd640bdd53cfb](https://kovan.etherscan.io/address/0x5e40a65621d14102e2fa532694bcd640bdd53cfb) |
 | [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xb287A334718C976718F081d1060A84CbbCf5E0ba](https://kovan.etherscan.io/address/0xb287A334718C976718F081d1060A84CbbCf5E0ba) |
 | [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x5Cb3e5A973cD838d46509EFf159011689A19772A](https://kovan.etherscan.io/address/0x5Cb3e5A973cD838d46509EFf159011689A19772A) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xdd831B3a8D411129e423C9457a110f984e0f2A61](https://kovan.etherscan.io/address/0xdd831B3a8D411129e423C9457a110f984e0f2A61) |
+| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xA293d8953998A3a2635475F4e077301aD9061507](https://kovan.etherscan.io/address/0xA293d8953998A3a2635475F4e077301aD9061507) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
@@ -365,7 +365,7 @@ The main goal of this project is to deploy Options Exchange to mainnet, however 
 
 There are a few major technical challenges that will need to get dealt with if the project gains traction and is deployed to mainnet:
 
-* Development of a dapp front-end application to make the exchange accessible to non-developers
+* Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
 * Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
 * Improvement of the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
