@@ -12,12 +12,12 @@ contract TestQueryPool is Base {
         queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy ATM");
         querySellAndAssert(applySellSpread(y[3]), 0, "sell ATM");
 
-        feed.setPrice(525e8);
+        feed.setPrice(525e18);
 
         queryBuyAndAssert(applyBuySpread(y[3]), 0, "buy OTM");
         querySellAndAssert(applySellSpread(y[3]), 0, "sell OTM");
 
-        feed.setPrice(575e8);
+        feed.setPrice(575e18);
 
         queryBuyAndAssert(applyBuySpread((y[3] + y[4]) / 2), 0, "buy ITM");
         querySellAndAssert(applySellSpread((y[3] + y[4]) / 2), 0, "sell ITM");
@@ -37,13 +37,13 @@ contract TestQueryPool is Base {
         queryBuyAndAssert(p0, freeBalance * volumeBase / (calcCollateralUnit() - p0), "buy ATM");
         querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell ATM");
 
-        feed.setPrice(525e8);
+        feed.setPrice(525e18);
 
         uint p1 = applyBuySpread(y[10]);
         queryBuyAndAssert(p1, freeBalance * volumeBase / (calcCollateralUnit() - p1), "buy OTM");
         querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell OTM");
 
-        feed.setPrice(575e8);
+        feed.setPrice(575e18);
 
         uint p2 = applyBuySpread((y[10] + y[11]) / 2);
         queryBuyAndAssert(p2, freeBalance * volumeBase / (calcCollateralUnit() - p2), "buy ITM");
@@ -59,7 +59,7 @@ contract TestQueryPool is Base {
 
         time.setFixedTime(15 hours);
 
-        feed.setPrice(575e8);
+        feed.setPrice(575e18);
 
         uint p0 = (y[3] + y[4]) / 2;
         uint p1 = (y[10] + y[11]) / 2;

@@ -7,7 +7,7 @@ import "../../../contracts/interfaces/UnderlyingFeed.sol";
 
 contract EthFeedMock is UnderlyingFeed, ManagedContract {
     
-    int ethPrice = 550e8;
+    int ethPrice = 550e18;
     TimeProvider private time;
     
     constructor(address deployer) public {
@@ -45,7 +45,7 @@ contract EthFeedMock is UnderlyingFeed, ManagedContract {
 
     function getDailyVolatility(uint) override external view returns (uint value) {
 
-        value = 1375e6; 
+        value = 1375e16; 
     }
 
     function calcLowerVolatility(uint vol) override external view returns (uint lowerVol) {

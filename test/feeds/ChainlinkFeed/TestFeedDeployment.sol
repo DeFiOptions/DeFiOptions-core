@@ -8,14 +8,14 @@ import "../../common/mock/AggregatorV3Mock.sol";
 contract TestFeedDeployment is Base {
 
     uint[] timestamps3d;
-    int[] prices3d;
+    int[] answers3d;
 
     function testRequestValidData() public {
 
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
         timestamps3d = [1 days, 2 days, 3 days];
-        prices3d = [answers[0], answers[1], answers[2]];
+        answers3d = [answers[0], answers[1], answers[2]];
 
         feed = new ChainlinkFeed(
             "ETH/USD",
@@ -23,23 +23,23 @@ contract TestFeedDeployment is Base {
             DeployedAddresses.TimeProviderMock(),
             0,
             timestamps3d, 
-            prices3d
+            answers3d
         );
         
         (, price, cached) = feed.getPriceCached(1 days);
-        Assert.equal(price, answers[0], "getPriceCached 1");
+        Assert.equal(price, prices[0], "getPriceCached 1");
         Assert.isTrue(cached, "cached 1");
 
         (, price, cached) = feed.getPriceCached(2 days);
-        Assert.equal(price, answers[1], "getPriceCached 2");
+        Assert.equal(price, prices[1], "getPriceCached 2");
         Assert.isTrue(cached, "cached 2");
 
         (, price, cached) = feed.getPriceCached(2 days + 12 hours);
-        Assert.equal(price, answers[2], "getPriceCached 2.5");
+        Assert.equal(price, prices[2], "getPriceCached 2.5");
         Assert.isFalse(cached, "cached 2.5");
 
         (, price, cached) = feed.getPriceCached(3 days);
-        Assert.equal(price, answers[2], "getPriceCached 3");
+        Assert.equal(price, prices[2], "getPriceCached 3");
         Assert.isTrue(cached, "cached 3");
     }
 
@@ -48,7 +48,7 @@ contract TestFeedDeployment is Base {
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
         timestamps3d = [1 days, 2 days, 3 days];
-        prices3d = [answers[0], answers[1], answers[2]];
+        answers3d = [answers[0], answers[1], answers[2]];
 
         feed = new ChainlinkFeed(
             "ETH/USD",
@@ -56,7 +56,7 @@ contract TestFeedDeployment is Base {
             DeployedAddresses.TimeProviderMock(),
             0,
             timestamps3d, 
-            prices3d
+            answers3d
         );
 
         (bool success,) = address(feed).call(

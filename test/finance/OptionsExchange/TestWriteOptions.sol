@@ -23,10 +23,11 @@ contract TestWriteOptions is Base {
 
     function testWriteAndSequentialTransfers() public {
 
-        int step = 40e8;
+        int step = 40e18;
+        uint vBase = 1e24;
         uint ct = MoreMath.sqrtAndMultiply(15, upperVol);
         
-        depositTokens(address(bob), 5000 finney);
+        depositTokens(address(bob), 5000 * vBase);
 
         uint id = bob.writeOptions(10, CALL, ethInitialPrice - step, 15 days);
         MoreAssert.equal(bob.calcCollateral(), 10 * ct, cBase, "collateral none transfered");
@@ -101,10 +102,11 @@ contract TestWriteOptions is Base {
 
     function testWriteAndBurn() public {
 
-        int step = 40e8;
+        int step = 40e18;
+        uint vBase = 1e24;
         uint ct = MoreMath.sqrtAndMultiply(15, upperVol);
         
-        depositTokens(address(bob), 5000 finney);
+        depositTokens(address(bob), 5000 * vBase);
 
         uint id = bob.writeOptions(10, CALL, ethInitialPrice - step, 15 days);
 

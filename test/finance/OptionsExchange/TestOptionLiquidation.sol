@@ -28,7 +28,7 @@ contract TestOptionLiquidation is Base {
 
     function testPartialLiquidationWhenIssuerLacksCollateral() public {
         
-        int step = 40e8;
+        int step = 40e18;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);
@@ -58,7 +58,7 @@ contract TestOptionLiquidation is Base {
 
     function testMultipleLiquidationsWhenIssuerLacksCollateral() public {
         
-        int step = 20e8;
+        int step = 20e18;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);
@@ -89,7 +89,7 @@ contract TestOptionLiquidation is Base {
 
     function testFullLiquidationsWhenIssuerLacksCollateral() public {
         
-        int step = 100e8;
+        int step = 100e18;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);
@@ -108,7 +108,7 @@ contract TestOptionLiquidation is Base {
 
     function testLiquidationAtMaturityOTM() public {
         
-        int step = 40e8;
+        int step = 40e18;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);
@@ -132,7 +132,7 @@ contract TestOptionLiquidation is Base {
 
     function testLiquidationAtMaturityITM() public {
         
-        int step = 40e8;
+        int step = 40e18;
 
         uint mu = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), mu);

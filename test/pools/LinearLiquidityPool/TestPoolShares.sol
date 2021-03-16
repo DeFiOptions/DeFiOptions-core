@@ -60,13 +60,13 @@ contract TestPoolShares is Base {
         (uint buyPrice,) = pool.queryBuy(symbol);
         erc20.issue(address(alice), buyPrice);
         alice.buyFromPool(symbol, buyPrice, volumeBase);
-        feed.setPrice(ethInitialPrice + 500e8); // force expected loss
-        Assert.equal(exchange.calcExpectedPayout(address(pool)), -500e8, "expected payout");
+        feed.setPrice(ethInitialPrice + 500e18); // force expected loss
+        Assert.equal(exchange.calcExpectedPayout(address(pool)), -500e18, "expected payout");
 
-        depositInPool(address(alice), 100e8);
+        depositInPool(address(alice), 100e18);
         
-        uint totalFunds = 10 * vBase + buyPrice - 400e8;
-        uint expected = pool.totalSupply() * 100e8 / totalFunds;
+        uint totalFunds = 10 * vBase + buyPrice - 400e18;
+        uint expected = pool.totalSupply() * 100e18 / totalFunds;
         Assert.equal(pool.balanceOf(address(bob)), 10 * vBase, "bob shares t1");
         MoreAssert.equal(pool.balanceOf(address(alice)), expected, cBase, "alice shares t1");
     }

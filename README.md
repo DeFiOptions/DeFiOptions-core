@@ -85,8 +85,8 @@ Before writing an option calculate the amount of collateral needed by calling th
 
 ```solidity
 address eth_usd_feed = address(0x987...);
-uint volumeBase = 1e9;
-uint strikePrice = 1300e8;
+uint volumeBase = 1e18;
+uint strikePrice = 1300e18;
 uint maturity = now + 30 days;
 
 uint collateral = exchange.calcCollateral(
@@ -131,7 +131,7 @@ The `calcIntrinsicValue` allows callers to check the updated intrinsict value fo
 uint iv = exchange.calcIntrinsicValue(id);
 ```
 
-Suppose the ETH price has gone up to US$ 1400, and considering that the strike price was set to US$ 1300, then the intrinsic value returned would be `100e8`, i.e., US$ 100. Multiply this value by the held volume to obtain the position's aggregated intrinsic value.
+Suppose the ETH price has gone up to US$ 1400, and considering that the strike price was set to US$ 1300, then the intrinsic value returned would be `100e18`, i.e., US$ 100. Multiply this value by the held volume to obtain the position's aggregated intrinsic value.
 
 ### Collateral allocation
 
@@ -304,7 +304,7 @@ Where:
 
 - The type code will be “EC” for European Call or “EP” for European Put.
 
-- Strike price is provided in the base currency using a “1e8” decimal base. For instance, considering the USD base currency, 175e9 is equivalent to 1750e8 which in turn converts to 1750 USD.
+- Strike price is provided in the base currency using a “1e18” decimal base. For instance, considering the USD base currency, 175e19 is equivalent to 1750e18 which in turn converts to 1750 USD.
 
 - Maturity is provided as a Unix timestamp from epoch. For instance, 161784e4 is equivalent to 1617840000 which in turn converts to “GMT: Thursday, 8 April 2021 00:00:00”.
 
@@ -352,7 +352,7 @@ A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience
 ```solidity
 ERC20Mock fakecoin = ERC20Mock(0xdd8...);
 address to = 0xABC
-uint value = 1500e8;
+uint value = 1500e18;
 fakecoin.issue(to, value);
 ```
 

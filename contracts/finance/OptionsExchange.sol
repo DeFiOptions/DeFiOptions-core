@@ -73,7 +73,7 @@ contract OptionsExchange is ManagedContract {
         factory = OptionTokenFactory(deployer.getContractAddress("OptionTokenFactory"));
 
         serial = 1;
-        volumeBase = 1e9;
+        volumeBase = 1e18;
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
     }

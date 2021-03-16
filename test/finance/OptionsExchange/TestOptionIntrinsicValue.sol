@@ -9,7 +9,7 @@ contract TestOptionIntrinsicValue is Base {
 
     function testCallIntrinsictValue() public {
 
-        int step = 30e8;
+        int step = 30e18;
         depositTokens(address(bob), upperVol);
         uint id = bob.writeOption(CALL, ethInitialPrice, 1 days);
         bob.transferOptions(address(alice), id, 1);
@@ -28,7 +28,7 @@ contract TestOptionIntrinsicValue is Base {
 
     function testPutIntrinsictValue() public {
 
-        int step = 40e8;
+        int step = 40e18;
         depositTokens(address(bob), upperVol);
         uint id = bob.writeOption(PUT, ethInitialPrice, 1 days);
         bob.transferOptions(address(alice), id, 1);
@@ -67,9 +67,10 @@ contract TestOptionIntrinsicValue is Base {
 
     function testCollateralForDifferentStrikePrices() public {
         
-        int step = 40e8;
+        int step = 40e18;
+        uint vBase = 1e24;
 
-        depositTokens(address(bob), 1500 finney);
+        depositTokens(address(bob), 1500 * vBase);
 
         uint id1 = bob.writeOption(CALL, ethInitialPrice - step, 10 days);
         bob.transferOptions(address(alice), id1, 1);

@@ -44,29 +44,29 @@ contract TestDailyVolatility is Base {
     function calcVol5d() private returns(uint vol) {
 
         array5d = [
-            (pBase * answers[6]) / answers[5],
-            (pBase * answers[7]) / answers[6],
-            (pBase * answers[8]) / answers[7],
-            (pBase * answers[9]) / answers[8]
+            (pBase * prices[6]) / prices[5],
+            (pBase * prices[7]) / prices[6],
+            (pBase * prices[8]) / prices[7],
+            (pBase * prices[9]) / prices[8]
         ];
 
-        vol = (uint(answers[9]) * MoreMath.std(array5d)) / uint(pBase);
+        vol = (uint(prices[9]) * MoreMath.std(array5d)) / uint(pBase);
     }
 
     function calcVol10d() private returns(uint vol) {
         
         array10d = [
-            (pBase * answers[1]) / answers[0],
-            (pBase * answers[2]) / answers[1],
-            (pBase * answers[3]) / answers[2],
-            (pBase * answers[4]) / answers[3],
-            (pBase * answers[5]) / answers[4],
-            (pBase * answers[6]) / answers[5],
-            (pBase * answers[7]) / answers[6],
-            (pBase * answers[8]) / answers[7],
-            (pBase * answers[9]) / answers[8]
+            (pBase * prices[1]) / prices[0],
+            (pBase * prices[2]) / prices[1],
+            (pBase * prices[3]) / prices[2],
+            (pBase * prices[4]) / prices[3],
+            (pBase * prices[5]) / prices[4],
+            (pBase * prices[6]) / prices[5],
+            (pBase * prices[7]) / prices[6],
+            (pBase * prices[8]) / prices[7],
+            (pBase * prices[9]) / prices[8]
         ];
 
-        vol = (uint(answers[9]) * MoreMath.std(array10d)) / uint(pBase);
+        vol = (uint(prices[9]) * MoreMath.std(array10d)) / uint(pBase);
     }
 }

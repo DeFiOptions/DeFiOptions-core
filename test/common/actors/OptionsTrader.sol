@@ -9,7 +9,7 @@ contract OptionsTrader {
     TimeProvider private time;
     
     address private addr;
-    uint private volumeBase = 1e9;
+    uint private volumeBase = 1e18;
     
     constructor(address _exchange, address _time) public {
 

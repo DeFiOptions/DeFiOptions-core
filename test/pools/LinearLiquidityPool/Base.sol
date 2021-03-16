@@ -14,13 +14,13 @@ import "../../common/mock/TimeProviderMock.sol";
 
 contract Base {
     
-    int ethInitialPrice = 550e8;
-    uint strike = 550e8;
+    int ethInitialPrice = 550e18;
+    uint strike = 550e18;
     uint maturity = 30 days;
     
     uint err = 1; // rounding error
     uint cBase = 1e6; // comparison base
-    uint volumeBase = 1e9;
+    uint volumeBase = 1e18;
     uint timeBase = 1 hours;
 
     uint spread = 5e7; // 5%
@@ -44,7 +44,7 @@ contract Base {
 
     uint[] x;
     uint[] y;
-    string symbol = "ETHM-EC-55e9-2592e3";
+    string symbol = "ETHM-EC-55e19-2592e3";
     
     function beforeEachDeploy() public {
 
@@ -93,10 +93,10 @@ contract Base {
 
     function addSymbol() internal {
 
-        x = [400e8, 450e8, 500e8, 550e8, 600e8, 650e8, 700e8];
+        x = [400e18, 450e18, 500e18, 550e18, 600e18, 650e18, 700e18];
         y = [
-            30e8,  40e8,  50e8,  50e8, 110e8, 170e8, 230e8,
-            25e8,  35e8,  45e8,  45e8, 105e8, 165e8, 225e8
+            30e18,  40e18,  50e18,  50e18, 110e18, 170e18, 230e18,
+            25e18,  35e18,  45e18,  45e18, 105e18, 165e18, 225e18
         ];
         
         pool.addSymbol(

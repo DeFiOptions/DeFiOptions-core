@@ -28,7 +28,7 @@ contract OptionToken is RedeemableToken {
     }
 
     function decimals() override external view returns (uint8) {
-        return 9;
+        return 18;
     }
 
     function issue(address to, uint value) external {

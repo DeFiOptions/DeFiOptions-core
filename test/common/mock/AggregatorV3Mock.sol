@@ -22,6 +22,7 @@ contract AggregatorV3Mock is AggregatorV3Interface {
 
     function decimals() override external view returns (uint8) {
 
+        return 8;
     }
 
     function description() override external view returns (string memory) {

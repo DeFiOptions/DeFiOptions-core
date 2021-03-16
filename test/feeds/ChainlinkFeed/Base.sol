@@ -12,6 +12,7 @@ abstract contract Base {
     
     uint[] roundIds;
     int[] answers;
+    int[] prices;
     uint[] updatedAts;
     
     int price;
@@ -20,7 +21,8 @@ abstract contract Base {
     function beforeEachDeploy() public {
 
         roundIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        answers = [20, 25, 28, 18, 19, 12, 12, 13, 18, 20];
+        answers = [20e8, 25e8, 28e8, 18e8, 19e8, 12e8, 12e8, 13e8, 18e8, 20e8];
+        prices = [20e18, 25e18, 28e18, 18e18, 19e18, 12e18, 12e18, 13e18, 18e18, 20e18];
         updatedAts = 
             [1 days, 2 days, 3 days, 4 days, 5 days, 6 days, 7 days, 8 days, 9 days, 10 days];
 

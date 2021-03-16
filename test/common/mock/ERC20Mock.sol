@@ -17,7 +17,7 @@ contract ERC20Mock is ERC20 {
     }
 
     function decimals() override external view returns (uint8) {
-        return 8;
+        return 18;
     }
 
     function issue(address to, uint value) public {

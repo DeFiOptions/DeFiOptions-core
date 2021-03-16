@@ -43,7 +43,7 @@ contract GovToken is ManagedContract, ERC20 {
     }
 
     function decimals() override external view returns (uint8) {
-        return 9;
+        return 18;
     }
 
     function setInitialSupply(address owner, uint supply) public {

@@ -26,6 +26,8 @@ contract ChainlinkFeed is UnderlyingFeed {
     string private _symbol;
     Sample[] private samples;
     uint private offset;
+    int private priceN;
+    int private priceD;
 
     constructor(
         string memory _sb,
@@ -48,11 +50,22 @@ contract ChainlinkFeed is UnderlyingFeed {
 
         require(samples.length == 0, "already initialized");
 
+        int exchangeDecimals = 18;
+        int diff = exchangeDecimals.sub(int(aggregator.decimals()));
+        require(-18 <= diff && diff <= 18, "invalid decimals");
+        if (diff > 0) {
+            priceN = int(10 ** uint(diff));
+            priceD = 1;
+        } else {
+            priceN = 1;
+            priceD = int(10 ** uint(-diff));
+        }
+
         for (uint i = 0; i < _timestamps.length; i++) {
 
             uint ts = _timestamps[i];
             int pc = _prices[i];
-            Sample memory s = Sample(ts, pc);
+            Sample memory s = Sample(ts, rescalePrice(pc));
 
             if (ts.mod(1 days) == 0) {
                 dailyPrices[ts] = s;
@@ -60,6 +73,10 @@ contract ChainlinkFeed is UnderlyingFeed {
             
             samples.push(s);
         }
+    }
+
+    function initializeDecimals() private {
+
     }
 
     function symbol() override external view returns (string memory) {
@@ -70,6 +87,7 @@ contract ChainlinkFeed is UnderlyingFeed {
     function getLatestPrice() override external view returns (uint timestamp, int price) {
 
         (, price,, timestamp,) = aggregator.latestRoundData();
+        price = rescalePrice(price);
     }
 
     function getPrice(uint position) 
@@ -172,6 +190,7 @@ contract ChainlinkFeed is UnderlyingFeed {
     function prefetchSample() external {
 
         (, int price,, uint timestamp,) = aggregator.latestRoundData();
+        price = rescalePrice(price);
         require(timestamp > samples[samples.length - 1].timestamp, "already up to date");
         samples.push(Sample(timestamp, price));
     }
@@ -180,11 +199,13 @@ contract ChainlinkFeed is UnderlyingFeed {
 
         int price;
         uint timestamp;
+
         if (roundId == 0) {
             (, price,, timestamp,) = aggregator.latestRoundData();
         } else {
             (, price,, timestamp,) = aggregator.getRoundData(uint80(roundId));
         }
+        price = rescalePrice(price);
 
         uint key = timestamp.div(1 days).mul(1 days);
         Sample memory s = Sample(timestamp, price);
@@ -208,6 +229,11 @@ contract ChainlinkFeed is UnderlyingFeed {
             (uint vol,) = getDailyVolatilityCached(timespan);
             dailyVolatilities[timespan][today()] = encodeValue(vol);
         }
+    }
+
+    function rescalePrice(int price) private view returns (int) {
+
+        return price.mul(priceN).div(priceD);
     }
 
     function encodeValue(uint v) private pure returns (uint) {

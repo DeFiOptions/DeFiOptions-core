@@ -8,7 +8,7 @@ contract TestExpectedPayout is Base {
 
     function testSingleOptionExpectedPayout() public {
 
-        int step = 30e8;
+        int step = 30e18;
         depositTokens(address(bob), upperVol);
 
         uint id = bob.writeOption(CALL, ethInitialPrice, 1 days);
@@ -29,7 +29,7 @@ contract TestExpectedPayout is Base {
 
     function testOptionsPortifolioExpectedPayout() public {
 
-        int step = 30e8;
+        int step = 30e18;
         depositTokens(address(bob), 15 * upperVol);
         
         uint id1 = bob.writeOptions(3, CALL, ethInitialPrice, 5 days);

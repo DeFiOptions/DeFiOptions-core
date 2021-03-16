@@ -74,7 +74,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     function decimals() override external view returns (uint8) {
-        return 8;
+        return 18;
     }
 
     function setParameters(

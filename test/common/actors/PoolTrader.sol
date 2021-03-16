@@ -11,7 +11,7 @@ contract PoolTrader {
     LiquidityPool private pool;
     
     address private addr;
-    uint private volumeBase = 1e9;
+    uint private volumeBase = 1e18;
     
     constructor(address _erc20, address _exchange, address _pool) public {
 

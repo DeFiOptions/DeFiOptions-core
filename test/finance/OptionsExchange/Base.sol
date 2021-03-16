@@ -15,13 +15,13 @@ import "../../common/mock/TimeProviderMock.sol";
 
 contract Base {
     
-    int ethInitialPrice = 550e8;
+    int ethInitialPrice = 550e18;
     uint lowerVol;
     uint upperVol;
     
     uint err = 1; // rounding error
     uint cBase = 1e8; // comparison base
-    uint volumeBase = 1e9;
+    uint volumeBase = 1e18;
     uint timeBase = 1 hours;
     
     EthFeedMock feed;
