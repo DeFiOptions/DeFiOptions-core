@@ -66,6 +66,7 @@ contract CreditToken is ManagedContract, ERC20 {
         require(msg.sender == issuer, "issuance unallowed");
         addBalance(to, value);
         _totalSupply = _totalSupply.add(value);
+        emitTransfer(address(0), to, value);
     }
 
     function balanceOf(address owner) override public view returns (uint bal) {

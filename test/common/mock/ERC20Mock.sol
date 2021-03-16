@@ -24,5 +24,6 @@ contract ERC20Mock is ERC20 {
 
         addBalance(to, value);
         _totalSupply = _totalSupply.add(value);
+        emitTransfer(address(0), to, value);
     }
 }

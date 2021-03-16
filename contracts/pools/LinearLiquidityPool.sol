@@ -168,6 +168,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         addBalance(to, v);
         _totalSupply = ts.add(v);
+        emitTransfer(address(0), to, v);
     }
     
     function listSymbols() override external view returns (string memory available) {

@@ -51,6 +51,7 @@ contract GovToken is ManagedContract, ERC20 {
         require(_totalSupply == 0, "initial supply already set");
         _totalSupply = supply;
         balances[owner] = supply;
+        emitTransfer(address(0), owner, supply);
     }
 
     function registerProposal(address addr) public returns (uint id) {
