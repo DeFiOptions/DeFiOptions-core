@@ -340,12 +340,12 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0xef1029a23cbaf78823a89b4f793c293163a65fcb](https://kovan.etherscan.io/address/0xef1029a23cbaf78823a89b4f793c293163a65fcb) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x286e5ce4c2231279750aa79eff7c097f85e309e9](https://kovan.etherscan.io/address/0x286e5ce4c2231279750aa79eff7c097f85e309e9) |
-| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x5e40a65621d14102e2fa532694bcd640bdd53cfb](https://kovan.etherscan.io/address/0x5e40a65621d14102e2fa532694bcd640bdd53cfb) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xb287A334718C976718F081d1060A84CbbCf5E0ba](https://kovan.etherscan.io/address/0xb287A334718C976718F081d1060A84CbbCf5E0ba) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x5Cb3e5A973cD838d46509EFf159011689A19772A](https://kovan.etherscan.io/address/0x5Cb3e5A973cD838d46509EFf159011689A19772A) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0xA293d8953998A3a2635475F4e077301aD9061507](https://kovan.etherscan.io/address/0xA293d8953998A3a2635475F4e077301aD9061507) |
+| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x6271d11cba6be634a5ff6153cd60bf55e9eeca68](https://kovan.etherscan.io/address/0x6271d11cba6be634a5ff6153cd60bf55e9eeca68) |
+| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x139885c858c66264f31f33a78ad74965bb55f14c](https://kovan.etherscan.io/address/0x139885c858c66264f31f33a78ad74965bb55f14c) |
+| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xe2ea8031581d602a520a6af42ffaf9ccf5ddd4c6](https://kovan.etherscan.io/address/0xe2ea8031581d602a520a6af42ffaf9ccf5ddd4c6) |
+| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
+| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
+| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0x96ffB171Bd80dC984612C017a5D9d30f2385275f](https://kovan.etherscan.io/address/0x96ffB171Bd80dC984612C017a5D9d30f2385275f) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
