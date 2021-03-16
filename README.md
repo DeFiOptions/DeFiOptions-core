@@ -230,7 +230,7 @@ interface UnderlyingFeed {
 
 The exchange depends on these functions to calculate options intrinsic value, collateral requirements and to liquidate positions.
 
-* The `symbol` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e10-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
+* The `symbol` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e20-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
 * The `getLatestPrice` function retrieves the latest quote for the option underlying, for calculating its intrinsic value.
 * The `getPrice` function on the other hand retrieves the first price for the underlying registered in the blockchain after a specific timestamp position, and is used to liquidate the option token contract at maturity.
 * The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation) section.
