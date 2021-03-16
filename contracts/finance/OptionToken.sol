@@ -36,7 +36,7 @@ contract OptionToken is RedeemableToken {
         require(msg.sender == address(exchange), "issuance unallowed");
         addBalance(to, value);
         _totalSupply = _totalSupply.add(value);
-        emitTransfer(address(0), to, value);
+        emit Transfer(address(0), to, value);
     }
 
     function burn(uint value) external {

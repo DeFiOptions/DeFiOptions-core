@@ -31,6 +31,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint sellStock;
     }
 
+    struct Deposit {
+        uint date;
+        uint balance;
+        uint value;
+    }
+
     TimeProvider private time;
 
     mapping(string => PricingParameters) private parameters;
@@ -47,6 +53,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private volumeBase;
     uint private fractionBase;
     string[] private optSymbols;
+    Deposit[] private deposits;
 
     constructor(address deployer) public {
 
@@ -97,7 +104,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
     function apy() override external view returns (uint) {
 
-        return 0; // TODO: calculate pool APY
+        return 0; // TODO: calculate pool APY from deposits array
     }
 
     function addSymbol(
@@ -155,9 +162,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint b0 = exchange.balanceOf(address(this));
         depositTokensInExchange(msg.sender, token, value);
         uint b1 = exchange.balanceOf(address(this));
-        int expBal = exchange.calcExpectedPayout(address(this)).add(int(b1));
+        int po = exchange.calcExpectedPayout(address(this));
+        
+        deposits.push(Deposit(time.getNow(), uint(int(b0).add(po)), value));
 
         uint ts = _totalSupply;
+        int expBal = po.add(int(b1));
         uint p = b1.sub(b0).mul(fractionBase).div(uint(expBal));
 
         uint b = 1e3;
