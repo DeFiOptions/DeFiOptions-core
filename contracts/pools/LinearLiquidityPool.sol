@@ -102,9 +102,22 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         return time.getNow() >= maturity;
     }
 
-    function apy() override external view returns (uint) {
+    function apy() override external view returns (uint y) {
+        
+        y = fractionBase;
+        uint start = time.getNow().sub(365 days);
+        
+        uint i = 0;
+        for (i = 0; i < deposits.length; i++) {
+            if (deposits[i].date > start) {
+                i--;
+                break;
+            }
+        }
 
-        return 0; // TODO: calculate pool APY from deposits array
+        for (; i < deposits.length; i++) {
+            y = y.mul(calcYield(i, start));
+        }
     }
 
     function addSymbol(
@@ -405,6 +418,30 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
         uint sp = exchange.calcSurplus(address(this));
         balance = sp > balance ? sp.sub(balance) : 0;
+    }
+
+    function calcYield(uint index, uint start) private view returns (uint y) {
+
+        uint t0 = index >= 0 ?
+            deposits[index].date : start;
+        uint t1 = index + 1 < deposits.length ?
+            deposits[index + 1].date : time.getNow();
+
+        int v0 = index >= 0 ?
+            int(deposits[index].value.add(deposits[index].balance)) :
+            0;
+        int v1 = index + 1 < deposits.length ? 
+            int(deposits[index + 1].balance) :
+            exchange.calcExpectedPayout(address(this)).add(int(exchange.balanceOf(address(this))));
+
+        y = uint(v1.mul(int(fractionBase)).div(v0));
+        if (start > t0) {
+            y = MoreMath.powDecimal(
+                y, 
+                (t1.sub(start)).mul(fractionBase).div(t1.sub(t0)), 
+                fractionBase
+            );
+        }
     }
 
     function depositTokensInExchange(address sender, address token, uint value) private {

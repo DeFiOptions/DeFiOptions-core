@@ -44,6 +44,25 @@ library MoreMath {
             return p;
         }
     }
+
+    function powDecimal(uint n, uint e, uint b) internal pure returns (uint v) {
+        
+        require(e < b, "invalid expoent");
+
+        v = b;
+        uint f = b;
+        uint aux = 0;
+        uint rootN = n;
+        uint rootB = sqrt(b);
+        while (f > 1) {
+            f = f.div(2);
+            rootN = sqrt(rootN).mul(rootB);
+            if (aux.add(f) < e) {
+                aux = aux.add(f);
+                v = v.mul(rootN).div(b);
+            }
+        }
+    }
     
     function divCeil(uint n, uint d) internal pure returns (uint v) {
         

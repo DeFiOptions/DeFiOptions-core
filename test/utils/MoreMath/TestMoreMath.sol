@@ -24,6 +24,17 @@ contract TestMoreMath {
         Assert.equal(MoreMath.pow(5, 10), 9765625, "pow 5,10");
     }
 
+    function testPowDecimal() public {
+        
+        uint b = 1e9;
+        Assert.equal(MoreMath.powDecimal(2e9, 50e7, b), 1411562702, "pow 2^0.50");
+        Assert.equal(MoreMath.powDecimal(2e9, 77e7, b), 1703641918, "pow 2^0.77");
+        Assert.equal(MoreMath.powDecimal(2e9, 30e7, b), 1229973362, "pow 2^0.30");
+        Assert.equal(MoreMath.powDecimal(2e9, 3e7, b),  1020119746, "pow 2^0.03");
+        Assert.equal(MoreMath.powDecimal(1024e9, 10e7, b), 1998000721, "pow 1024^0.1");
+        Assert.equal(MoreMath.powDecimal(89021e9, 6612e5, b), 1871857777773, "pow 89021^0.6612");
+    }
+
     function testSqrtAndMultiply() public {
         
         Assert.equal(MoreMath.sqrtAndMultiply(1, 5), 5, "sqrtAndMultiply 1, 5");
