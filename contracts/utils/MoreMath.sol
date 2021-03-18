@@ -47,7 +47,13 @@ library MoreMath {
 
     function powDecimal(uint n, uint e, uint b) internal pure returns (uint v) {
         
-        require(e < b, "invalid expoent");
+        if (e == 0) {
+            return b;
+        }
+
+        if (e > b) {
+            return n.mul(powDecimal(n, e.sub(b), b)).div(b);
+        }
 
         v = b;
         uint f = b;

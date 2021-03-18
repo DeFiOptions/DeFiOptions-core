@@ -105,18 +105,34 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function apy() override external view returns (uint y) {
         
         y = fractionBase;
-        uint start = time.getNow().sub(365 days);
-        
-        uint i = 0;
-        for (i = 0; i < deposits.length; i++) {
-            if (deposits[i].date > start) {
-                i--;
-                break;
-            }
-        }
 
-        for (; i < deposits.length; i++) {
-            y = y.mul(calcYield(i, start));
+        if (deposits.length > 0) {
+            
+            uint dt = 365 days;
+            uint _now = time.getNow();
+            uint start = _now.sub(dt);
+            
+            uint i = 0;
+            for (i = 0; i < deposits.length; i++) {
+                if (deposits[i].date > start) {
+                    break;
+                }
+            }
+
+            for (; i <= deposits.length; i++) {
+                if (i > 0) {
+                    y = y.mul(calcYield(i, start)).div(fractionBase);
+                }
+            }
+
+            if (deposits[0].date > start && y != fractionBase) {
+                uint aux = _now.sub(deposits[0].date);
+                y = MoreMath.powDecimal(
+                    y, 
+                    (dt).mul(fractionBase).div(aux), 
+                    fractionBase
+                );
+            }
         }
     }
 
@@ -422,16 +438,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
     function calcYield(uint index, uint start) private view returns (uint y) {
 
-        uint t0 = index >= 0 ?
-            deposits[index].date : start;
-        uint t1 = index + 1 < deposits.length ?
-            deposits[index + 1].date : time.getNow();
+        uint t0 = deposits[index - 1].date;
+        uint t1 = index < deposits.length ?
+            deposits[index].date : time.getNow();
 
-        int v0 = index >= 0 ?
-            int(deposits[index].value.add(deposits[index].balance)) :
-            0;
-        int v1 = index + 1 < deposits.length ? 
-            int(deposits[index + 1].balance) :
+        int v0 = int(deposits[index - 1].value.add(deposits[index - 1].balance));
+        int v1 = index < deposits.length ? 
+            int(deposits[index].balance) :
             exchange.calcExpectedPayout(address(this)).add(int(exchange.balanceOf(address(this))));
 
         y = uint(v1.mul(int(fractionBase)).div(v0));
