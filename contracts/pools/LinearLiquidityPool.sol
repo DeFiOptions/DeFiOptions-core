@@ -46,7 +46,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     address private owner;
     uint private spread;
     uint private reserveRatio;
-    uint private maturity;
+    uint private _maturity;
 
     uint private timeBase;
     uint private sqrtTimeBase;
@@ -87,27 +87,30 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function setParameters(
         uint _spread,
         uint _reserveRatio,
-        uint _maturity
+        uint _mt
     )
         external
     {
         ensureCaller();
         spread = _spread;
         reserveRatio = _reserveRatio;
-        maturity = _maturity;
+        _maturity = _mt;
     }
 
     function redeemAllowed() override public returns (bool) {
         
-        return time.getNow() >= maturity;
+        return time.getNow() >= _maturity;
     }
 
-    function apy() override external view returns (uint y) {
+    function maturity() override external view returns (uint) {
         
-        y = fractionBase;
+        return _maturity;
+    }
 
+    function yield() override external view returns (uint[] memory y, uint[] memory t) {
+        
         if (deposits.length > 0) {
-            
+
             uint dt = 365 days;
             uint _now = time.getNow();
             uint start = _now.sub(dt);
@@ -119,19 +122,17 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
                 }
             }
 
+            uint len = deposits.length.sub(i).add(i > 0 ? 1 : 0);
+            y = new uint[](len);
+            t = new uint[](len);
+            uint j = 0;
             for (; i <= deposits.length; i++) {
                 if (i > 0) {
-                    y = y.mul(calcYield(i, start)).div(fractionBase);
+                    (uint _y, uint _t) = calcYield(i);
+                    y[j] = _y;
+                    t[j] = _t;
+                    j++;
                 }
-            }
-
-            if (deposits[0].date > start && y != fractionBase) {
-                uint aux = _now.sub(deposits[0].date);
-                y = MoreMath.powDecimal(
-                    y, 
-                    (dt).mul(fractionBase).div(aux), 
-                    fractionBase
-                );
             }
         }
     }
@@ -140,7 +141,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         string calldata optSymbol,
         address udlFeed,
         uint strike,
-        uint _maturity,
+        uint _mt,
         OptionsExchange.OptionType optType,
         uint t0,
         uint t1,
@@ -152,7 +153,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         external
     {
         ensureCaller();
-        require(_maturity < maturity, "invalid maturity");
+        require(_mt < _maturity, "invalid maturity");
         require(x.length > 0 && x.length.mul(2) == y.length, "invalid pricing surface");
 
         if (parameters[optSymbol].x.length == 0) {
@@ -162,7 +163,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         parameters[optSymbol] = PricingParameters(
             udlFeed,
             strike,
-            _maturity,
+            _mt,
             optType,
             t0,
             t1,
@@ -436,7 +437,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         balance = sp > balance ? sp.sub(balance) : 0;
     }
 
-    function calcYield(uint index, uint start) private view returns (uint y) {
+    function calcYield(uint index) private view returns (uint y, uint t) {
 
         uint t0 = deposits[index - 1].date;
         uint t1 = index < deposits.length ?
@@ -448,13 +449,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             exchange.calcExpectedPayout(address(this)).add(int(exchange.balanceOf(address(this))));
 
         y = uint(v1.mul(int(fractionBase)).div(v0));
-        if (start > t0) {
-            y = MoreMath.powDecimal(
-                y, 
-                (t1.sub(start)).mul(fractionBase).div(t1.sub(t0)), 
-                fractionBase
-            );
-        }
+        t = t1.sub(t0);
     }
 
     function depositTokensInExchange(address sender, address token, uint value) private {
