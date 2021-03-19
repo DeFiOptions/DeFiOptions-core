@@ -12,7 +12,7 @@ interface LiquidityPool {
 
     function maturity() external view returns (uint);
 
-    function yield() external view returns (uint[] memory y, uint[] memory t);
+    function yield(uint dt) external view returns (uint y);
 
     function depositTokens(address to, address token, uint value) external;
 

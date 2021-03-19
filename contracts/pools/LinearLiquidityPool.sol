@@ -107,11 +107,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         return _maturity;
     }
 
-    function yield() override external view returns (uint[] memory y, uint[] memory t) {
+    function yield(uint dt) override external view returns (uint y) {
         
-        if (deposits.length > 0) {
+        y = fractionBase;
 
-            uint dt = 365 days;
+        if (deposits.length > 0) {
+            
             uint _now = time.getNow();
             uint start = _now.sub(dt);
             
@@ -122,16 +123,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
                 }
             }
 
-            uint len = deposits.length.sub(i).add(i > 0 ? 1 : 0);
-            y = new uint[](len);
-            t = new uint[](len);
-            uint j = 0;
             for (; i <= deposits.length; i++) {
                 if (i > 0) {
-                    (uint _y, uint _t) = calcYield(i);
-                    y[j] = _y;
-                    t[j] = _t;
-                    j++;
+                    y = y.mul(calcYield(i, start)).div(fractionBase);
                 }
             }
         }
@@ -437,7 +431,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         balance = sp > balance ? sp.sub(balance) : 0;
     }
 
-    function calcYield(uint index) private view returns (uint y, uint t) {
+    function calcYield(uint index, uint start) private view returns (uint y) {
 
         uint t0 = deposits[index - 1].date;
         uint t1 = index < deposits.length ?
@@ -449,7 +443,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             exchange.calcExpectedPayout(address(this)).add(int(exchange.balanceOf(address(this))));
 
         y = uint(v1.mul(int(fractionBase)).div(v0));
-        t = t1.sub(t0);
+        if (start > t0) {
+            y = MoreMath.powDecimal(
+                y, 
+                (t1.sub(start)).mul(fractionBase).div(t1.sub(t0)), 
+                fractionBase
+            );
+        }
     }
 
     function depositTokensInExchange(address sender, address token, uint value) private {

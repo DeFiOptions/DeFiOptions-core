@@ -13,54 +13,36 @@ contract TestPoolYield is Base {
 
         uint vBase = 1e6;
         time.setTimeOffset(0);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 0, "length t0");
+        Assert.equal(pool.yield(365 days), fractionBase, "yield t0");
 
         depositInPool(address(bob), 10 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 1, "length t1");
-        Assert.equal(yd[0], fractionBase, "yield t1");
+        Assert.equal(pool.yield(365 days), fractionBase, "yield t1");
+
         time.setTimeOffset(30 days);
         depositInPool(address(bob), 5 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 2, "length t2");
-        Assert.equal(yd[1], fractionBase, "yield t2");
+        Assert.equal(pool.yield(365 days), fractionBase, "yield t2");
 
         time.setTimeOffset(90 days);
         depositInPool(address(alice), 2 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 3, "length t3");
-        Assert.equal(yd[2], fractionBase, "yield t3");
-        
-        Assert.equal(dt[0], 30 days, "dt[0]]");
-        Assert.equal(dt[1], 60 days, "dt[1]");
-        Assert.equal(dt[2], 0, "dt[2]");
+        Assert.equal(pool.yield(365 days), fractionBase, "yield t3");
     }
 
     function testYieldAfterSingleProfit() public {
 
+        cBase = 1e3;
         uint vBase = 1e6;
         time.setTimeOffset(0);
         depositInPool(address(bob), 10 * vBase);
 
         time.setTimeOffset(180 days);
         depositInExchangeToPool(2 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 1, "length t1");
-        Assert.equal(yd[0], 1200000000, "yield t1");
-        Assert.equal(dt[0], 180 days, "dt t1");
+        MoreAssert.equal(pool.yield(365 days), 1200000000, cBase, "yield t1");
 
         time.setTimeOffset(365 days);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 1, "length t2");
-        Assert.equal(yd[0], 1200000000, "yield t2");
-        Assert.equal(dt[0], 365 days, "dt t2");
+        MoreAssert.equal(pool.yield(365 days), 1200000000, cBase, "yield t2");
 
         time.setTimeOffset(500 days);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 1, "length t3");
-        Assert.equal(yd[0], 1200000000, "yield t3");
-        Assert.equal(dt[0], 500 days, "dt t3");
+        MoreAssert.equal(pool.yield(365 days), 1142358216, cBase, "yield t3");
     }
 
     function testYieldAfterMultipleProfits() public {
@@ -73,26 +55,18 @@ contract TestPoolYield is Base {
         time.setTimeOffset(180 days);
         depositInExchangeToPool(1 * vBase);
         depositInPool(address(bob), 5 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 2, "length t1");
-        Assert.equal(yd[0], 1100000000, "yield t1");
-        Assert.equal(dt[0], 180 days, "dt t1");
+        MoreAssert.equal(pool.yield(365 days), 1100000000, cBase, "yield t1");
 
         time.setTimeOffset(365 days);
         depositInExchangeToPool(2 * vBase);
         depositInPool(address(bob), 10 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 3, "length t2");
-        Assert.equal(yd[1], 1125000000, "yield t2");
-        Assert.equal(dt[1], 185 days, "dt t2");
+        MoreAssert.equal(pool.yield(365 days), 1237500000, cBase, "yield t2");
 
         time.setTimeOffset(500 days);
         depositInExchangeToPool(56 * vBase / 10);
         depositInPool(address(bob), 2 * vBase);
-        (yd, dt) = pool.yield();
-        Assert.equal(yd.length, 4, "length t3");
-        Assert.equal(yd[2], 1200000000, "yield t3");
-        Assert.equal(dt[2], 135 days, "dt t3");
+        MoreAssert.equal(pool.yield(500 days), 1485000000, cBase, "yield t3");
+        MoreAssert.equal(pool.yield(365 days), 1382553480, 5e2, "yield t3");
     }
 
     function depositInExchangeToPool(uint value) private {
