@@ -253,6 +253,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         external
         returns (address addr)
     {
+        require(volume > 0, "invalid volume");
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
@@ -294,7 +295,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     function sell(string calldata optSymbol, uint price, uint volume) override external {
-
+        
+        require(volume > 0, "invalid volume");
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
