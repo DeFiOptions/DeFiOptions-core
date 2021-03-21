@@ -8,6 +8,7 @@ import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
 import "../utils/Arrays.sol";
 import "../utils/MoreMath.sol";
+import "../utils/SafeCast.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./CreditProvider.sol";
@@ -16,26 +17,27 @@ import "./OptionTokenFactory.sol";
 
 contract OptionsExchange is ManagedContract {
 
+    using SafeCast for uint;
     using SafeMath for uint;
     using SignedSafeMath for int;
     
     enum OptionType { CALL, PUT }
     
     struct OrderData {
-        uint id;
+        uint64 id;
         address owner;
         address udlFeed;
-        uint lowerVol;
-        uint upperVol;
-        uint written;
-        uint holding;
+        uint120 lowerVol;
+        uint120 upperVol;
+        uint120 written;
+        uint120 holding;
         OptionData option;
     }
     
     struct OptionData {
         OptionType _type;
-        uint strike;
-        uint maturity;
+        uint120 strike;
+        uint32 maturity;
     }
     
     TimeProvider private time;
@@ -44,12 +46,11 @@ contract OptionsExchange is ManagedContract {
     OptionTokenFactory private factory;
 
     mapping(uint => OrderData) private orders;
-    mapping(address => uint[]) private book;
+    mapping(address => uint64[]) private book;
     mapping(string => address) private optionTokens;
-    mapping(string => uint[]) private tokensIds;
+    mapping(string => uint64[]) private tokensIds;
     
-    uint private serial;
-    uint private bookLength; // TODO: remove unused variable
+    uint64 private serial;
     uint private volumeBase;
     uint private timeBase;
     uint private sqrtTimeBase;
@@ -119,7 +120,7 @@ contract OptionsExchange is ManagedContract {
 
     function writtenVolume(string calldata symbol, address owner) external view returns (uint) {
 
-        return findOrder(book[owner], symbol).written;
+        return uint(findOrder(book[owner], symbol).written);
     }
 
     function transferOwnership(
@@ -150,8 +151,8 @@ contract OptionsExchange is ManagedContract {
             tokensIds[symbol].push(toOrd.id);
         }
         
-        orders[ord.id].holding = orders[ord.id].holding.sub(volume);
-        orders[toOrd.id].holding = orders[toOrd.id].holding.add(volume);
+        orders[ord.id].holding = uint(orders[ord.id].holding).sub(volume).toUint120();
+        orders[toOrd.id].holding = uint(orders[toOrd.id].holding).add(volume).toUint120();
         ensureFunds(ord.owner);
 
         if (shouldRemove(ord.id)) {
@@ -173,8 +174,8 @@ contract OptionsExchange is ManagedContract {
         require(isValid(ord), "order not found");
         require(ord.written >= volume && ord.holding >= volume, "invalid volume");
         
-        orders[ord.id].written = ord.written.sub(volume);
-        orders[ord.id].holding = ord.holding.sub(volume);
+        orders[ord.id].written = uint(ord.written).sub(volume).toUint120();
+        orders[ord.id].holding = uint(ord.holding).sub(volume).toUint120();
 
         if (shouldRemove(ord.id)) {
             removeOrder(symbol, ord.id);
@@ -193,7 +194,7 @@ contract OptionsExchange is ManagedContract {
 
             for (uint i = 0; i < len && i < limit; i++) {
                 
-                uint id = tokensIds[symbol][0];
+                uint64 id = tokensIds[symbol][0];
                 ord = orders[id];
 
                 if (i == 0) {
@@ -277,7 +278,7 @@ contract OptionsExchange is ManagedContract {
     function calcCollateral(address owner) public view returns (uint) {
         
         int collateral;
-        uint[] memory ids = book[owner];
+        uint64[] memory ids = book[owner];
 
         for (uint i = 0; i < ids.length; i++) {
 
@@ -301,7 +302,7 @@ contract OptionsExchange is ManagedContract {
 
     function calcExpectedPayout(address owner) external view returns (int payout) {
 
-        uint[] memory ids = book[owner];
+        uint64[] memory ids = book[owner];
 
         for (uint i = 0; i < ids.length; i++) {
 
@@ -347,7 +348,7 @@ contract OptionsExchange is ManagedContract {
             int[] memory iv
         )
     {
-        uint[] memory ids = book[owner];
+        uint64[] memory ids = book[owner];
         holding = new uint[](ids.length);
         written = new uint[](ids.length);
         iv = new int[](ids.length);
@@ -425,14 +426,14 @@ contract OptionsExchange is ManagedContract {
 
         OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
         id = serial++;
-        ord.id = id;
+        ord.id = uint64(id);
 
         string memory symbol = getOptionSymbol(ord);
 
         OrderData memory result = findOrder(book[msg.sender], symbol);
         if (isValid(result)) {
-            orders[result.id].written = result.written.add(volume);
-            orders[result.id].holding = result.holding.add(volume);
+            orders[result.id].written = uint(result.written).add(volume).toUint120();
+            orders[result.id].holding = uint(result.holding).add(volume).toUint120();
             id = result.id;
         } else {
             orders[id] = ord;
@@ -462,7 +463,7 @@ contract OptionsExchange is ManagedContract {
         view
         returns (OrderData memory ord)
     {
-        OptionData memory opt = OptionData(optType, strike, maturity);
+        OptionData memory opt = OptionData(optType, strike.toUint120(), maturity.toUint32());
 
         UnderlyingFeed feed = udlFeed != address(0) ?
             UnderlyingFeed(udlFeed) :
@@ -474,16 +475,16 @@ contract OptionsExchange is ManagedContract {
             0, 
             msg.sender, 
             address(feed),
-            feed.calcLowerVolatility(vol),
-            feed.calcUpperVolatility(vol),
-            volume,
-            volume,
+            feed.calcLowerVolatility(uint(vol)).toUint120(),
+            feed.calcUpperVolatility(uint(vol)).toUint120(),
+            volume.toUint120(),
+            volume.toUint120(),
             opt
         );
     }
 
     function findOrder(
-        uint[] storage ids,
+        uint64[] storage ids,
         string memory symbol
     )
         private
@@ -526,9 +527,9 @@ contract OptionsExchange is ManagedContract {
     {
         uint volume = calcLiquidationVolume(ord);
         value = calcCollateral(ord.lowerVol, ord).add(iv)
-            .mul(volume).div(ord.written).div(volumeBase);
+            .mul(volume.toUint120()).div(ord.written).div(volumeBase);
         
-        orders[ord.id].written = orders[ord.id].written.sub(volume);
+        orders[ord.id].written = uint(orders[ord.id].written).sub(volume).toUint120();
         if (shouldRemove(ord.id)) {
             removeOrder(symbol, ord.id);
         }
@@ -543,7 +544,7 @@ contract OptionsExchange is ManagedContract {
         require(collateral > bal, "unfit for liquidation");
 
         volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
-            calcCollateral(ord.upperVol.sub(ord.lowerVol), ord)
+            calcCollateral(uint(ord.upperVol).sub(uint(ord.lowerVol)), ord)
         );
 
         volume = MoreMath.min(volume, ord.written);
@@ -554,7 +555,7 @@ contract OptionsExchange is ManagedContract {
         return orders[id].written == 0 && orders[id].holding == 0;
     }
     
-    function removeOrder(string memory symbol, uint id) private {
+    function removeOrder(string memory symbol, uint64 id) private {
         
         Arrays.removeItem(tokensIds[symbol], id);
         Arrays.removeItem(book[orders[id].owner], id);
@@ -610,7 +611,7 @@ contract OptionsExchange is ManagedContract {
         
         uint _now = getUdlNow(ord);
         if (ord.option.maturity > _now) {
-            d = (timeBase.mul(ord.option.maturity.sub(uint(_now)))).div(1 days);
+            d = (timeBase.mul(uint(ord.option.maturity).sub(uint(_now)))).div(1 days);
         } else {
             d = 0;
         }

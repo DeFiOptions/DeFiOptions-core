@@ -42,8 +42,8 @@ contract Base {
     OptionsExchange.OptionType CALL = OptionsExchange.OptionType.CALL;
     OptionsExchange.OptionType PUT = OptionsExchange.OptionType.PUT;
 
-    uint[] x;
-    uint[] y;
+    uint120[] x;
+    uint120[] y;
     string symbol = "ETHM-EC-55e19-2592e3";
     
     function beforeEachDeploy() public {
