@@ -47,8 +47,10 @@ contract OptionsExchange is ManagedContract {
 
     mapping(uint => OrderData) private orders;
     mapping(address => uint64[]) private book;
-    mapping(string => address) private optionTokens;
-    mapping(string => uint64[]) private tokensIds;
+    mapping(address => mapping(string => uint64)) private index;
+
+    mapping(string => address) private tokenAddress;
+    mapping(string => uint64[]) private tokenIds;
     
     uint64 private serial;
     uint private volumeBase;
@@ -120,7 +122,7 @@ contract OptionsExchange is ManagedContract {
 
     function writtenVolume(string calldata symbol, address owner) external view returns (uint) {
 
-        return uint(findOrder(book[owner], symbol).written);
+        return uint(findOrder(owner, symbol).written);
     }
 
     function transferOwnership(
@@ -131,14 +133,14 @@ contract OptionsExchange is ManagedContract {
     )
         external
     {
-        require(optionTokens[symbol] == msg.sender, "unauthorized ownership transfer");
+        require(tokenAddress[symbol] == msg.sender, "unauthorized ownership transfer");
 
-        OrderData memory ord = findOrder(book[from], symbol);
+        OrderData memory ord = findOrder(from, symbol);
 
         require(isValid(ord), "order not found");
         require(volume <= ord.holding, "invalid volume");
                 
-        OrderData memory toOrd = findOrder(book[to], symbol);
+        OrderData memory toOrd = findOrder(to, symbol);
 
         if (!isValid(toOrd)) {
             toOrd = orders[ord.id];
@@ -148,7 +150,8 @@ contract OptionsExchange is ManagedContract {
             toOrd.holding = 0;
             orders[toOrd.id] = toOrd;
             book[to].push(toOrd.id);
-            tokensIds[symbol].push(toOrd.id);
+            index[to][symbol] = toOrd.id;
+            tokenIds[symbol].push(toOrd.id);
         }
         
         orders[ord.id].holding = uint(orders[ord.id].holding).sub(volume).toUint120();
@@ -167,9 +170,9 @@ contract OptionsExchange is ManagedContract {
     )
         external
     {
-        require(optionTokens[symbol] == msg.sender, "unauthorized burn");
+        require(tokenAddress[symbol] == msg.sender, "unauthorized burn");
         
-        OrderData memory ord = findOrder(book[owner], symbol);
+        OrderData memory ord = findOrder(owner, symbol);
         
         require(isValid(ord), "order not found");
         require(ord.written >= volume && ord.holding >= volume, "invalid volume");
@@ -187,14 +190,14 @@ contract OptionsExchange is ManagedContract {
         uint value;
         int udlPrice;
         uint iv;
-        uint len = tokensIds[symbol].length;
+        uint len = tokenIds[symbol].length;
         OrderData memory ord;
 
         if (len > 0) {
 
             for (uint i = 0; i < len && i < limit; i++) {
                 
-                uint64 id = tokensIds[symbol][0];
+                uint64 id = tokenIds[symbol][0];
                 ord = orders[id];
 
                 if (i == 0) {
@@ -217,8 +220,8 @@ contract OptionsExchange is ManagedContract {
         }
 
         if (len <= limit) {
-            delete tokensIds[symbol];
-            delete optionTokens[symbol];
+            delete tokenIds[symbol];
+            delete tokenAddress[symbol];
         }
 
         emit LiquidateSymbol(symbol, udlPrice, value);
@@ -327,14 +330,14 @@ contract OptionsExchange is ManagedContract {
 
     function resolveToken(uint id) public view returns (address) {
         
-        address addr = optionTokens[getOptionSymbol(orders[id])];
+        address addr = tokenAddress[getOptionSymbol(orders[id])];
         require(addr != address(0), "token not found");
         return addr;
     }
 
     function resolveToken(string memory symbol) public view returns (address) {
         
-        address addr = optionTokens[symbol];
+        address addr = tokenAddress[symbol];
         require(addr != address(0), "token not found");
         return addr;
     }
@@ -430,7 +433,7 @@ contract OptionsExchange is ManagedContract {
 
         string memory symbol = getOptionSymbol(ord);
 
-        OrderData memory result = findOrder(book[msg.sender], symbol);
+        OrderData memory result = findOrder(msg.sender, symbol);
         if (isValid(result)) {
             orders[result.id].written = uint(result.written).add(volume).toUint120();
             orders[result.id].holding = uint(result.holding).add(volume).toUint120();
@@ -438,13 +441,14 @@ contract OptionsExchange is ManagedContract {
         } else {
             orders[id] = ord;
             book[msg.sender].push(ord.id);
-            tokensIds[symbol].push(ord.id);
+            index[msg.sender][symbol] = ord.id;
+            tokenIds[symbol].push(ord.id);
         }
 
-        address tk = optionTokens[symbol];
+        address tk = tokenAddress[symbol];
         if (tk == address(0)) {
             tk = factory.create(symbol);
-            optionTokens[symbol] = tk;
+            tokenAddress[symbol] = tk;
             emit CreateSymbol(symbol);
         }
         
@@ -484,18 +488,16 @@ contract OptionsExchange is ManagedContract {
     }
 
     function findOrder(
-        uint64[] storage ids,
+        address owner,
         string memory symbol
     )
         private
         view
         returns (OrderData memory)
     {
-        for (uint i = 0; i < ids.length; i++) {
-            OrderData memory ord = orders[ids[i]];
-            if (compareStrings(getOptionSymbol(ord), symbol)) {
-                return ord;
-            }
+        uint64 id = index[owner][symbol];
+        if (id > 0) {
+            return orders[id];
         }
     }
 
@@ -557,8 +559,10 @@ contract OptionsExchange is ManagedContract {
     
     function removeOrder(string memory symbol, uint64 id) private {
         
-        Arrays.removeItem(tokensIds[symbol], id);
-        Arrays.removeItem(book[orders[id].owner], id);
+        address owner = orders[id].owner;
+        Arrays.removeItem(tokenIds[symbol], id);
+        Arrays.removeItem(book[owner], id);
+        delete index[owner][symbol];
         delete orders[id];
     }
 
@@ -629,9 +633,5 @@ contract OptionsExchange is ManagedContract {
     function getUdlNow(OrderData memory ord) private view returns (uint timestamp) {
 
         (timestamp,) = UnderlyingFeed(ord.udlFeed).getLatestPrice();
-    }
-
-    function compareStrings(string memory a, string memory b) private pure returns (bool) {
-        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }
