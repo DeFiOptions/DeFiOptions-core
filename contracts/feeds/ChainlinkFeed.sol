@@ -171,7 +171,7 @@ contract ChainlinkFeed is UnderlyingFeed {
 
         } else {
 
-            vol = desymbolValue(dailyVolatilities[timespan][today()]);
+            vol = decodeValue(dailyVolatilities[timespan][today()]);
             cached = true;
 
         }
@@ -240,7 +240,7 @@ contract ChainlinkFeed is UnderlyingFeed {
         return v | (uint(1) << 255);
     }
 
-    function desymbolValue(uint v) private pure returns (uint) {
+    function decodeValue(uint v) private pure returns (uint) {
         return v & (~(uint(1) << 255));
     }
 
