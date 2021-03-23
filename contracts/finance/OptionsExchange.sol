@@ -25,13 +25,13 @@ contract OptionsExchange is ManagedContract {
     
     struct OrderData {
         uint64 id;
+        OptionData option;
         address owner;
         address udlFeed;
         uint120 lowerVol;
         uint120 upperVol;
         uint120 written;
         uint120 holding;
-        OptionData option;
     }
     
     struct OptionData {
@@ -147,15 +147,17 @@ contract OptionsExchange is ManagedContract {
             toOrd.id = serial++;
             toOrd.owner = address(to);
             toOrd.written = 0;
-            toOrd.holding = 0;
+            toOrd.holding = volume.toUint120();
             orders[toOrd.id] = toOrd;
             book[to].push(toOrd.id);
             index[to][symbol] = toOrd.id;
             tokenIds[symbol].push(toOrd.id);
+        } else {
+            orders[toOrd.id].holding = uint(orders[toOrd.id].holding).add(volume).toUint120();
         }
         
         orders[ord.id].holding = uint(orders[ord.id].holding).sub(volume).toUint120();
-        orders[toOrd.id].holding = uint(orders[toOrd.id].holding).add(volume).toUint120();
+
         ensureFunds(ord.owner);
 
         if (shouldRemove(ord.id)) {
@@ -428,17 +430,16 @@ contract OptionsExchange is ManagedContract {
         require(maturity > time.getNow(), "invalid maturity");
 
         OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
-        id = serial++;
-        ord.id = uint64(id);
-
         string memory symbol = getOptionSymbol(ord);
 
         OrderData memory result = findOrder(msg.sender, symbol);
         if (isValid(result)) {
-            orders[result.id].written = uint(result.written).add(volume).toUint120();
-            orders[result.id].holding = uint(result.holding).add(volume).toUint120();
             id = result.id;
+            orders[id].written = uint(result.written).add(volume).toUint120();
+            orders[id].holding = uint(result.holding).add(volume).toUint120();
         } else {
+            id = serial++;
+            ord.id = uint64(id);
             orders[id] = ord;
             book[msg.sender].push(ord.id);
             index[msg.sender][symbol] = ord.id;
@@ -476,14 +477,14 @@ contract OptionsExchange is ManagedContract {
         uint vol = feed.getDailyVolatility(settings.getVolatilityPeriod());
 
         ord = OrderData(
-            0, 
+            0,
+            opt,
             msg.sender, 
             address(feed),
             feed.calcLowerVolatility(uint(vol)).toUint120(),
             feed.calcUpperVolatility(uint(vol)).toUint120(),
             volume.toUint120(),
-            volume.toUint120(),
-            opt
+            volume.toUint120()
         );
     }
 

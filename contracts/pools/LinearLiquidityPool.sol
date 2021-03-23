@@ -259,10 +259,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
-        uint p = calcOptPrice(param, Operation.BUY);
-        require(price >= p, "insufficient price");
+        price = validatePrice(price, param, Operation.BUY);
 
-        uint value = p.mul(volume).div(volumeBase);
+        uint value = price.mul(volume).div(volumeBase);
         depositTokensInExchange(msg.sender, token, value);
 
         uint _holding = holding[optSymbol];
@@ -302,14 +301,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
-        uint p = calcOptPrice(param, Operation.SELL);
-        require(price <= p, "insufficient price");
+        price = validatePrice(price, param, Operation.SELL);
 
         address addr = exchange.resolveToken(optSymbol);
         OptionToken tk = OptionToken(addr);
         tk.transferFrom(msg.sender, address(this), volume);
 
-        uint value = p.mul(volume).div(volumeBase);
+        uint value = price.mul(volume).div(volumeBase);
         exchange.transferBalance(msg.sender, value);
         require(calcFreeBalance() > 0, "excessive volume");
         
@@ -327,6 +325,22 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         holding[optSymbol] = _holding.toUint120();
 
         emit Sell(optSymbol, price, volume);
+    }
+
+    function validatePrice(
+        uint price, 
+        PricingParameters memory param, 
+        Operation op
+    ) 
+        private
+        view
+        returns (uint p) 
+    {
+        p = calcOptPrice(param, op);
+        require(
+            op == Operation.BUY ? price >= p : price <= p,
+            "insufficient price"
+        );
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)
