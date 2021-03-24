@@ -264,10 +264,29 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             uint(param.sellStock).sub(holding[optSymbol])
         );
     }
-
-    function buy(string calldata optSymbol, uint price, uint volume, address token)
+    
+    function buy(
+        string calldata optSymbol,
+        uint price,
+        uint volume,
+        address token,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
         override
         external
+        returns (address addr)
+    {
+        uint value = price.mul(volume).div(volumeBase);
+        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
+        addr = buy(optSymbol, price, volume, token);
+    }
+
+    function buy(string memory optSymbol, uint price, uint volume, address token)
+        override
+        public
         returns (address addr)
     {
         require(volume > 0, "invalid volume");

@@ -5,14 +5,14 @@
 Experimental DeFi options trading smart contracts enabling long and short positions for call and put tokenized, collateralized, cash settable european style options.
 
 <p align="center">
-<img src="https://github.com/TCGV/DeFiOptions/blob/master/diagram.PNG?raw=true" width="500" />
+<img src="https://github.com/DeFiOptions/DeFiOptions-core/blob/master/diagram.PNG?raw=true" width="500" />
 </p>
 
 A dynamic approach was implemented for ensuring collateral for writing options, making use of favorable writer's open option positions for decreasing total required balance provided as collateral.
 
 The exchange accepts stablecoin deposits as collateral for issuing ERC20 option tokens. [Chainlink](https://chain.link/) based price feeds provide the exchange onchain underlying price and volatility updates.
 
-Upon maturity each [option contract](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionToken.sol) is liquidated, cash settled by the credit provider contract and destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
+Upon maturity each [option contract](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionToken.sol) is liquidated, cash settled by the credit provider contract and destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
 
 Registered debt will accrue interest until it's repaid by the borrower. Payment occurs either automatically when any of the borrower's open option positions matures and is cash settled (pending debt will be discounted from profits) or manually if the borrower makes a new stablecoin deposit.
 
@@ -20,28 +20,28 @@ Exchange's balances not allocated as collateral can be withdrawn by respective o
 
 Holders of credit tokens can request to withdraw (and burn) their balance for stablecoins as long as there are sufficient funds available in the exchange to process the operation, otherwise the withdraw request will be FIFO-queued while the exchange gathers funds, accruing interest until it's finally processed to compensate for the delay.
 
-Test cases defined in [test/finance](https://github.com/TCGV/DeFiOptions/blob/master/test/finance) provide more insight into the implementation progress.
+Test cases defined in [test/finance](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/finance) provide more insight into the implementation progress.
 
 ## Table of contents
 
-* [Coding Reference](https://github.com/TCGV/DeFiOptions#coding-reference)
-  * [Making a deposit](https://github.com/TCGV/DeFiOptions#making-a-deposit)
-  * [Writing options](https://github.com/TCGV/DeFiOptions#writing-options)
-  * [Collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation)
-  * [Liquidating positions](https://github.com/TCGV/DeFiOptions#liquidating-positions)
-  * [Burning options](https://github.com/TCGV/DeFiOptions#burning-options)
-  * [Underlying feeds](https://github.com/TCGV/DeFiOptions#underlying-feeds)
-  * [Credit tokens](https://github.com/TCGV/DeFiOptions#credit-tokens)
-  * [Linear liquidity pool](https://github.com/TCGV/DeFiOptions#linear-liquidity-pool)
-    * [Pool interface](https://github.com/TCGV/DeFiOptions#pool-interface)
-    * [Buying from the pool](https://github.com/TCGV/DeFiOptions#buying-from-the-pool)
-    * [Selling to the pool](https://github.com/TCGV/DeFiOptions#selling-to-the-pool)
-* [Kovan addresses](https://github.com/TCGV/DeFiOptions#kovan-addresses)
-* [Get involved](https://github.com/TCGV/DeFiOptions#get-involved)
-  * [Validate code](https://github.com/TCGV/DeFiOptions#validate-code)
-  * [Open challenges](https://github.com/TCGV/DeFiOptions#open-challenges)
-  * [Support mainnet](https://github.com/TCGV/DeFiOptions#support-mainnet)
-* [Licensing](https://github.com/TCGV/DeFiOptions/blob/master/LICENSE)
+* [Coding Reference](https://github.com/DeFiOptions/DeFiOptions-core#coding-reference)
+  * [Making a deposit](https://github.com/DeFiOptions/DeFiOptions-core#making-a-deposit)
+  * [Writing options](https://github.com/DeFiOptions/DeFiOptions-core#writing-options)
+  * [Collateral allocation](https://github.com/DeFiOptions/DeFiOptions-core#collateral-allocation)
+  * [Liquidating positions](https://github.com/DeFiOptions/DeFiOptions-core#liquidating-positions)
+  * [Burning options](https://github.com/DeFiOptions/DeFiOptions-core#burning-options)
+  * [Underlying feeds](https://github.com/DeFiOptions/DeFiOptions-core#underlying-feeds)
+  * [Credit tokens](https://github.com/DeFiOptions/DeFiOptions-core#credit-tokens)
+  * [Linear liquidity pool](https://github.com/DeFiOptions/DeFiOptions-core#linear-liquidity-pool)
+    * [Pool interface](https://github.com/DeFiOptions/DeFiOptions-core#pool-interface)
+    * [Buying from the pool](https://github.com/DeFiOptions/DeFiOptions-core#buying-from-the-pool)
+    * [Selling to the pool](https://github.com/DeFiOptions/DeFiOptions-core#selling-to-the-pool)
+* [Kovan addresses](https://github.com/DeFiOptions/DeFiOptions-core#kovan-addresses)
+* [Get involved](https://github.com/DeFiOptions/DeFiOptions-core#get-involved)
+  * [Validate code](https://github.com/DeFiOptions/DeFiOptions-core#validate-code)
+  * [Open challenges](https://github.com/DeFiOptions/DeFiOptions-core#open-challenges)
+  * [Support mainnet](https://github.com/DeFiOptions/DeFiOptions-core#support-mainnet)
+* [Licensing](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/LICENSE)
 
 ## Coding Reference
 
@@ -233,18 +233,18 @@ The exchange depends on these functions to calculate options intrinsic value, co
 * The `symbol` function is used to create option token contracts identifiers, such as `ETH/USD-EC-13e20-1611964800` which represents an ETH european call option with strike price US$ 1300 and maturity at timestamp `1611964800`.
 * The `getLatestPrice` function retrieves the latest quote for the option underlying, for calculating its intrinsic value.
 * The `getPrice` function on the other hand retrieves the first price for the underlying registered in the blockchain after a specific timestamp position, and is used to liquidate the option token contract at maturity.
-* The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/TCGV/DeFiOptions#collateral-allocation) section.
+* The `getDailyVolatility` function is used to calculate collateral requirements as described in the [collateral allocation](https://github.com/DeFiOptions/DeFiOptions-core#collateral-allocation) section.
 * The `calcLowerVolatility` and `calcUpperVolatility` apply, respectively, the k<sub>lower</sub> and k<sub>upper</sub> constants to the volatility passed as a parameter, also used for calculating collateral requirements, and for liquidating positions as well.
 
 This repository provides a [Chainlink](https://chain.link/) based implementation of the `UnderlyingFeed` interface which allows any Chainlink USD fiat paired currency (ex: ETH, BTC, LINK, EUR) to be used as underlying for issuing options:
 
-* [contracts/feeds/ChainlinkFeed.sol](https://github.com/TCGV/DeFiOptions/blob/master/contracts/feeds/ChainlinkFeed.sol)
+* [contracts/feeds/ChainlinkFeed.sol](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/feeds/ChainlinkFeed.sol)
 
 Notice that this implementation provides prefetching functions (`prefetchSample`, `prefetchDailyPrice` and `prefetchDailyVolatility`) which should be called periodically and are used to lock-in underlying prices for liquidation and to optimize gas usage while performing volatility calculations.
 
 ### Credit tokens
 
-A [credit token](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol) can be viewed as a proxy for any of the exchange's compatible stablecoin tokens, since it can be redeemed for the stablecoin at a 1:1 value conversion ratio. In this sense the credit token is also a stablecoin, one with less liquidity nonetheless.
+A [credit token](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol) can be viewed as a proxy for any of the exchange's compatible stablecoin tokens, since it can be redeemed for the stablecoin at a 1:1 value conversion ratio. In this sense the credit token is also a stablecoin, one with less liquidity nonetheless.
 
 Credit tokens are issued when there aren't enough stablecoin tokens available in the exchange to cover a withdraw operation. Holders of credit tokens receive interest on their balance (hourly accrued) to compensate for the time they have to wait to finally redeem (burn) these credit tokens for stablecoins once the exchange ensures funds again. To redeem credit tokens call the `requestWithdraw` function, and expect to receive the requested value in any of the exchange's compatible stablecoin tokens:
 
@@ -262,7 +262,7 @@ The exchange will ensure funds for burning credit tokens when debtors repay thei
 This project provides a liquidity pool implementation that uses linear interpolation for calculating buy/sell option prices. The diagram below illustrates how the linear interpolation liquidity pool fits in the options exchange trading environment, how market agents interact with it, and provides some context on the pool pricing model:
 
 <p align="center">
-<img src="https://github.com/TCGV/DeFiOptions/blob/master/linear-liquidity-pool.PNG?raw=true" width="500" />
+<img src="https://github.com/DeFiOptions/DeFiOptions-core/blob/master/linear-liquidity-pool.PNG?raw=true" width="500" />
 </p>
 
 The pool holds a pricing parameters data structure for each tradable option which contains a discretized pricing curve calculated off-chain based on a traditional option pricing model (ex: Monte Carlo) that’s “uploaded” to the pool storage. The pool pricing function receives the underlying price (fetched from the underlying price feed) and the current timestamp as inputs, then it interpolates the discrete curve to obtain the desired option’s target price.
@@ -271,7 +271,7 @@ A fixed spread is applied on top of the option’s target price for deriving its
 
 #### Pool interface
 
-The following [liquidity pool interface](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/LiquidityPool.sol) functions are provided for those willing to interact with the options exchange environment:
+The following [liquidity pool interface](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/LiquidityPool.sol) functions are provided for those willing to interact with the options exchange environment:
 
 ```solidity
 interface LiquidityPool {
@@ -340,12 +340,12 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/OptionsExchange.sol)         | [0x6271d11cba6be634a5ff6153cd60bf55e9eeca68](https://kovan.etherscan.io/address/0x6271d11cba6be634a5ff6153cd60bf55e9eeca68) |
-| [CreditToken](https://github.com/TCGV/DeFiOptions/blob/master/contracts/finance/CreditToken.sol)                 | [0x139885c858c66264f31f33a78ad74965bb55f14c](https://kovan.etherscan.io/address/0x139885c858c66264f31f33a78ad74965bb55f14c) |
-| [Linear Liquidity Pool](https://github.com/TCGV/DeFiOptions/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xe2ea8031581d602a520a6af42ffaf9ccf5ddd4c6](https://kovan.etherscan.io/address/0xe2ea8031581d602a520a6af42ffaf9ccf5ddd4c6) |
-| [ETH/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
-| [BTC/USD feed](https://github.com/TCGV/DeFiOptions/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
-| [ERC20Mock](https://github.com/TCGV/DeFiOptions/blob/master/test/common/mock/ERC20Mock.sol)                      | [0x96ffB171Bd80dC984612C017a5D9d30f2385275f](https://kovan.etherscan.io/address/0x96ffB171Bd80dC984612C017a5D9d30f2385275f) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0xc9457ab09432bd0042871428066c0631f9a47c18](https://kovan.etherscan.io/address/0xc9457ab09432bd0042871428066c0631f9a47c18) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0x1db75d0b246edacdb0f535b01a7d76852cdeb368](https://kovan.etherscan.io/address/0x1db75d0b246edacdb0f535b01a7d76852cdeb368) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xc14ddeda05103268c09ff5c40ef0fa99a5f5fb00](https://kovan.etherscan.io/address/0xc14ddeda05103268c09ff5c40ef0fa99a5f5fb00) |
+| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
+| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
+| [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
 
@@ -378,7 +378,7 @@ There are a few major technical challenges that will need to get dealt with if t
 * Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
 * Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
-* Improvement of the incipient governance functionality ([contracts/governance](https://github.com/TCGV/DeFiOptions/tree/master/contracts/governance))
+* Improvement of the incipient governance functionality ([contracts/governance](https://github.com/DeFiOptions/DeFiOptions-core/tree/master/contracts/governance))
 
 ### Support mainnet
 

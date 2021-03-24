@@ -121,7 +121,7 @@ abstract contract ERC20 is IERC20Details {
         require(deadline >= block.timestamp, "permit expired");
         bytes32 digest = keccak256(
             abi.encodePacked(
-                '\x19\x01',
+                "\x19\x01",
                 DOMAIN_SEPARATOR,
                 keccak256(
                     abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline)
@@ -129,7 +129,7 @@ abstract contract ERC20 is IERC20Details {
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, 'invalid signature');
+        require(recoveredAddress != address(0) && recoveredAddress == owner, "invalid signature");
         approve(owner, spender, value);
     }
 
