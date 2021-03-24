@@ -45,6 +45,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     mapping(string => uint120) private written;
     mapping(string => uint120) private holding;
 
+    string private constant _name = "Linear Liquidity Pool Redeemable Token";
+    string private constant _symbol = "LLPTK";
+
     address private owner;
     uint private spread;
     uint private reserveRatio;
@@ -57,7 +60,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     string[] private optSymbols;
     Deposit[] private deposits;
 
-    constructor(address deployer) public {
+    constructor(address deployer) ERC20(_name) public {
 
         Deployer(deployer).setContractAddress("LinearLiquidityPool");
     }
@@ -75,15 +78,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     function name() override external view returns (string memory) {
-        return "Linear Liquidity Pool Redeemable Token";
+        return _name;
     }
 
     function symbol() override external view returns (string memory) {
-        return "LLPTK";
-    }
-
-    function decimals() override external view returns (uint8) {
-        return 18;
+        return _symbol;
     }
 
     function setParameters(
@@ -183,7 +182,23 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         emit RemoveSymbol(optSymbol);
     }
 
-    function depositTokens(address to, address token, uint value) override external {
+    function depositTokens(
+        address to,
+        address token,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        override
+        external
+    {
+        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
+        depositTokens(to, token, value);
+    }
+
+    function depositTokens(address to, address token, uint value) override public {
 
         uint b0 = exchange.balanceOf(address(this));
         depositTokensInExchange(msg.sender, token, value);

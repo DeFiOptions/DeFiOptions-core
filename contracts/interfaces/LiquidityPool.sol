@@ -14,6 +14,16 @@ interface LiquidityPool {
 
     function yield(uint dt) external view returns (uint y);
 
+    function depositTokens(
+        address to,
+        address token,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
     function depositTokens(address to, address token, uint value) external;
 
     function listSymbols() external view returns (string memory);

@@ -26,11 +26,14 @@ contract CreditToken is ManagedContract, ERC20 {
     mapping(address => uint) private creditDates;
     mapping(address => WithdrawQueueItem) private queue;
 
+    string private constant _name = "Credit Token";
+    string private constant _symbol = "CREDTK";
+
     address private issuer;
     address private headAddr;
     address private tailAddr;
 
-    constructor(address deployer) public {
+    constructor(address deployer) ERC20(_name) public {
 
         Deployer(deployer).setContractAddress("CreditToken");
     }
@@ -44,15 +47,11 @@ contract CreditToken is ManagedContract, ERC20 {
     }
 
     function name() override external view returns (string memory) {
-        return "Credit Token";
+        return _name;
     }
 
     function symbol() override external view returns (string memory) {
-        return "CREDTK";
-    }
-
-    function decimals() override external view returns (uint8) {
-        return 18;
+        return _symbol;
     }
 
     function setIssuer(address _issuer) public {

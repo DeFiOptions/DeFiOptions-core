@@ -19,10 +19,13 @@ contract GovToken is ManagedContract, ERC20 {
     mapping(uint => Proposal) private proposalsMap;
     mapping(address => uint) private proposingDate;
 
+    string private constant _name = "Governance Token";
+    string private constant _symbol = "GOVTK";
+
     uint private serial;
     uint[] private proposals;
 
-    constructor(address deployer) public {
+    constructor(address deployer) ERC20(_name) public {
 
         Deployer(deployer).setContractAddress("GovToken");
     }
@@ -35,15 +38,11 @@ contract GovToken is ManagedContract, ERC20 {
     }
 
     function name() override external view returns (string memory) {
-        return "Governance Token";
+        return _name;
     }
 
     function symbol() override external view returns (string memory) {
-        return "GOVTK";
-    }
-
-    function decimals() override external view returns (uint8) {
-        return 18;
+        return _symbol;
     }
 
     function setInitialSupply(address owner, uint supply) public {

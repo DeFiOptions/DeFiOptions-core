@@ -10,25 +10,24 @@ contract OptionToken is RedeemableToken {
 
     using SafeMath for uint;
 
+    string private constant _prefix = "Option Redeemable Token: ";
     string private _symbol;
 
-    constructor(string memory _sb, address _issuer) public {
-        
+    constructor(string memory _sb, address _issuer)
+        ERC20(string(abi.encodePacked(_prefix, _symbol)))
+        public
+    {    
         _symbol = _sb;
         exchange = OptionsExchange(_issuer);
     }
 
     function name() override external view returns (string memory) {
-        return string(abi.encodePacked("Option Redeemable Token: ", _symbol));
+        return string(abi.encodePacked(_prefix, _symbol));
     }
 
     function symbol() override external view returns (string memory) {
 
         return _symbol;
-    }
-
-    function decimals() override external view returns (uint8) {
-        return 18;
     }
 
     function issue(address to, uint value) external {

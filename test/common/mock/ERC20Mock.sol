@@ -7,17 +7,20 @@ contract ERC20Mock is ERC20 {
 
     using SafeMath for uint;
 
+    string private constant _name = "ERC20Mock";
+    string private constant _symbol = "MOCK";
+
+    constructor() ERC20(_name) public {
+
+    }
+
     function name() override external view returns (string memory) {
-        return "ERC20Mock";
+        return _name;
     }
 
     function symbol() override external view returns (string memory) {
 
-        return "MOCK";
-    }
-
-    function decimals() override external view returns (uint8) {
-        return 18;
+        return _symbol;
     }
 
     function issue(address to, uint value) public {

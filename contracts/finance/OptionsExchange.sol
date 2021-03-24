@@ -81,7 +81,22 @@ contract OptionsExchange is ManagedContract {
         sqrtTimeBase = 1e9;
     }
 
-    function depositTokens(address to, address token, uint value) external {
+    function depositTokens(
+        address to,
+        address token,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        external
+    {
+        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
+        depositTokens(to, token, value);
+    }
+
+    function depositTokens(address to, address token, uint value) public {
 
         ERC20 t = ERC20(token);
         t.transferFrom(msg.sender, address(this), value);
