@@ -57,6 +57,11 @@ contract OptionsExchange is ManagedContract {
     uint private timeBase;
     uint private sqrtTimeBase;
 
+    mapping(address => uint) public nonces;
+    bytes32 public DOMAIN_SEPARATOR;
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+
     event CreateSymbol(string indexed symbol);
 
     event WriteOptions(string indexed symbol, address indexed issuer, uint volume, uint id);
@@ -65,7 +70,22 @@ contract OptionsExchange is ManagedContract {
 
     constructor(address deployer) public {
 
-        Deployer(deployer).setContractAddress("OptionsExchange");
+        string memory _name = "OptionsExchange";
+        Deployer(deployer).setContractAddress(_name);
+
+        uint chainId;
+        assembly {
+            chainId := chainid()
+        }
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+                keccak256(bytes(_name)),
+                keccak256(bytes('1')),
+                chainId,
+                address(this)
+            )
+        );
     }
 
     function initialize(Deployer deployer) override internal {
@@ -109,7 +129,25 @@ contract OptionsExchange is ManagedContract {
         return creditProvider.balanceOf(owner);
     }
 
-    function transferBalance(address to, uint value) external {
+    function transferBalance(
+        address from, 
+        address to, 
+        uint value,
+        uint maxValue,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        external
+    {
+        require(maxValue > value, "insufficient permit value");
+        permit(from, to, maxValue, deadline, v, r, s);
+        creditProvider.transferBalance(from, to, value);
+        ensureFunds(from);
+    }
+
+    function transferBalance(address to, uint value) public {
 
         creditProvider.transferBalance(msg.sender, to, value);
         ensureFunds(msg.sender);
@@ -428,6 +466,31 @@ contract OptionsExchange is ManagedContract {
         OrderData memory ord = createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
 
         return calcIntrinsicValue(ord);
+    }
+
+    function permit(
+        address from,
+        address to,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        private
+    {
+        require(deadline >= block.timestamp, "permit expired");
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(
+                    abi.encode(PERMIT_TYPEHASH, from, to, value, nonces[from]++, deadline)
+                )
+            )
+        );
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        require(recoveredAddress != address(0) && recoveredAddress == from, "invalid signature");
     }
 
     function createOrder(

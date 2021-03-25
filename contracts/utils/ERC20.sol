@@ -24,7 +24,6 @@ abstract contract ERC20 is IERC20Details {
     constructor(string memory _name) public {
 
         uint chainId;
-
         assembly {
             chainId := chainid()
         }

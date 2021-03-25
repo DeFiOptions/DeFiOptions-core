@@ -266,7 +266,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
     
     function buy(
-        string calldata optSymbol,
+        string memory optSymbol,
         uint price,
         uint volume,
         address token,
@@ -276,16 +276,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         bytes32 s
     )
         override
-        external
-        returns (address addr)
-    {
-        uint value = price.mul(volume).div(volumeBase);
-        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
-        addr = buy(optSymbol, price, volume, token);
-    }
-
-    function buy(string memory optSymbol, uint price, uint volume, address token)
-        override
         public
         returns (address addr)
     {
@@ -293,10 +283,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
-        price = validatePrice(price, param, Operation.BUY);
-
-        uint value = price.mul(volume).div(volumeBase);
-        depositTokensInExchange(msg.sender, token, value);
+        price = receivePayment(param, price, volume, token, deadline, v, r, s);
 
         uint _holding = holding[optSymbol];
         if (volume > _holding) {
@@ -329,6 +316,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         emit Buy(optSymbol, price, volume, token);
     }
 
+    function buy(string calldata optSymbol, uint price, uint volume, address token)
+        override
+        external
+        returns (address addr)
+    {
+        bytes32 x;
+        addr = buy(optSymbol, price, volume, token, 0, 0, x, x);
+    }
+
     function sell(string calldata optSymbol, uint price, uint volume) override external {
         
         require(volume > 0, "invalid volume");
@@ -359,6 +355,36 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         holding[optSymbol] = _holding.toUint120();
 
         emit Sell(optSymbol, price, volume);
+    }
+
+    function receivePayment(
+        PricingParameters memory param,
+        uint price,
+        uint volume,
+        address token,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        private
+        returns (uint)
+    {
+        
+        uint maxValue = price.mul(volume).div(volumeBase);
+        price = validatePrice(price, param, Operation.BUY);
+        uint value = price.mul(volume).div(volumeBase);
+
+        if (token != address(exchange)) {
+            if (deadline > 0) {
+                ERC20(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
+            }
+            depositTokensInExchange(msg.sender, token, value);
+        } else {
+            exchange.transferBalance(msg.sender, address(this), value, maxValue, deadline, v, r, s);
+        }
+
+        return price;
     }
 
     function validatePrice(
@@ -505,7 +531,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     function depositTokensInExchange(address sender, address token, uint value) private {
-
+        
         ERC20 t = ERC20(token);
         t.transferFrom(sender, address(this), value);
         t.approve(address(exchange), value);
