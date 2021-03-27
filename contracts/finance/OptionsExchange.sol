@@ -28,8 +28,6 @@ contract OptionsExchange is ManagedContract {
         OptionData option;
         address owner;
         address udlFeed;
-        uint120 lowerVol;
-        uint120 upperVol;
         uint120 written;
         uint120 holding;
     }
@@ -39,6 +37,11 @@ contract OptionsExchange is ManagedContract {
         uint120 strike;
         uint32 maturity;
     }
+
+    struct FeedData {
+        uint120 lowerVol;
+        uint120 upperVol;
+    }
     
     TimeProvider private time;
     ProtocolSettings private settings;
@@ -46,6 +49,7 @@ contract OptionsExchange is ManagedContract {
     OptionTokenFactory private factory;
 
     mapping(uint => OrderData) private orders;
+    mapping(address => FeedData) private feeds;
     mapping(address => uint64[]) private book;
     mapping(address => mapping(string => uint64)) private index;
 
@@ -141,7 +145,7 @@ contract OptionsExchange is ManagedContract {
     )
         external
     {
-        require(maxValue > value, "insufficient permit value");
+        require(maxValue >= value, "insufficient permit value");
         permit(from, to, maxValue, deadline, v, r, s);
         creditProvider.transferBalance(from, to, value);
         ensureFunds(from);
@@ -294,7 +298,8 @@ contract OptionsExchange is ManagedContract {
         if (getUdlNow(ord) >= ord.option.maturity) {
             value = liquidateAfterMaturity(ord, symbol, token, iv);
         } else {
-            value = liquidateBeforeMaturity(ord, symbol, token, iv);
+            FeedData memory fd = feeds[ord.udlFeed];
+            value = liquidateBeforeMaturity(ord, fd, symbol, token, iv);
         }
     }
 
@@ -324,10 +329,11 @@ contract OptionsExchange is ManagedContract {
         view
         returns (uint)
     {
-        OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
+        (OrderData memory ord, FeedData memory fd) =
+            createOrderInMemory(udlFeed, volume, optType, strike, maturity);
 
         int collateral = calcIntrinsicValue(ord).mul(int(volume)).add(
-            int(calcCollateral(ord.upperVol, ord))
+            int(calcCollateral(fd.upperVol, ord))
         ).div(int(volumeBase));
 
         return collateral > 0 ? uint(collateral) : 0;
@@ -347,7 +353,7 @@ contract OptionsExchange is ManagedContract {
                     calcIntrinsicValue(ord).mul(
                         int(ord.written).sub(int(ord.holding))
                     )
-                ).add(int(calcCollateral(ord.upperVol, ord)));
+                ).add(int(calcCollateral(feeds[ord.udlFeed].upperVol, ord)));
             }
         }
 
@@ -440,12 +446,18 @@ contract OptionsExchange is ManagedContract {
     
     function calcLowerCollateral(uint id) external view returns (uint) {
         
-        return calcCollateral(orders[id].lowerVol, orders[id]).div(volumeBase);
+        return calcCollateral(
+            feeds[orders[id].udlFeed].lowerVol,
+            orders[id]
+        ).div(volumeBase);
     }
     
     function calcUpperCollateral(uint id) external view returns (uint) {
         
-        return calcCollateral(orders[id].upperVol, orders[id]).div(volumeBase);
+        return calcCollateral(
+            feeds[orders[id].udlFeed].upperVol,
+            orders[id]
+        ).div(volumeBase);
     }
     
     function calcIntrinsicValue(uint id) external view returns (int) {
@@ -463,7 +475,8 @@ contract OptionsExchange is ManagedContract {
         view
         returns (int)
     {
-        OrderData memory ord = createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
+        (OrderData memory ord,) = 
+            createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
 
         return calcIntrinsicValue(ord);
     }
@@ -507,10 +520,12 @@ contract OptionsExchange is ManagedContract {
         require(volume > 0, "invalid volume");
         require(maturity > time.getNow(), "invalid maturity");
 
-        OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
-        string memory symbol = getOptionSymbol(ord);
+        (OrderData memory ord, FeedData memory fd) =
+            createOrderInMemory(udlFeed, volume, optType, strike, maturity);
 
+        string memory symbol = getOptionSymbol(ord);
         OrderData memory result = findOrder(msg.sender, symbol);
+
         if (isValid(result)) {
             id = result.id;
             orders[id].written = uint(result.written).add(volume).toUint120();
@@ -526,6 +541,7 @@ contract OptionsExchange is ManagedContract {
 
         address tk = tokenAddress[symbol];
         if (tk == address(0)) {
+            feeds[ord.udlFeed] = fd;
             tk = factory.create(symbol);
             tokenAddress[symbol] = tk;
             emit CreateSymbol(symbol);
@@ -544,7 +560,7 @@ contract OptionsExchange is ManagedContract {
     )
         private
         view
-        returns (OrderData memory ord)
+        returns (OrderData memory ord, FeedData memory fd)
     {
         OptionData memory opt = OptionData(optType, strike.toUint120(), maturity.toUint32());
 
@@ -552,17 +568,19 @@ contract OptionsExchange is ManagedContract {
             UnderlyingFeed(udlFeed) :
             UnderlyingFeed(settings.getDefaultUdlFeed());
 
-        uint vol = feed.getDailyVolatility(settings.getVolatilityPeriod());
-
         ord = OrderData(
             0,
             opt,
             msg.sender, 
             address(feed),
-            feed.calcLowerVolatility(uint(vol)).toUint120(),
-            feed.calcUpperVolatility(uint(vol)).toUint120(),
             volume.toUint120(),
             volume.toUint120()
+        );
+
+        uint vol = feed.getDailyVolatility(settings.getVolatilityPeriod());
+        fd = FeedData(
+            feed.calcLowerVolatility(uint(vol)).toUint120(),
+            feed.calcUpperVolatility(uint(vol)).toUint120()
         );
     }
 
@@ -599,6 +617,7 @@ contract OptionsExchange is ManagedContract {
 
     function liquidateBeforeMaturity(
         OrderData memory ord,
+        FeedData memory fd,
         string memory symbol,
         address token,
         uint iv
@@ -606,9 +625,8 @@ contract OptionsExchange is ManagedContract {
         private
         returns (uint value)
     {
-        uint volume = calcLiquidationVolume(ord);
-        value = calcCollateral(ord.lowerVol, ord).add(iv)
-            .mul(volume.toUint120()).div(ord.written).div(volumeBase);
+        uint volume = calcLiquidationVolume(ord, fd);
+        value = calcLiquidationValue(ord, fd, iv, volume);
         
         orders[ord.id].written = uint(orders[ord.id].written).sub(volume).toUint120();
         if (shouldRemove(ord.id)) {
@@ -618,17 +636,37 @@ contract OptionsExchange is ManagedContract {
         creditProvider.processPayment(ord.owner, token, value);
     }
 
-    function calcLiquidationVolume(OrderData memory ord) private view returns (uint volume) {
-        
+    function calcLiquidationVolume(
+        OrderData memory ord,
+        FeedData memory fd
+    )
+        private
+        view
+        returns (uint volume)
+    {    
         uint bal = creditProvider.balanceOf(ord.owner);
         uint collateral = calcCollateral(ord.owner);
         require(collateral > bal, "unfit for liquidation");
 
         volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
-            calcCollateral(uint(ord.upperVol).sub(uint(ord.lowerVol)), ord)
+            calcCollateral(uint(fd.upperVol).sub(uint(fd.lowerVol)), ord)
         );
 
         volume = MoreMath.min(volume, ord.written);
+    }
+
+    function calcLiquidationValue(
+        OrderData memory ord,
+        FeedData memory fd,
+        uint iv,
+        uint volume
+    )
+        private
+        view
+        returns (uint value)
+    {    
+        value = calcCollateral(fd.lowerVol, ord).add(iv)
+            .mul(volume.toUint120()).div(ord.written).div(volumeBase);
     }
 
     function shouldRemove(uint id) private view returns (bool) {
