@@ -380,10 +380,10 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         if (token != address(exchange)) {
             (uint tv, uint tb) = settings.getTokenRate(token);
             if (deadline > 0) {
-                maxValue = maxValue.mul(tb).div(tv);
+                maxValue = maxValue.mul(tv).div(tb);
                 ERC20(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
             }
-            value = value.mul(tb).div(tv);
+            value = value.mul(tv).div(tb);
             depositTokensInExchange(msg.sender, token, value);
         } else {
             exchange.transferBalance(msg.sender, address(this), value, maxValue, deadline, v, r, s);
