@@ -3,6 +3,7 @@ pragma solidity >=0.6.0;
 import "../deployment/ManagedContract.sol";
 import "../finance/OptionsExchange.sol";
 import "../finance/RedeemableToken.sol";
+import "../governance/ProtocolSettings.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/LiquidityPool.sol";
 import "../interfaces/UnderlyingFeed.sol";
@@ -40,6 +41,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     TimeProvider private time;
+    ProtocolSettings private settings;
 
     mapping(string => PricingParameters) private parameters;
     mapping(string => uint120) private written;
@@ -70,6 +72,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         owner = deployer.getOwner();
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
+        settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
 
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
@@ -370,15 +373,17 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         private
         returns (uint)
     {
-        
         uint maxValue = price.mul(volume).div(volumeBase);
         price = validatePrice(price, param, Operation.BUY);
         uint value = price.mul(volume).div(volumeBase);
 
         if (token != address(exchange)) {
+            (uint tv, uint tb) = settings.getTokenRate(token);
             if (deadline > 0) {
+                maxValue = maxValue.mul(tb).div(tv);
                 ERC20(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
             }
+            value = value.mul(tb).div(tv);
             depositTokensInExchange(msg.sender, token, value);
         } else {
             exchange.transferBalance(msg.sender, address(this), value, maxValue, deadline, v, r, s);
