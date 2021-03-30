@@ -54,13 +54,14 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private spread;
     uint private reserveRatio;
     uint private _maturity;
+    int public freeBalance;
+    string[] private optSymbols;
+    Deposit[] private deposits;
 
     uint private timeBase;
     uint private sqrtTimeBase;
     uint private volumeBase;
     uint private fractionBase;
-    string[] private optSymbols;
-    Deposit[] private deposits;
 
     constructor(address deployer) ERC20(_name) public {
 
@@ -222,7 +223,20 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         addBalance(to, v);
         _totalSupply = ts.add(v);
+        freeBalance = freeBalance.add(int(b1.sub(b0)));
         emitTransfer(address(0), to, v);
+    }
+
+    function calcFreeBalance() public view returns (uint balance) {
+
+        balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
+        uint sp = exchange.calcSurplus(address(this));
+        balance = sp > balance ? sp.sub(balance) : 0;
+    }
+
+    function setFreeBalance() public {
+
+        freeBalance = int(calcFreeBalance());
     }
     
     function listSymbols() override external view returns (string memory available) {
@@ -290,21 +304,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         uint _holding = holding[optSymbol];
         if (volume > _holding) {
-
-            uint _written = written[optSymbol];
             uint toWrite = volume.sub(_holding);
-            require(_written.add(toWrite) <= param.buyStock, "excessive volume");
-            written[optSymbol] = _written.add(toWrite).toUint120();
-
-            exchange.writeOptions(
-                param.udlFeed,
-                toWrite,
-                param.optType,
-                param.strike,
-                param.maturity
-            );
-
-            require(calcFreeBalance() > 0, "excessive volume");
+            writeOptions(optSymbol, param, price, toWrite);
         }
 
         if (_holding > 0) {
@@ -342,7 +343,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         uint value = price.mul(volume).div(volumeBase);
         exchange.transferBalance(msg.sender, value);
-        require(calcFreeBalance() > 0, "excessive volume");
+        
+        freeBalance = freeBalance.sub(int(value));
+        require(freeBalance > 0, "excessive volume");
         
         uint _holding = uint(holding[optSymbol]).add(volume);
         uint _written = written[optSymbol];
@@ -406,6 +409,30 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             op == Operation.BUY ? price >= p : price <= p,
             "insufficient price"
         );
+    }
+
+    function writeOptions(
+        string memory optSymbol,
+        PricingParameters memory param,
+        uint price,
+        uint toWrite
+    )
+        private
+    {
+        uint _written = written[optSymbol];
+        require(_written.add(toWrite) <= param.buyStock, "excessive volume");
+        written[optSymbol] = _written.add(toWrite).toUint120();
+
+        exchange.writeOptions(
+            param.udlFeed,
+            toWrite,
+            param.optType,
+            param.strike,
+            param.maturity
+        );
+        
+        freeBalance = freeBalance.sub(int(price.mul(toWrite).div(volumeBase)));
+        require(freeBalance > 0, "excessive volume");
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)
@@ -505,13 +532,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
                 exchange.balanceOf(address(this)).mul(volumeBase).div(price)
             );
         }
-    }
-
-    function calcFreeBalance() private view returns (uint balance) {
-
-        balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
-        uint sp = exchange.calcSurplus(address(this));
-        balance = sp > balance ? sp.sub(balance) : 0;
     }
 
     function calcYield(uint index, uint start) private view returns (uint y) {

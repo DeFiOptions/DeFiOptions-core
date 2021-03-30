@@ -81,6 +81,7 @@ contract Base {
         erc20.issue(address(this), value);
         erc20.approve(address(pool), value);
         pool.depositTokens(to, address(erc20), value);
+        pool.setFreeBalance();
     }
 
     function applyBuySpread(uint v) internal view returns (uint) {

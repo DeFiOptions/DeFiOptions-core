@@ -66,11 +66,11 @@ contract OptionsExchange is ManagedContract {
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
-    event CreateSymbol(string indexed symbol);
+    event CreateSymbol(address indexed token, address indexed issuer);
 
-    event WriteOptions(string indexed symbol, address indexed issuer, uint volume, uint id);
+    event WriteOptions(address indexed token, address indexed issuer, uint volume, uint id);
 
-    event LiquidateSymbol(string indexed symbol, int udlPrice, uint value);
+    event LiquidateSymbol(address indexed token, int udlPrice, uint value);
 
     constructor(address deployer) public {
 
@@ -278,12 +278,12 @@ contract OptionsExchange is ManagedContract {
             }
         }
 
+        emit LiquidateSymbol(tokenAddress[symbol], udlPrice, value);
+
         if (len <= limit) {
             delete tokenIds[symbol];
             delete tokenAddress[symbol];
         }
-
-        emit LiquidateSymbol(symbol, udlPrice, value);
     }
 
     function liquidateOptions(uint id) external returns (uint value) {
@@ -544,11 +544,11 @@ contract OptionsExchange is ManagedContract {
             feeds[ord.udlFeed] = fd;
             tk = factory.create(symbol);
             tokenAddress[symbol] = tk;
-            emit CreateSymbol(symbol);
+            emit CreateSymbol(tk, msg.sender);
         }
         
         OptionToken(tk).issue(msg.sender, volume);
-        emit WriteOptions(symbol, msg.sender, volume, id);
+        emit WriteOptions(tk, msg.sender, volume, id);
     }
 
     function createOrderInMemory(
