@@ -51,18 +51,19 @@ contract OptionsExchange is ManagedContract {
     mapping(uint => OrderData) private orders;
     mapping(address => FeedData) private feeds;
     mapping(address => uint64[]) private book;
-    mapping(address => uint256) private collateral;
+    mapping(address => uint256) public collateral;
     mapping(address => mapping(string => uint64)) private index;
 
     mapping(string => address) private tokenAddress;
     mapping(string => uint64[]) private tokenIds;
+
+    mapping(address => uint) public nonces;
     
     uint64 private serial;
     uint private volumeBase;
     uint private timeBase;
     uint private sqrtTimeBase;
 
-    mapping(address => uint) public nonces;
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;

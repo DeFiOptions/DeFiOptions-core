@@ -54,7 +54,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private spread;
     uint private reserveRatio;
     uint private _maturity;
-    int public freeBalance;
     string[] private optSymbols;
     Deposit[] private deposits;
 
@@ -223,20 +222,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         addBalance(to, v);
         _totalSupply = ts.add(v);
-        freeBalance = freeBalance.add(int(b1.sub(b0)));
         emitTransfer(address(0), to, v);
     }
 
     function calcFreeBalance() public view returns (uint balance) {
 
-        balance = exchange.balanceOf(address(this)).mul(reserveRatio).div(fractionBase);
-        uint sp = exchange.calcSurplus(address(this));
+        uint exBal = exchange.balanceOf(address(this));
+        balance = exBal.mul(reserveRatio).div(fractionBase);
+        uint sp = exBal.sub(exchange.collateral(address(this)));
         balance = sp > balance ? sp.sub(balance) : 0;
-    }
-
-    function setFreeBalance() public {
-
-        freeBalance = int(calcFreeBalance());
     }
     
     function listSymbols() override external view returns (string memory available) {
@@ -305,7 +299,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint _holding = holding[optSymbol];
         if (volume > _holding) {
             uint toWrite = volume.sub(_holding);
-            writeOptions(optSymbol, param, price, toWrite);
+            writeOptions(optSymbol, param, toWrite);
         }
 
         if (_holding > 0) {
@@ -344,8 +338,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint value = price.mul(volume).div(volumeBase);
         exchange.transferBalance(msg.sender, value);
         
-        freeBalance = freeBalance.sub(int(value));
-        require(freeBalance > 0, "excessive volume");
+        require(calcFreeBalance() > 0, "excessive volume");
         
         uint _holding = uint(holding[optSymbol]).add(volume);
         uint _written = written[optSymbol];
@@ -414,7 +407,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function writeOptions(
         string memory optSymbol,
         PricingParameters memory param,
-        uint price,
         uint toWrite
     )
         private
@@ -431,8 +423,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             param.maturity
         );
         
-        freeBalance = freeBalance.sub(int(price.mul(toWrite).div(volumeBase)));
-        require(freeBalance > 0, "excessive volume");
+        require(calcFreeBalance() > 0, "excessive volume");
     }
 
     function calcOptPrice(PricingParameters memory p, Operation op)
