@@ -51,6 +51,7 @@ contract OptionsExchange is ManagedContract {
     mapping(uint => OrderData) private orders;
     mapping(address => FeedData) private feeds;
     mapping(address => uint64[]) private book;
+    mapping(address => uint256) private collateral;
     mapping(address => mapping(string => uint64)) private index;
 
     mapping(string => address) private tokenAddress;
@@ -310,12 +311,42 @@ contract OptionsExchange is ManagedContract {
     
     function calcSurplus(address owner) public view returns (uint) {
         
-        uint collateral = calcCollateral(owner);
+        uint coll = calcCollateral(owner);
         uint bal = creditProvider.balanceOf(owner);
-        if (bal >= collateral) {
-            return bal.sub(collateral);
+        if (bal >= coll) {
+            return bal.sub(coll);
         }
         return 0;
+    }
+
+    function setCollateral(address owner) external {
+
+        collateral[owner] = calcCollateral(owner);
+    }
+    
+    function calcCollateral(address owner) public view returns (uint) {
+        
+        int coll;
+        uint64[] memory ids = book[owner];
+
+        for (uint i = 0; i < ids.length; i++) {
+
+            OrderData memory ord = orders[ids[i]];
+
+            if (isValid(ord)) {
+                coll = coll.add(
+                    calcIntrinsicValue(ord).mul(
+                        int(ord.written).sub(int(ord.holding))
+                    )
+                ).add(int(calcCollateral(feeds[ord.udlFeed].upperVol, ord)));
+            }
+        }
+
+        coll = coll.div(int(volumeBase));
+
+        if (coll < 0)
+            return 0;
+        return uint(coll);
     }
 
     function calcCollateral(
@@ -325,43 +356,18 @@ contract OptionsExchange is ManagedContract {
         uint strike, 
         uint maturity
     )
-        external
+        public
         view
         returns (uint)
     {
         (OrderData memory ord, FeedData memory fd) =
             createOrderInMemory(udlFeed, volume, optType, strike, maturity);
 
-        int collateral = calcIntrinsicValue(ord).mul(int(volume)).add(
+        int coll = calcIntrinsicValue(ord).mul(int(volume)).add(
             int(calcCollateral(fd.upperVol, ord))
         ).div(int(volumeBase));
 
-        return collateral > 0 ? uint(collateral) : 0;
-    }
-    
-    function calcCollateral(address owner) public view returns (uint) {
-        
-        int collateral;
-        uint64[] memory ids = book[owner];
-
-        for (uint i = 0; i < ids.length; i++) {
-
-            OrderData memory ord = orders[ids[i]];
-
-            if (isValid(ord)) {
-                collateral = collateral.add(
-                    calcIntrinsicValue(ord).mul(
-                        int(ord.written).sub(int(ord.holding))
-                    )
-                ).add(int(calcCollateral(feeds[ord.udlFeed].upperVol, ord)));
-            }
-        }
-
-        collateral = collateral.div(int(volumeBase));
-
-        if (collateral < 0)
-            return 0;
-        return uint(collateral);
+        return coll > 0 ? uint(coll) : 0;
     }
 
     function calcExpectedPayout(address owner) external view returns (int payout) {
@@ -382,6 +388,13 @@ contract OptionsExchange is ManagedContract {
         }
 
         payout = payout.div(int(volumeBase));
+    }
+
+    function createSymbol(string memory symbol) public returns (address tk) {
+
+        tk = factory.create(symbol);
+        tokenAddress[symbol] = tk;
+        emit CreateSymbol(tk, msg.sender);
     }
 
     function resolveSymbol(uint id) external view returns (string memory) {
@@ -542,12 +555,19 @@ contract OptionsExchange is ManagedContract {
         address tk = tokenAddress[symbol];
         if (tk == address(0)) {
             feeds[ord.udlFeed] = fd;
-            tk = factory.create(symbol);
-            tokenAddress[symbol] = tk;
-            emit CreateSymbol(tk, msg.sender);
+            tk = createSymbol(symbol);
         }
         
         OptionToken(tk).issue(msg.sender, volume);
+        collateral[msg.sender] = collateral[msg.sender].add(
+            calcCollateral(
+                udlFeed,
+                volume,
+                optType,
+                strike, 
+                maturity
+            )
+        );
         emit WriteOptions(tk, msg.sender, volume, id);
     }
 
@@ -645,10 +665,10 @@ contract OptionsExchange is ManagedContract {
         returns (uint volume)
     {    
         uint bal = creditProvider.balanceOf(ord.owner);
-        uint collateral = calcCollateral(ord.owner);
-        require(collateral > bal, "unfit for liquidation");
+        uint coll = calcCollateral(ord.owner);
+        require(coll > bal, "unfit for liquidation");
 
-        volume = collateral.sub(bal).mul(volumeBase).mul(ord.written).div(
+        volume = coll.sub(bal).mul(volumeBase).mul(ord.written).div(
             calcCollateral(uint(fd.upperVol).sub(uint(fd.lowerVol)), ord)
         );
 
@@ -700,7 +720,7 @@ contract OptionsExchange is ManagedContract {
     function ensureFunds(address owner) private view {
         
         require(
-            creditProvider.balanceOf(owner) >= calcCollateral(owner),
+            creditProvider.balanceOf(owner) >= collateral[owner],
             "insufficient collateral"
         );
     }
