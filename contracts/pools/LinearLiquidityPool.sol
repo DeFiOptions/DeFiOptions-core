@@ -311,7 +311,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         OptionToken tk = OptionToken(addr);
         tk.transfer(msg.sender, volume);
 
-        emit Buy(optSymbol, price, volume, token);
+        emit Buy(addr, msg.sender, price, volume);
     }
 
     function buy(string calldata optSymbol, uint price, uint volume, address token)
@@ -353,7 +353,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         require(_holding <= param.sellStock, "excessive volume");
         holding[optSymbol] = _holding.toUint120();
 
-        emit Sell(optSymbol, price, volume);
+        emit Sell(addr, msg.sender, price, volume);
     }
 
     function receivePayment(

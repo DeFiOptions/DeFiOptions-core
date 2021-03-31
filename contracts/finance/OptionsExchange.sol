@@ -72,7 +72,9 @@ contract OptionsExchange is ManagedContract {
 
     event WriteOptions(address indexed token, address indexed issuer, uint volume, uint id);
 
-    event LiquidateSymbol(address indexed token, int udlPrice, uint value);
+    event LiquidateEarly(address indexed token, address indexed sender, uint volume);
+
+    event LiquidateExpired(address indexed token, address indexed sender, uint volume);
 
     constructor(address deployer) public {
 
@@ -202,9 +204,10 @@ contract OptionsExchange is ManagedContract {
         OrderData memory toOrd = findOrder(to, symbol);
 
         if (!isValid(toOrd)) {
-            toOrd = orders[ord.id];
             toOrd.id = serial++;
             toOrd.owner = address(to);
+            toOrd.udlFeed = ord.udlFeed;
+            toOrd.option = ord.option;
             toOrd.written = 0;
             toOrd.holding = volume.toUint120();
             orders[toOrd.id] = toOrd;
@@ -212,15 +215,16 @@ contract OptionsExchange is ManagedContract {
             index[to][symbol] = toOrd.id;
             tokenIds[symbol].push(toOrd.id);
         } else {
-            orders[toOrd.id].holding = uint(orders[toOrd.id].holding).add(volume).toUint120();
+            orders[toOrd.id].holding = uint(toOrd.holding).add(volume).toUint120();
         }
         
-        orders[ord.id].holding = uint(orders[ord.id].holding).sub(volume).toUint120();
+        uint120 _holding = uint(ord.holding).sub(volume).toUint120();
+        orders[ord.id].holding = _holding;
 
         ensureFunds(ord.owner);
 
-        if (shouldRemove(ord.id)) {
-            removeOrder(symbol, ord.id);
+        if (shouldRemove(ord.written, _holding)) {
+            removeOrder(symbol, ord);
         }
     }
 
@@ -238,17 +242,20 @@ contract OptionsExchange is ManagedContract {
         require(isValid(ord), "order not found");
         require(ord.written >= volume && ord.holding >= volume, "invalid volume");
         
-        orders[ord.id].written = uint(ord.written).sub(volume).toUint120();
-        orders[ord.id].holding = uint(ord.holding).sub(volume).toUint120();
+        uint120 _written = uint(ord.written).sub(volume).toUint120();
+        orders[ord.id].written = _written;
+        uint120 _holding = uint(ord.holding).sub(volume).toUint120();
+        orders[ord.id].holding = _holding;
 
-        if (shouldRemove(ord.id)) {
-            removeOrder(symbol, ord.id);
+        if (shouldRemove(_written, _holding)) {
+            removeOrder(symbol, ord);
         }
     }
 
     function liquidateSymbol(string calldata symbol, uint limit) external {
 
         uint value;
+        uint volume;
         int udlPrice;
         uint iv;
         uint len = tokenIds[symbol].length;
@@ -269,18 +276,22 @@ contract OptionsExchange is ManagedContract {
                 }
 
                 require(ord.id == id, "invalid order id");
+                
+                volume = volume.add(ord.written).add(ord.holding);
 
                 if (ord.written > 0) {
                     value.add(
                         liquidateAfterMaturity(ord, symbol, msg.sender, iv.mul(ord.written))
                     );
                 } else {
-                    removeOrder(symbol, id);
+                    removeOrder(symbol, ord);
                 }
             }
         }
 
-        emit LiquidateSymbol(tokenAddress[symbol], udlPrice, value);
+        if (volume > 0) {
+            emit LiquidateExpired(tokenAddress[symbol], msg.sender, volume);
+        }
 
         if (len <= limit) {
             delete tokenIds[symbol];
@@ -299,6 +310,7 @@ contract OptionsExchange is ManagedContract {
         
         if (getUdlNow(ord) >= ord.option.maturity) {
             value = liquidateAfterMaturity(ord, symbol, token, iv);
+            emit LiquidateExpired(token, msg.sender, ord.written);
         } else {
             FeedData memory fd = feeds[ord.udlFeed];
             value = liquidateBeforeMaturity(ord, fd, symbol, token, iv);
@@ -361,8 +373,12 @@ contract OptionsExchange is ManagedContract {
         view
         returns (uint)
     {
-        (OrderData memory ord, FeedData memory fd) =
-            createOrderInMemory(udlFeed, volume, optType, strike, maturity);
+        OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
+        
+        FeedData memory fd = feeds[udlFeed];
+        if (fd.lowerVol == 0 || fd.upperVol == 0) {
+            fd = getFeedData(udlFeed);
+        }
 
         int coll = calcIntrinsicValue(ord).mul(int(volume)).add(
             int(calcCollateral(fd.upperVol, ord))
@@ -391,11 +407,26 @@ contract OptionsExchange is ManagedContract {
         payout = payout.div(int(volumeBase));
     }
 
-    function createSymbol(string memory symbol) public returns (address tk) {
+    function createSymbol(string memory symbol, address udlFeed) public returns (address tk) {
 
         tk = factory.create(symbol);
         tokenAddress[symbol] = tk;
+        
+        bytes memory sb1 = bytes(UnderlyingFeed(udlFeed).symbol());
+        bytes memory sb2 = bytes(symbol);
+        for (uint i = 0; i < sb1.length; i++) {
+            if (sb1[i] != sb2[i]) {
+                revert("invalid feed");
+            }
+        }
+        prefetchFeedData(udlFeed);
+
         emit CreateSymbol(tk, msg.sender);
+    }
+
+    function prefetchFeedData(address udlFeed) public {
+        
+        feeds[udlFeed] = getFeedData(udlFeed);
     }
 
     function resolveSymbol(uint id) external view returns (string memory) {
@@ -489,9 +520,7 @@ contract OptionsExchange is ManagedContract {
         view
         returns (int)
     {
-        (OrderData memory ord,) = 
-            createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
-
+        OrderData memory ord = createOrderInMemory(udlFeed, volumeBase, optType, strike, maturity);
         return calcIntrinsicValue(ord);
     }
 
@@ -530,12 +559,11 @@ contract OptionsExchange is ManagedContract {
         private 
         returns (uint id)
     {
-        require(udlFeed == address(0) || settings.getUdlFeed(udlFeed) > 0, "feed not allowed");
+        require(settings.getUdlFeed(udlFeed) > 0, "feed not allowed");
         require(volume > 0, "invalid volume");
         require(maturity > time.getNow(), "invalid maturity");
 
-        (OrderData memory ord, FeedData memory fd) =
-            createOrderInMemory(udlFeed, volume, optType, strike, maturity);
+        OrderData memory ord = createOrderInMemory(udlFeed, volume, optType, strike, maturity);
 
         string memory symbol = getOptionSymbol(ord);
         OrderData memory result = findOrder(msg.sender, symbol);
@@ -555,8 +583,7 @@ contract OptionsExchange is ManagedContract {
 
         address tk = tokenAddress[symbol];
         if (tk == address(0)) {
-            feeds[ord.udlFeed] = fd;
-            tk = createSymbol(symbol);
+            tk = createSymbol(symbol, ord.udlFeed);
         }
         
         OptionToken(tk).issue(msg.sender, volume);
@@ -581,24 +608,28 @@ contract OptionsExchange is ManagedContract {
     )
         private
         view
-        returns (OrderData memory ord, FeedData memory fd)
+        returns (OrderData memory ord)
     {
-        OptionData memory opt = OptionData(optType, strike.toUint120(), maturity.toUint32());
+        require(udlFeed != address(0), "invalid feed address");
 
-        UnderlyingFeed feed = udlFeed != address(0) ?
-            UnderlyingFeed(udlFeed) :
-            UnderlyingFeed(settings.getDefaultUdlFeed());
+        OptionData memory opt = OptionData(optType, strike.toUint120(), maturity.toUint32());
 
         ord = OrderData(
             0,
             opt,
             msg.sender, 
-            address(feed),
+            udlFeed,
             volume.toUint120(),
             volume.toUint120()
         );
+    }
+
+    function getFeedData(address udlFeed) private view returns (FeedData memory fd) {
+        
+        UnderlyingFeed feed = UnderlyingFeed(udlFeed);
 
         uint vol = feed.getDailyVolatility(settings.getVolatilityPeriod());
+
         fd = FeedData(
             feed.calcLowerVolatility(uint(vol)).toUint120(),
             feed.calcUpperVolatility(uint(vol)).toUint120()
@@ -633,7 +664,7 @@ contract OptionsExchange is ManagedContract {
             creditProvider.processPayment(ord.owner, token, value);
         }
     
-        removeOrder(symbol, ord.id);
+        removeOrder(symbol, ord);
     }
 
     function liquidateBeforeMaturity(
@@ -649,12 +680,15 @@ contract OptionsExchange is ManagedContract {
         uint volume = calcLiquidationVolume(ord, fd);
         value = calcLiquidationValue(ord, fd, iv, volume);
         
-        orders[ord.id].written = uint(orders[ord.id].written).sub(volume).toUint120();
-        if (shouldRemove(ord.id)) {
-            removeOrder(symbol, ord.id);
+        uint120 _written = uint(ord.written).sub(volume).toUint120();
+        orders[ord.id].written = _written;
+        
+        if (shouldRemove(_written, ord.holding)) {
+            removeOrder(symbol, ord);
         }
 
         creditProvider.processPayment(ord.owner, token, value);
+        emit LiquidateEarly(token, msg.sender, volume);
     }
 
     function calcLiquidationVolume(
@@ -690,18 +724,17 @@ contract OptionsExchange is ManagedContract {
             .mul(volume.toUint120()).div(ord.written).div(volumeBase);
     }
 
-    function shouldRemove(uint id) private view returns (bool) {
+    function shouldRemove(uint120 w, uint120 h) private pure returns (bool) {
 
-        return orders[id].written == 0 && orders[id].holding == 0;
+        return w == 0 && h == 0;
     }
     
-    function removeOrder(string memory symbol, uint64 id) private {
+    function removeOrder(string memory symbol, OrderData memory ord) private {
         
-        address owner = orders[id].owner;
-        Arrays.removeItem(tokenIds[symbol], id);
-        Arrays.removeItem(book[owner], id);
-        delete index[owner][symbol];
-        delete orders[id];
+        Arrays.removeItem(tokenIds[symbol], ord.id);
+        Arrays.removeItem(book[ord.owner], ord.id);
+        delete index[ord.owner][symbol];
+        delete orders[ord.id];
     }
 
     function getOptionSymbol(OrderData memory ord) private view returns (string memory symbol) {
