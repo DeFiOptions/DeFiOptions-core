@@ -55,7 +55,7 @@ contract OptionsTrader {
         public
         returns (uint id)
     {
-        id = exchange.writeOptions(
+        (id,) = exchange.writeOptions(
             feed, volume * volumeBase, optType, uint(strike), time.getNow() + timeToMaturity
         );
     }

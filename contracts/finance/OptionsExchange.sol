@@ -127,9 +127,8 @@ contract OptionsExchange is ManagedContract {
     function depositTokens(address to, address token, uint value) public {
 
         ERC20 t = ERC20(token);
-        t.transferFrom(msg.sender, address(this), value);
-        t.approve(address(creditProvider), value);
-        creditProvider.depositTokens(to, token, value);
+        t.transferFrom(msg.sender, address(creditProvider), value);
+        creditProvider.addBalance(to, token, value);
     }
 
     function balanceOf(address owner) external view returns (uint) {
@@ -175,9 +174,9 @@ contract OptionsExchange is ManagedContract {
         uint maturity
     )
         external 
-        returns (uint id)
+        returns (uint id, address tk)
     {
-        id = createOrder(udlFeed, volume, optType, strike, maturity);
+        (id, tk) = createOrder(udlFeed, volume, optType, strike, maturity);
         ensureFunds(msg.sender);
     }
 
@@ -557,7 +556,7 @@ contract OptionsExchange is ManagedContract {
         uint maturity
     )
         private 
-        returns (uint id)
+        returns (uint id, address tk)
     {
         require(settings.getUdlFeed(udlFeed) > 0, "feed not allowed");
         require(volume > 0, "invalid volume");
@@ -581,7 +580,7 @@ contract OptionsExchange is ManagedContract {
             tokenIds[symbol].push(ord.id);
         }
 
-        address tk = tokenAddress[symbol];
+        tk = tokenAddress[symbol];
         if (tk == address(0)) {
             tk = createSymbol(symbol, ord.udlFeed);
         }

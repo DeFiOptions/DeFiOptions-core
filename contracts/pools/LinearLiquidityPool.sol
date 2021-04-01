@@ -288,7 +288,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     )
         override
         public
-        returns (address addr)
+        returns (address tk)
     {
         require(volume > 0, "invalid volume");
         ensureValidSymbol(optSymbol);
@@ -299,7 +299,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint _holding = holding[optSymbol];
         if (volume > _holding) {
             uint toWrite = volume.sub(_holding);
-            writeOptions(optSymbol, param, toWrite);
+            tk = writeOptions(optSymbol, param, toWrite);
+        } else {
+            tk = exchange.resolveToken(optSymbol);
         }
 
         if (_holding > 0) {
@@ -307,20 +309,18 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             holding[optSymbol] = _holding.sub(diff).toUint120();
         }
 
-        addr = exchange.resolveToken(optSymbol);
-        OptionToken tk = OptionToken(addr);
-        tk.transfer(msg.sender, volume);
+        OptionToken(tk).transfer(msg.sender, volume);
 
-        emit Buy(addr, msg.sender, price, volume);
+        emit Buy(tk, msg.sender, price, volume);
     }
 
     function buy(string calldata optSymbol, uint price, uint volume, address token)
         override
         external
-        returns (address addr)
+        returns (address tk)
     {
         bytes32 x;
-        addr = buy(optSymbol, price, volume, token, 0, 0, x, x);
+        tk = buy(optSymbol, price, volume, token, 0, 0, x, x);
     }
 
     function sell(string calldata optSymbol, uint price, uint volume) override external {
@@ -410,12 +410,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint toWrite
     )
         private
+        returns (address tk)
     {
         uint _written = written[optSymbol];
         require(_written.add(toWrite) <= param.buyStock, "excessive volume");
         written[optSymbol] = _written.add(toWrite).toUint120();
 
-        exchange.writeOptions(
+        (,tk) = exchange.writeOptions(
             param.udlFeed,
             toWrite,
             param.optType,

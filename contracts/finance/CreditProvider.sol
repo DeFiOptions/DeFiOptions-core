@@ -75,6 +75,11 @@ contract CreditProvider is ManagedContract {
 
         return balances[owner];
     }
+    
+    function addBalance(address to, address token, uint value) external {
+
+        addBalance(to, token, value, false);
+    }
 
     function transferBalance(address from, address to, uint value) public {
 
@@ -86,16 +91,8 @@ contract CreditProvider is ManagedContract {
     
     function depositTokens(address to, address token, uint value) external {
 
-        if (value > 0) {
-            
-            (uint r, uint b) = settings.getTokenRate(token);
-            require(r != 0 && token != ctAddr, "token not allowed");
-            ERC20(token).transferFrom(msg.sender, address(this), value);
-            value = value.mul(b).div(r);
-            addBalance(to, value);
-            emit TransferBalance(address(0), to, value);
-            _totalTokenStock = _totalTokenStock.add(value);
-        }
+        ERC20(token).transferFrom(msg.sender, address(this), value);
+        addBalance(to, token, value, true);
     }
 
     function withdrawTokens(address owner, uint value) external {
@@ -148,6 +145,23 @@ contract CreditProvider is ManagedContract {
                 addBalance(to, credit);
                 emit AccumulateDebt(to, value);
             }
+        }
+    }
+    
+    function addBalance(address to, address token, uint value, bool trusted) private {
+
+        if (value > 0) {
+
+            if (!trusted) {
+                ensureCaller();
+            }
+            
+            (uint r, uint b) = settings.getTokenRate(token);
+            require(r != 0 && token != ctAddr, "token not allowed");
+            value = value.mul(b).div(r);
+            addBalance(to, value);
+            emit TransferBalance(address(0), to, value);
+            _totalTokenStock = _totalTokenStock.add(value);
         }
     }
     
