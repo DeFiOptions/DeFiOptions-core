@@ -28,6 +28,12 @@ contract CreditProvider is ManagedContract {
     uint private _totalTokenStock;
     uint private _totalAccruedFees;
 
+    event TransferBalance(address indexed from, address indexed to, uint value);
+
+    event AccumulateDebt(address indexed to, uint value);
+
+    event BurnDebt(address indexed from, uint value);
+
     constructor(address deployer) public {
 
         Deployer(deployer).setContractAddress("CreditProvider");
@@ -75,6 +81,7 @@ contract CreditProvider is ManagedContract {
         ensureCaller();
         removeBalance(from, value);
         addBalance(to, value);
+        emit TransferBalance(from, to, value);
     }
     
     function depositTokens(address to, address token, uint value) external {
@@ -86,6 +93,7 @@ contract CreditProvider is ManagedContract {
             ERC20(token).transferFrom(msg.sender, address(this), value);
             value = value.mul(b).div(r);
             addBalance(to, value);
+            emit TransferBalance(address(0), to, value);
             _totalTokenStock = _totalTokenStock.add(value);
         }
     }
@@ -138,6 +146,7 @@ contract CreditProvider is ManagedContract {
                 applyDebtInterestRate(from);
                 setDebt(from, debts[from].add(credit));
                 addBalance(to, credit);
+                emit AccumulateDebt(to, value);
             }
         }
     }
@@ -174,6 +183,7 @@ contract CreditProvider is ManagedContract {
         if (d > 0) {
             burnt = MoreMath.min(value, d);
             setDebt(from, d.sub(burnt));
+            emit BurnDebt(from, value);
         }
     }
 
