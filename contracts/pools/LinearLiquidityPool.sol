@@ -44,8 +44,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     ProtocolSettings private settings;
 
     mapping(string => PricingParameters) private parameters;
-    mapping(string => uint120) private written;
-    mapping(string => uint120) private holding;
 
     string private constant _name = "Linear Liquidity Pool Redeemable Token";
     string private constant _symbol = "LLPTK";
@@ -179,8 +177,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureCaller();
         PricingParameters memory empty;
         parameters[optSymbol] = empty;
-        delete written[optSymbol];
-        delete holding[optSymbol];
         Arrays.removeItem(optSymbols, optSymbol);
         emit RemoveSymbol(optSymbol);
     }
@@ -255,9 +251,10 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
         PricingParameters memory param = parameters[optSymbol];
         price = calcOptPrice(param, Operation.BUY);
+        uint _written = exchange.writtenVolume(optSymbol, address(this));
         volume = MoreMath.min(
             calcVolume(param, price, Operation.BUY),
-            uint(param.buyStock).sub(written[optSymbol])
+            uint(param.buyStock).sub(_written)
         );
     }
 
@@ -270,9 +267,10 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
         PricingParameters memory param = parameters[optSymbol];
         price = calcOptPrice(param, Operation.SELL);
+        address tk = exchange.resolveToken(optSymbol);
         volume = MoreMath.min(
             calcVolume(param, price, Operation.SELL),
-            uint(param.sellStock).sub(holding[optSymbol])
+            uint(param.sellStock).sub(ERC20(tk).balanceOf(address(this)))
         );
     }
     
@@ -296,20 +294,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         PricingParameters memory param = parameters[optSymbol];
         price = receivePayment(param, price, volume, token, deadline, v, r, s);
 
-        uint _holding = holding[optSymbol];
+        tk = exchange.resolveToken(optSymbol);
+        uint _holding = ERC20(tk).balanceOf(address(this));
         if (volume > _holding) {
-            uint toWrite = volume.sub(_holding);
-            tk = writeOptions(optSymbol, param, toWrite);
+            writeOptions(optSymbol, param, volume);
         } else {
-            tk = exchange.resolveToken(optSymbol);
+            OptionToken(tk).transfer(msg.sender, volume);
         }
-
-        if (_holding > 0) {
-            uint diff = MoreMath.min(_holding, volume);
-            holding[optSymbol] = _holding.sub(diff).toUint120();
-        }
-
-        OptionToken(tk).transfer(msg.sender, volume);
 
         emit Buy(tk, msg.sender, price, volume);
     }
@@ -340,18 +331,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         
         require(calcFreeBalance() > 0, "excessive volume");
         
-        uint _holding = uint(holding[optSymbol]).add(volume);
-        uint _written = written[optSymbol];
+        uint _written = exchange.writtenVolume(optSymbol, address(this));
 
         if (_written > 0) {
             uint toBurn = MoreMath.min(_written, volume);
             tk.burn(toBurn);
-            written[optSymbol] = _written.sub(toBurn).toUint120();
-            _holding = _holding.sub(toBurn);
         }
 
+        uint _holding = tk.balanceOf(address(this));
         require(_holding <= param.sellStock, "excessive volume");
-        holding[optSymbol] = _holding.toUint120();
 
         emit Sell(addr, msg.sender, price, volume);
     }
@@ -410,18 +398,17 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint toWrite
     )
         private
-        returns (address tk)
     {
-        uint _written = written[optSymbol];
+        uint _written = exchange.writtenVolume(optSymbol, address(this));
         require(_written.add(toWrite) <= param.buyStock, "excessive volume");
-        written[optSymbol] = _written.add(toWrite).toUint120();
 
-        (,tk) = exchange.writeOptions(
+        exchange.writeOptions(
             param.udlFeed,
             toWrite,
             param.optType,
             param.strike,
-            param.maturity
+            param.maturity,
+            msg.sender
         );
         
         require(calcFreeBalance() > 0, "excessive volume");

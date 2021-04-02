@@ -176,8 +176,27 @@ contract OptionsExchange is ManagedContract {
         external 
         returns (uint id, address tk)
     {
-        (id, tk) = createOrder(udlFeed, volume, optType, strike, maturity);
+        (id, tk) = createOrder(udlFeed, volume, optType, strike, maturity, msg.sender);
         ensureFunds(msg.sender);
+    }
+
+    function writeOptions(
+        address udlFeed,
+        uint volume,
+        OptionType optType,
+        uint strike, 
+        uint maturity,
+        address to
+    )
+        external 
+        returns (uint id, address tk)
+    {
+        (id, tk) = createOrder(udlFeed, volume, optType, strike, maturity, to);
+        if (to != msg.sender) {
+            transferOwnershipInternal(OptionToken(tk).symbol(), msg.sender, to, volume);
+        } else {
+            ensureFunds(msg.sender);
+        }
     }
 
     function writtenVolume(string calldata symbol, address owner) external view returns (uint) {
@@ -194,37 +213,7 @@ contract OptionsExchange is ManagedContract {
         external
     {
         require(tokenAddress[symbol] == msg.sender, "unauthorized ownership transfer");
-
-        OrderData memory ord = findOrder(from, symbol);
-
-        require(isValid(ord), "order not found");
-        require(volume <= ord.holding, "invalid volume");
-                
-        OrderData memory toOrd = findOrder(to, symbol);
-
-        if (!isValid(toOrd)) {
-            toOrd.id = serial++;
-            toOrd.owner = address(to);
-            toOrd.udlFeed = ord.udlFeed;
-            toOrd.option = ord.option;
-            toOrd.written = 0;
-            toOrd.holding = volume.toUint120();
-            orders[toOrd.id] = toOrd;
-            book[to].push(toOrd.id);
-            index[to][symbol] = toOrd.id;
-            tokenIds[symbol].push(toOrd.id);
-        } else {
-            orders[toOrd.id].holding = uint(toOrd.holding).add(volume).toUint120();
-        }
-        
-        uint120 _holding = uint(ord.holding).sub(volume).toUint120();
-        orders[ord.id].holding = _holding;
-
-        ensureFunds(ord.owner);
-
-        if (shouldRemove(ord.written, _holding)) {
-            removeOrder(symbol, ord);
-        }
+        transferOwnershipInternal(symbol, from, to, volume);
     }
 
     function burnOptions(
@@ -553,7 +542,8 @@ contract OptionsExchange is ManagedContract {
         uint volume,
         OptionType optType,
         uint strike, 
-        uint maturity
+        uint maturity,
+        address to
     )
         private 
         returns (uint id, address tk)
@@ -584,8 +574,8 @@ contract OptionsExchange is ManagedContract {
         if (tk == address(0)) {
             tk = createSymbol(symbol, ord.udlFeed);
         }
+        OptionToken(tk).issue(to, volume);
         
-        OptionToken(tk).issue(msg.sender, volume);
         collateral[msg.sender] = collateral[msg.sender].add(
             calcCollateral(
                 udlFeed,
@@ -596,6 +586,46 @@ contract OptionsExchange is ManagedContract {
             )
         );
         emit WriteOptions(tk, msg.sender, volume, id);
+    }
+
+    function transferOwnershipInternal(
+        string memory symbol,
+        address from,
+        address to,
+        uint volume
+    )
+        private
+    {
+        OrderData memory ord = findOrder(from, symbol);
+
+        require(isValid(ord), "order not found");
+        require(volume <= ord.holding, "invalid volume");
+                
+        OrderData memory toOrd = findOrder(to, symbol);
+
+        if (!isValid(toOrd)) {
+            toOrd.id = serial++;
+            toOrd.owner = address(to);
+            toOrd.udlFeed = ord.udlFeed;
+            toOrd.option = ord.option;
+            toOrd.written = 0;
+            toOrd.holding = volume.toUint120();
+            orders[toOrd.id] = toOrd;
+            book[to].push(toOrd.id);
+            index[to][symbol] = toOrd.id;
+            tokenIds[symbol].push(toOrd.id);
+        } else {
+            orders[toOrd.id].holding = uint(toOrd.holding).add(volume).toUint120();
+        }
+        
+        uint120 _holding = uint(ord.holding).sub(volume).toUint120();
+        orders[ord.id].holding = _holding;
+
+        ensureFunds(ord.owner);
+
+        if (shouldRemove(ord.written, _holding)) {
+            removeOrder(symbol, ord);
+        }
     }
 
     function createOrderInMemory(
