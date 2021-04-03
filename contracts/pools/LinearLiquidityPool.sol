@@ -242,6 +242,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         }
     }
 
+    function setUpSymbol(string calldata optSymbol) external {
+
+        PricingParameters memory param = parameters[optSymbol];
+        writeOptions(optSymbol, param, 1, address(this));
+    }
+
     function queryBuy(string memory optSymbol)
         override
         public
@@ -297,7 +303,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         tk = exchange.resolveToken(optSymbol);
         uint _holding = ERC20(tk).balanceOf(address(this));
         if (volume > _holding) {
-            writeOptions(optSymbol, param, volume);
+            writeOptions(optSymbol, param, volume, msg.sender);
         } else {
             OptionToken(tk).transfer(msg.sender, volume);
         }
@@ -395,20 +401,21 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function writeOptions(
         string memory optSymbol,
         PricingParameters memory param,
-        uint toWrite
+        uint volume,
+        address to
     )
         private
     {
         uint _written = exchange.writtenVolume(optSymbol, address(this));
-        require(_written.add(toWrite) <= param.buyStock, "excessive volume");
+        require(_written.add(volume) <= param.buyStock, "excessive volume");
 
         exchange.writeOptions(
             param.udlFeed,
-            toWrite,
+            volume,
             param.optType,
             param.strike,
             param.maturity,
-            msg.sender
+            to
         );
         
         require(calcFreeBalance() > 0, "excessive volume");

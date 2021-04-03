@@ -19,4 +19,16 @@ contract OptionTokenFactory is ManagedContract {
 
         return address(new OptionToken(symbol, msg.sender));
     }
+
+    function create(string calldata symbol, address udlFeed) external returns (address) {
+
+        bytes memory sb1 = bytes(UnderlyingFeed(udlFeed).symbol());
+        bytes memory sb2 = bytes(symbol);
+        for (uint i = 0; i < sb1.length; i++) {
+            if (sb1[i] != sb2[i]) {
+                revert("invalid feed");
+            }
+        }
+        return address(new OptionToken(symbol, msg.sender));
+    }
 }
