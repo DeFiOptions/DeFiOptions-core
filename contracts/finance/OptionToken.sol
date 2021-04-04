@@ -14,7 +14,7 @@ contract OptionToken is RedeemableToken {
     string private _symbol;
 
     constructor(string memory _sb, address _issuer)
-        ERC20(string(abi.encodePacked(_prefix, _symbol)))
+        ERC20(string(abi.encodePacked(_prefix, _sb)))
         public
     {    
         _symbol = _sb;
@@ -53,16 +53,7 @@ contract OptionToken is RedeemableToken {
 
     function redeemAllowed() override public returns (bool) {
         
-        exchange.liquidateSymbol(_symbol, uint(-1));
-        return true;
-    }
-
-    function addBalance(address owner, uint value) override internal {
-
-        if (balanceOf(owner) == 0) {
-            holders.push(owner);
-        }
-        balances[owner] = balanceOf(owner).add(value);
+        return exchange.unliquidatedVolume(_symbol) == 0;
     }
 
     function emitTransfer(address from, address to, uint value) override internal {

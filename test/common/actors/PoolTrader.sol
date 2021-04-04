@@ -49,7 +49,7 @@ contract PoolTrader {
         returns (uint id)
     {
         (id,) = exchange.writeOptions(
-            feed, volume * volumeBase, optType, strike, maturity
+            feed, volume * volumeBase, optType, strike, maturity, address(this)
         );
     }
     

@@ -74,7 +74,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
-        volumeBase = exchange.getVolumeBase();
+        volumeBase = exchange.volumeBase();
         fractionBase = 1e9;
     }
 
@@ -547,14 +547,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         t.transferFrom(sender, address(this), value);
         t.approve(address(exchange), value);
         exchange.depositTokens(address(this), token, value);
-    }
-
-    function addBalance(address _owner, uint value) override internal {
-
-        if (balanceOf(_owner) == 0) {
-            holders.push(_owner);
-        }
-        balances[_owner] = balanceOf(_owner).add(value);
     }
 
     function ensureValidSymbol(string memory optSymbol) private view {

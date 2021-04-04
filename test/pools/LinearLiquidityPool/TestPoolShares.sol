@@ -95,8 +95,8 @@ contract TestPoolShares is Base {
         Assert.equal(exchange.balanceOf(addr[8]), 0, "addr[8] balance");
 
         time.setFixedTime(90 days);
-        pool.redeem(4);
-        pool.redeem(8);
+        pool.redeem(addr[4]);
+        pool.redeem(addr[8]);
 
         Assert.equal(exchange.balanceOf(address(pool)), 210 * vBase, "pool balance");
         Assert.equal(exchange.balanceOf(addr[4]), 30 * vBase, "addr[4] balance");
@@ -104,7 +104,7 @@ contract TestPoolShares is Base {
         Assert.equal(exchange.balanceOf(addr[8]), 30 * vBase, "addr[8] balance");
     }
 
-    function testDestroyPool() public {
+    function testRedeemAllAddressesPool() public {
 
         uint vBase = 1e6;
 
@@ -134,7 +134,7 @@ contract TestPoolShares is Base {
         Assert.equal(exchange.balanceOf(addr[8]), 0, "addr[8] balance");
 
         time.setFixedTime(90 days);
-        pool.destroy();
+        pool.redeem(addr);
 
         Assert.equal(exchange.balanceOf(address(pool)), 0, "pool balance");
         Assert.equal(exchange.balanceOf(addr[0]), 30 * vBase, "addr[0] balance");

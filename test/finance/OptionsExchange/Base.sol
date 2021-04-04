@@ -74,13 +74,15 @@ contract Base {
         exchange.depositTokens(to, address(erc20), value);
     }
 
-    function destroyOptionToken(uint id) internal {
+    function liquidateAndRedeem(uint id) internal {
 
-        OptionToken(exchange.resolveToken(id)).destroy();
+        liquidateAndRedeem(exchange.resolveToken(id));
     }
 
-    function destroyOptionToken(address token) internal {
+    function liquidateAndRedeem(address token) internal {
 
-        OptionToken(token).destroy();
+        uint maxId = uint(exchange.serial());
+        address[] memory owners = exchange.liquidateExpired(1, maxId);
+        OptionToken(token).redeem(owners);
     }
 }
