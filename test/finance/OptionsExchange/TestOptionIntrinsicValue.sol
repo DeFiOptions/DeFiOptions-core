@@ -11,17 +11,17 @@ contract TestOptionIntrinsicValue is Base {
 
         int step = 30e18;
         depositTokens(address(bob), upperVol);
-        uint id = bob.writeOption(CALL, ethInitialPrice, 1 days);
-        bob.transferOptions(address(alice), id, 1);
+        address _tk = bob.writeOption(CALL, ethInitialPrice, 1 days);
+        bob.transferOptions(address(alice), _tk, 1);
 
         feed.setPrice(ethInitialPrice - step);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), 0, "quote below strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), 0, "quote below strike");
 
         feed.setPrice(ethInitialPrice);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), 0, "quote at strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), 0, "quote at strike");
         
         feed.setPrice(ethInitialPrice + step);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), step, "quote above strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), step, "quote above strike");
         
         Assert.equal(bob.calcCollateral(), upperVol + uint(step), "call collateral");
     }
@@ -30,17 +30,17 @@ contract TestOptionIntrinsicValue is Base {
 
         int step = 40e18;
         depositTokens(address(bob), upperVol);
-        uint id = bob.writeOption(PUT, ethInitialPrice, 1 days);
-        bob.transferOptions(address(alice), id, 1);
+        address _tk = bob.writeOption(PUT, ethInitialPrice, 1 days);
+        bob.transferOptions(address(alice), _tk, 1);
 
         feed.setPrice(ethInitialPrice - step);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), step, "quote below strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), step, "quote below strike");
 
         feed.setPrice(ethInitialPrice);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), 0, "quote at strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), 0, "quote at strike");
         
         feed.setPrice(ethInitialPrice + step);
-        Assert.equal(int(exchange.calcIntrinsicValue(id)), 0, "quote above strike");
+        Assert.equal(int(exchange.calcIntrinsicValue(_tk)), 0, "quote above strike");
                 
         Assert.equal(bob.calcCollateral(), upperVol, "put collateral");
     }
@@ -72,13 +72,13 @@ contract TestOptionIntrinsicValue is Base {
 
         depositTokens(address(bob), 1500 * vBase);
 
-        uint id1 = bob.writeOption(CALL, ethInitialPrice - step, 10 days);
-        bob.transferOptions(address(alice), id1, 1);
+        address _tk1 = bob.writeOption(CALL, ethInitialPrice - step, 10 days);
+        bob.transferOptions(address(alice), _tk1, 1);
         uint ct1 = MoreMath.sqrtAndMultiply(10, upperVol) + uint(step);
         MoreAssert.equal(bob.calcCollateral(), ct1, cBase, "collateral ITM");
 
-        uint id2 = bob.writeOption(CALL, ethInitialPrice + step, 10 days);
-        bob.transferOptions(address(alice), id2, 1);
+        address _tk2 = bob.writeOption(CALL, ethInitialPrice + step, 10 days);
+        bob.transferOptions(address(alice), _tk2, 1);
         uint ct2 = MoreMath.sqrtAndMultiply(10, upperVol);
         MoreAssert.equal(bob.calcCollateral(), ct1 + ct2, cBase, "collateral OTM");
     }
