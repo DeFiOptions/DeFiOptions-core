@@ -13,14 +13,14 @@ abstract contract RedeemableToken is ERC20 {
 
     function redeemAllowed() virtual public returns(bool);
 
-    function redeem(address owner) external returns (uint) {
+    function redeem(address owner) external returns (uint value) {
 
         address[] memory owners = new address[](1);
         owners[0] = owner;
-        redeem(owners);
+        value = redeem(owners);
     }
 
-    function redeem(address[] memory owners) public returns (uint) {
+    function redeem(address[] memory owners) public returns (uint value) {
 
         require(redeemAllowed(), "redeemd not allowed");
 
@@ -32,6 +32,7 @@ abstract contract RedeemableToken is ERC20 {
         for (uint i = 0; i < owners.length; i++) {
             if (owners[i] != address(0)) {
                 (uint bal, uint val) = redeem(valTotal, supplyTotal, owners[i]);
+                value = value.add(val);
                 valRemaining = valRemaining.sub(val);
                 supplyRemaining = supplyRemaining.sub(bal);
             }
