@@ -8,6 +8,7 @@ import "../../../contracts/finance/OptionToken.sol";
 import "../../../contracts/pools/LinearLiquidityPool.sol";
 import "../../../contracts/governance/ProtocolSettings.sol";
 import "../../common/actors/PoolTrader.sol";
+import "../../common/actors/OptionsTrader.sol";
 import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
