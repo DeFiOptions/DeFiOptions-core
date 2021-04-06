@@ -55,13 +55,28 @@ contract OptionsExchange is ManagedContract {
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
-    event CreateSymbol(address indexed token, address indexed issuer);
+    event CreateSymbol(address indexed token, address indexed sender);
 
-    event WriteOptions(address indexed token, address indexed issuer, uint volume);
+    event WriteOptions(
+        address indexed token,
+        address indexed issuer,
+        address indexed onwer,
+        uint volume
+    );
 
-    event LiquidateEarly(address indexed token, address indexed sender, uint volume);
+    event LiquidateEarly(
+        address indexed token,
+        address indexed sender,
+        address indexed onwer,
+        uint volume
+    );
 
-    event LiquidateExpired(address indexed token, address indexed sender, uint volume);
+    event LiquidateExpired(
+        address indexed token,
+        address indexed sender,
+        address indexed onwer,
+        uint volume
+    );
 
     constructor(address deployer) public {
 
@@ -433,10 +448,10 @@ contract OptionsExchange is ManagedContract {
         }
 
         OptionToken tk = OptionToken(_tk);
-        if (tk.writtenVolume(msg.sender) == 0) {
+        if (tk.writtenVolume(msg.sender) == 0 && tk.balanceOf(msg.sender) == 0) {
             book[msg.sender].push(_tk);
         }
-        if (tk.balanceOf(to) == 0) {
+        if (msg.sender != to && tk.writtenVolume(to) == 0 && tk.balanceOf(to) == 0) {
             book[to].push(_tk);
         }
         tk.issue(msg.sender, to, volume);
@@ -449,7 +464,7 @@ contract OptionsExchange is ManagedContract {
             calcCollateral(opt, volume)
         );
 
-        emit WriteOptions(_tk, msg.sender, volume);
+        emit WriteOptions(_tk, msg.sender, to, volume);
     }
 
     function createOptionInMemory(
@@ -481,7 +496,7 @@ contract OptionsExchange is ManagedContract {
 
         if (isExpired) {
             value = liquidateAfterMaturity(owner, tk, written, iv);
-            emit LiquidateExpired(address(tk), msg.sender, written);
+            emit LiquidateExpired(address(tk), msg.sender, owner, written);
         } else {
             require(written > 0, "invalid volume");
             value = liquidateBeforeMaturity(owner, opt, tk, written, iv);
@@ -528,7 +543,7 @@ contract OptionsExchange is ManagedContract {
             tk.burn(owner, volume);
         }
 
-        emit LiquidateEarly(address(tk), msg.sender, volume);
+        emit LiquidateEarly(address(tk), msg.sender, owner, volume);
     }
 
     function calcLiquidationVolume(

@@ -52,6 +52,8 @@ contract TestOptionLiquidation is Base {
 
         Assert.equal(bob.calcSurplus(), 0, "bob final surplus");
         Assert.equal(alice.calcSurplus(), 0, "alice final surplus");
+
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testMultipleLiquidationsWhenIssuerLacksCollateral() public {
@@ -81,6 +83,8 @@ contract TestOptionLiquidation is Base {
         Assert.isTrue(v3 > 0, "liquidation value t3");
         Assert.equal(bob.balance(), mu - v1 - v2 - v3, "bob balance t3");
         MoreAssert.equal(bob.calcCollateral(), mu - v1 - v2 - v3, cBase, "bob collateral t3");
+
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testFullLiquidationsWhenIssuerLacksCollateral() public {
@@ -98,6 +102,8 @@ contract TestOptionLiquidation is Base {
         Assert.isTrue(v1 > mu, "liquidation value t1");
         Assert.equal(bob.balance(), 0, "bob balance t1");
         MoreAssert.equal(bob.calcCollateral(), 0, cBase, "bob collateral t1");
+
+        Assert.equal(getBookLength(), 1, "book length");
     }
 
     function testLiquidationAtMaturityOTM() public {

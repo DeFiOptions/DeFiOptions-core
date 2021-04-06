@@ -46,6 +46,8 @@ contract TestOptionTrading is Base {
 
         Assert.equal(creditToken.balanceOf(address(bob)), 0, "bob tokens");
         Assert.equal(creditToken.balanceOf(address(alice)), uint(step) - ct5 - ct10, "alice tokens");
+        
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testDebtInterestRate() public {
@@ -82,6 +84,8 @@ contract TestOptionTrading is Base {
         uint d3 = bob.calcDebt();
         uint debt20 = MoreMath.powAndMultiply(debtIr, debtBase, 20 days / timeBase, debt);
         MoreAssert.equal(d3, debt20, cBase, "debt with 20 day interest");
+
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testDebtSettlementEarlyWithdraw() public {
@@ -126,6 +130,8 @@ contract TestOptionTrading is Base {
         Assert.equal(creditToken.balanceOf(address(alice)), 0, "alice tokens");
 
         Assert.equal(creditProvider.totalTokenStock(), ct5 + debt - (uint(step) - ct10), "token stock");
+
+        Assert.equal(getBookLength(), 0, "book length");
     }
 
     function testDebtSettlementLateWithdraw() public {
@@ -167,6 +173,8 @@ contract TestOptionTrading is Base {
         Assert.equal(creditToken.balanceOf(address(alice)), 0, "alice tokens");
 
         Assert.equal(creditProvider.totalTokenStock(), ct - uint(step) + debt, "token stock");
+
+        Assert.equal(getBookLength(), 0, "book length");
     }
 
     function testWriteBurnAndRedeem() public {
@@ -207,5 +215,6 @@ contract TestOptionTrading is Base {
 
         time.setTimeOffset(30 days);
         liquidateAndRedeem(address(tk));
+        Assert.equal(getBookLength(), 0, "book length");
     }
 }

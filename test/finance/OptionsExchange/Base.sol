@@ -23,6 +23,8 @@ contract Base {
     uint cBase = 1e8; // comparison base
     uint volumeBase = 1e18;
     uint timeBase = 1 hours;
+
+    address[] traders;
     
     EthFeedMock feed;
     ERC20Mock erc20;
@@ -51,8 +53,8 @@ contract Base {
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         deployer.deploy();
 
-        bob = new OptionsTrader(address(exchange), address(time), address(feed));
-        alice = new OptionsTrader(address(exchange), address(time), address(feed));
+        bob = createTrader();
+        alice = createTrader();
         
         uint vol = feed.getDailyVolatility(182 days);
         lowerVol = feed.calcLowerVolatility(vol);
@@ -67,6 +69,13 @@ contract Base {
         time.setTimeOffset(0);
     }
 
+    function createTrader() internal returns (OptionsTrader) {
+
+        OptionsTrader td = new OptionsTrader(address(exchange), address(time), address(feed));
+        traders.push(address(td));
+        return td;
+    }
+
     function depositTokens(address to, uint value) internal {
         
         erc20.issue(address(this), value);
@@ -74,12 +83,18 @@ contract Base {
         exchange.depositTokens(to, address(erc20), value);
     }
 
+    function getBookLength() internal returns (uint total) {
+
+        total = 0;
+        for (uint i = 0; i < traders.length; i++) {
+            (,uint[] memory holding,,) = exchange.getBook(traders[i]);
+            total += holding.length;
+        }
+    }
+
     function liquidateAndRedeem(address _tk) internal {
 
-        address[] memory owners = new address[](2);
-        owners[0] = address(alice);
-        owners[1] = address(bob);
-        exchange.liquidateExpired(_tk, owners);
-        OptionToken(_tk).redeem(owners);
+        exchange.liquidateExpired(_tk, traders);
+        OptionToken(_tk).redeem(traders);
     }
 }

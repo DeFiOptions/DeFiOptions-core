@@ -48,6 +48,8 @@ contract TestWriteOptions is Base {
         Assert.equal(tk.writtenVolume(address(alice)), 0, "alice written volume");
         Assert.equal(tk.balanceOf(address(alice)), 6 * volumeBase, "alice options");
         Assert.equal(tk.totalSupply(), 10 * volumeBase, "total supply");
+
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testWriteAndDistribute() public {
@@ -62,13 +64,15 @@ contract TestWriteOptions is Base {
         depositTokens(address(bob), ct);
         address _tk = bob.writeOptions(1100, CALL, ethInitialPrice, 30 days);
 
-        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time), address(feed));
-        address address_h2 = address(0x0000000000000000000000000000000000000001);
-        OptionsTrader h3 = new OptionsTrader(address(exchange), address(time), address(feed));
-        OptionsTrader h4 = new OptionsTrader(address(exchange), address(time), address(feed));
+        Assert.equal(getBookLength(), 1, "book length t0");
+
+        OptionsTrader h1 = createTrader();
+        OptionsTrader h2 = createTrader();
+        OptionsTrader h3 = createTrader();
+        OptionsTrader h4 = createTrader();
 
         bob.transferOptions(address(h1), _tk, 100);
-        bob.transferOptions(address_h2, _tk, 200);
+        bob.transferOptions(address(h2), _tk, 200);
         bob.transferOptions(address(h3), _tk, 300);
         bob.transferOptions(address(h4), _tk, 400);
 
@@ -76,21 +80,24 @@ contract TestWriteOptions is Base {
 
         Assert.equal(tk.balanceOf(address(bob)), 100 * volumeBase, "bob options");
         Assert.equal(tk.balanceOf(address(h1)), 100 * volumeBase, "h1 options");
-        Assert.equal(tk.balanceOf(address_h2), 200 * volumeBase, "h2 options");
+        Assert.equal(tk.balanceOf(address(h2)), 200 * volumeBase, "h2 options");
         Assert.equal(tk.balanceOf(address(h3)), 300 * volumeBase, "h3 options");
         Assert.equal(tk.balanceOf(address(h4)), 400 * volumeBase, "h4 options");
 
-        h1.transferOptions(address_h2, _tk, 100);
-        h3.transferOptions(address_h2, _tk, 100);
-        h4.transferOptions(address_h2, _tk, 100);
+        Assert.equal(getBookLength(), 5, "book length t1");
+
+        h1.transferOptions(address(h2), _tk, 100);
+        h3.transferOptions(address(h2), _tk, 100);
+        h4.transferOptions(address(h2), _tk, 100);
 
         Assert.equal(tk.balanceOf(address(bob)), 100 * volumeBase, "bob options");
         Assert.equal(tk.balanceOf(address(h1)), 0, "h1 options");
-        Assert.equal(tk.balanceOf(address_h2), 500 * volumeBase, "h2 options");
+        Assert.equal(tk.balanceOf(address(h2)), 500 * volumeBase, "h2 options");
         Assert.equal(tk.balanceOf(address(h3)), 200 * volumeBase, "h3 options");
         Assert.equal(tk.balanceOf(address(h4)), 300 * volumeBase, "h4 options");
 
         Assert.equal(tk.writtenVolume(address(bob)), 1100 * volumeBase, "bob written volume");
+        Assert.equal(getBookLength(), 4, "book length t2");
     }
 
     function testWriteAndBurn() public {
@@ -121,6 +128,8 @@ contract TestWriteOptions is Base {
         Assert.equal(tk.balanceOf(address(bob)), 0, "bob options");
         Assert.equal(tk.balanceOf(address(alice)), 5 * volumeBase, "alice options");
         Assert.equal(tk.totalSupply(), 5 * volumeBase, "total supply");
+
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testWriteSameMultipleTimes() public {
@@ -134,7 +143,7 @@ contract TestWriteOptions is Base {
         );
         depositTokens(address(bob), ct);
 
-        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time), address(feed));
+        OptionsTrader h1 = createTrader();
 
         address _tk1 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
         OptionToken tk = OptionToken(_tk1);
@@ -154,5 +163,6 @@ contract TestWriteOptions is Base {
 
         Assert.equal(tk.balanceOf(address(bob)), 0, "bob options");
         Assert.equal(tk.balanceOf(address(h1)), 300 * volumeBase, "h1 options");
+        Assert.equal(getBookLength(), 2, "book length");
     }
 }
