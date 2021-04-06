@@ -1,7 +1,6 @@
 pragma solidity >=0.6.0;
 
 import "../deployment/ManagedContract.sol";
-import "../finance/OptionsExchange.sol";
 import "../finance/RedeemableToken.sol";
 import "../governance/ProtocolSettings.sol";
 import "../interfaces/TimeProvider.sol";
@@ -42,6 +41,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
     TimeProvider private time;
     ProtocolSettings private settings;
+    CreditProvider private creditProvider;
 
     mapping(string => PricingParameters) private parameters;
 
@@ -71,6 +71,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
+        creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
 
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
@@ -200,7 +201,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function depositTokens(address to, address token, uint value) override public {
 
         uint b0 = exchange.balanceOf(address(this));
-        depositTokensInExchange(msg.sender, token, value);
+        depositTokensInExchange(token, value);
         uint b1 = exchange.balanceOf(address(this));
         int po = exchange.calcExpectedPayout(address(this));
         
@@ -370,7 +371,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
                 ERC20(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
             }
             value = value.mul(tv).div(tb);
-            depositTokensInExchange(msg.sender, token, value);
+            depositTokensInExchange(token, value);
         } else {
             exchange.transferBalance(msg.sender, address(this), value, maxValue, deadline, v, r, s);
         }
@@ -537,12 +538,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         }
     }
 
-    function depositTokensInExchange(address sender, address token, uint value) private {
+    function depositTokensInExchange(address token, uint value) private {
         
         ERC20 t = ERC20(token);
-        t.transferFrom(sender, address(this), value);
-        t.approve(address(exchange), value);
-        exchange.depositTokens(address(this), token, value);
+        t.transferFrom(msg.sender, address(creditProvider), value);
+        creditProvider.addBalance(address(this), token, value);
     }
 
     function ensureValidSymbol(string memory optSymbol) private view {

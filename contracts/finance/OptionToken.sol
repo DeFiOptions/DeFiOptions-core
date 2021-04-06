@@ -83,7 +83,7 @@ contract OptionToken is RedeemableToken {
         return _unliquidatedVolume == 0;
     }
 
-    function afterRedeem(address owner, uint bal, uint val) override internal {
+    function afterRedeem(address owner, uint, uint) override internal {
 
         exchange.cleanUp(address(this), owner);
     }

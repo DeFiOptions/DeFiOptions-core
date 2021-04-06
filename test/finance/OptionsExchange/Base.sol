@@ -83,7 +83,7 @@ contract Base {
         exchange.depositTokens(to, address(erc20), value);
     }
 
-    function getBookLength() internal returns (uint total) {
+    function getBookLength() internal view returns (uint total) {
 
         total = 0;
         for (uint i = 0; i < traders.length; i++) {
