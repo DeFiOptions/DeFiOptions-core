@@ -49,20 +49,20 @@ contract TestOptionIntrinsicValue is Base {
 
         uint ct1 = MoreMath.sqrtAndMultiply(30, upperVol);
         depositTokens(address(bob), ct1);
-        uint id = bob.writeOption(CALL, ethInitialPrice, 30 days);
-        MoreAssert.equal(exchange.calcUpperCollateral(id), ct1, cBase, "upper collateral at 30d");
+        bob.writeOption(CALL, ethInitialPrice, 30 days);
+        MoreAssert.equal(bob.calcCollateral(), ct1, cBase, "collateral at 30d");
 
         uint ct2 = MoreMath.sqrtAndMultiply(10, upperVol);
         time.setTimeOffset(20 days);
-        MoreAssert.equal(exchange.calcUpperCollateral(id), ct2, cBase, "upper collateral at 10d");
+        MoreAssert.equal(bob.calcCollateral(), ct2, cBase, "collateral at 10d");
 
         uint ct3 = MoreMath.sqrtAndMultiply(5, upperVol);
         time.setTimeOffset(25 days);
-        MoreAssert.equal(exchange.calcUpperCollateral(id), ct3, cBase, "upper collateral at 5d");
+        MoreAssert.equal(bob.calcCollateral(), ct3, cBase, "collateral at 5d");
 
         uint ct4 = MoreMath.sqrtAndMultiply(1, upperVol);
         time.setTimeOffset(29 days);
-        MoreAssert.equal(exchange.calcUpperCollateral(id), ct4, cBase, "upper collateral at 1d");
+        MoreAssert.equal(bob.calcCollateral(), ct4, cBase, "collateral at 1d");
     }
 
     function testCollateralForDifferentStrikePrices() public {
@@ -75,11 +75,11 @@ contract TestOptionIntrinsicValue is Base {
         uint id1 = bob.writeOption(CALL, ethInitialPrice - step, 10 days);
         bob.transferOptions(address(alice), id1, 1);
         uint ct1 = MoreMath.sqrtAndMultiply(10, upperVol) + uint(step);
-        MoreAssert.equal(bob.calcCollateral(), ct1, cBase, "upper collateral ITM");
+        MoreAssert.equal(bob.calcCollateral(), ct1, cBase, "collateral ITM");
 
         uint id2 = bob.writeOption(CALL, ethInitialPrice + step, 10 days);
         bob.transferOptions(address(alice), id2, 1);
         uint ct2 = MoreMath.sqrtAndMultiply(10, upperVol);
-        MoreAssert.equal(bob.calcCollateral(), ct1 + ct2, cBase, "upper collateral OTM");
+        MoreAssert.equal(bob.calcCollateral(), ct1 + ct2, cBase, "collateral OTM");
     }
 }

@@ -2,13 +2,13 @@ pragma solidity >=0.6.0;
 
 interface LiquidityPool {
 
-    event AddSymbol(string indexed optSymbol);
+    event AddSymbol(string optSymbol);
     
-    event RemoveSymbol(string indexed optSymbol);
+    event RemoveSymbol(string optSymbol);
 
-    event Buy(string indexed optSymbol, uint price, uint volume, address token);
+    event Buy(address indexed token, address indexed buyer, uint price, uint volume);
     
-    event Sell(string indexed optSymbol, uint price, uint volume);
+    event Sell(address indexed token, address indexed seller, uint price, uint volume);
 
     function maturity() external view returns (uint);
 

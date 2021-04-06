@@ -14,7 +14,7 @@ library Arrays {
         array.pop();
     }
 
-    function removeItem(uint64[] storage array, uint64 item) internal returns (bool) {
+    function removeItem(uint48[] storage array, uint48 item) internal returns (bool) {
 
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == item) {

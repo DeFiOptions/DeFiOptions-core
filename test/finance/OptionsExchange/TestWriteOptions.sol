@@ -55,7 +55,7 @@ contract TestWriteOptions is Base {
     function testWriteAndDistribute() public {
 
         uint ct = exchange.calcCollateral(
-            address(0), 
+            address(feed), 
             1100 * volumeBase, 
             CALL, 
             uint(ethInitialPrice), 
@@ -66,10 +66,10 @@ contract TestWriteOptions is Base {
 
         Assert.equal(exchange.getBookLength(), 1, "book length t0");
 
-        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time));
+        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time), address(feed));
         address address_h2 = address(0x0000000000000000000000000000000000000001);
-        OptionsTrader h3 = new OptionsTrader(address(exchange), address(time));
-        OptionsTrader h4 = new OptionsTrader(address(exchange), address(time));
+        OptionsTrader h3 = new OptionsTrader(address(exchange), address(time), address(feed));
+        OptionsTrader h4 = new OptionsTrader(address(exchange), address(time), address(feed));
 
         bob.transferOptions(address(h1), id, 100);
         bob.transferOptions(address_h2, id, 200);
@@ -135,7 +135,7 @@ contract TestWriteOptions is Base {
     function testWriteSameMultipleTimes() public {
 
         uint ct = exchange.calcCollateral(
-            address(0), 
+            address(feed), 
             300 * volumeBase, 
             CALL, 
             uint(ethInitialPrice), 
@@ -143,7 +143,7 @@ contract TestWriteOptions is Base {
         );
         depositTokens(address(bob), ct);
 
-        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time));
+        OptionsTrader h1 = new OptionsTrader(address(exchange), address(time), address(feed));
 
         uint id1 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
         OptionToken tk = OptionToken(exchange.resolveToken(id1));

@@ -51,8 +51,8 @@ contract Base {
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         deployer.deploy();
 
-        bob = new OptionsTrader(address(exchange), address(time));
-        alice = new OptionsTrader(address(exchange), address(time));
+        bob = new OptionsTrader(address(exchange), address(time), address(feed));
+        alice = new OptionsTrader(address(exchange), address(time), address(feed));
         
         uint vol = feed.getDailyVolatility(182 days);
         lowerVol = feed.calcLowerVolatility(vol);
@@ -61,7 +61,7 @@ contract Base {
         erc20 = new ERC20Mock();
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
-        settings.setDefaultUdlFeed(address(feed));
+        settings.setUdlFeed(address(feed), 1);
 
         feed.setPrice(ethInitialPrice);
         time.setTimeOffset(0);
@@ -74,13 +74,15 @@ contract Base {
         exchange.depositTokens(to, address(erc20), value);
     }
 
-    function destroyOptionToken(uint id) internal {
+    function liquidateAndRedeem(uint id) internal {
 
-        OptionToken(exchange.resolveToken(id)).destroy();
+        liquidateAndRedeem(exchange.resolveToken(id));
     }
 
-    function destroyOptionToken(address token) internal {
+    function liquidateAndRedeem(address token) internal {
 
-        OptionToken(token).destroy();
+        uint maxId = uint(exchange.serial());
+        address[] memory owners = exchange.liquidateExpired(1, maxId);
+        OptionToken(token).redeem(owners);
     }
 }
