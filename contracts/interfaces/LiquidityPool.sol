@@ -49,5 +49,16 @@ interface LiquidityPool {
         external
         returns (address addr);
 
+    function sell(
+        string calldata optSymbol,
+        uint price,
+        uint volume,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        external;
+
     function sell(string calldata optSymbol, uint price, uint volume) external;
 }

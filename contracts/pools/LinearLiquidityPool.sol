@@ -317,8 +317,18 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         _tk = buy(optSymbol, price, volume, token, 0, 0, x, x);
     }
 
-    function sell(string calldata optSymbol, uint price, uint volume) override external {
-        
+    function sell(
+        string memory optSymbol,
+        uint price,
+        uint volume,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        override
+        public
+    {
         require(volume > 0, "invalid volume");
         ensureValidSymbol(optSymbol);
 
@@ -327,6 +337,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         address _tk = exchange.resolveToken(optSymbol);
         OptionToken tk = OptionToken(_tk);
+        if (deadline > 0) {
+            tk.permit(msg.sender, address(this), volume, deadline, v, r, s);
+        }
         tk.transferFrom(msg.sender, address(this), volume);
 
         uint value = price.mul(volume).div(volumeBase);
@@ -345,6 +358,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         require(_holding <= param.sellStock, "excessive volume");
 
         emit Sell(_tk, msg.sender, price, volume);
+    }
+
+    function sell(string calldata optSymbol, uint price, uint volume) override external {
+        
+        bytes32 x;
+        sell(optSymbol, price, volume, 0, 0, x, x);
     }
 
     function receivePayment(
