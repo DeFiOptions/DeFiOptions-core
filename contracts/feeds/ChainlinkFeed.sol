@@ -226,7 +226,8 @@ contract ChainlinkFeed is UnderlyingFeed {
         require(timespan.mod(1 days) == 0, "invalid timespan");
 
         if (dailyVolatilities[timespan][today()] == 0) {
-            (uint vol,) = getDailyVolatilityCached(timespan);
+            (uint vol, bool cached) = getDailyVolatilityCached(timespan);
+            require(!cached, "already cached");
             dailyVolatilities[timespan][today()] = encodeValue(vol);
         }
     }
