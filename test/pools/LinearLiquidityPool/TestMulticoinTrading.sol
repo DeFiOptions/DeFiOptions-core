@@ -205,19 +205,29 @@ Verify that Trader B balances is a combination of Stablecoins “A”, “B” a
 
         //期权的买家又叫持权人(holder)，期权的卖家又叫立权人(writer)。
         //Trader B writes an option in the OptionsExchange
-        uint id = userB.writeOptions(1, CALL, strike, maturity);
+        uint test_strike=550e18;
+        uint id = userB.writeOptions(1, CALL, test_strike, 30 days);
         OptionToken tk = OptionToken(exchange.resolveToken(id));
+        emit LogUint("3.balanceOf(ex) userB write",exchange.balanceOf(address(userB)));
 
         //Trader B sells his option to the LiquidityPool
         
         uint volume = 1 * volumeBase;
         (uint sellPrice,) = pool.querySell(symbol);
         userB.sellToPool(symbol, sellPrice, volume);
+        emit LogUint("3.balanceOf(ex) userB selltopool",exchange.balanceOf(address(userB)));
+        emit LogUint("3.userB surplus before liquidate",userB.calcSurplus());
 
         //todo:???The option expires OTM (out-of-the-money)
+        uint step = 40e18;
+        feed.setPrice(int(test_strike - step));
+        time.setTimeOffset(30 days);
+        
+        userB.liquidateOptions(id);
+        emit LogUint("3.userB surplus after liquidate",userB.calcSurplus());
 
         //Trader B withdraws all his exchange balance
-        emit LogUint("3.balanceOf(ex) userB sell",exchange.balanceOf(address(userB)));
+        emit LogUint("3.balanceOf(ex) userB liquidate",exchange.balanceOf(address(userB)));
         userB.withdrawTokens(exchange.calcSurplus(address(userB)));
         emit LogUint("3.balanceOf(ex) userB withdraw",exchange.balanceOf(address(userB)));
 
