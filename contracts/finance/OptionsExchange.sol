@@ -169,6 +169,7 @@ contract OptionsExchange is ManagedContract {
 
     function createSymbol(string memory symbol, address udlFeed) public returns (address tk) {
 
+        require(tokenAddress[symbol] == address(0), "already created");
         tk = factory.create(symbol, udlFeed);
         tokenAddress[symbol] = tk;
         prefetchFeedData(udlFeed);
