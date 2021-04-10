@@ -37,6 +37,7 @@ interface LiquidityPool {
         uint price,
         uint volume,
         address token,
+        uint maxValue,
         uint deadline,
         uint8 v,
         bytes32 r,

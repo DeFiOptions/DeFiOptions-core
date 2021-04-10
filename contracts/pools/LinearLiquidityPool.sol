@@ -280,6 +280,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint price,
         uint volume,
         address token,
+        uint maxValue,
         uint deadline,
         uint8 v,
         bytes32 r,
@@ -293,7 +294,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
-        price = receivePayment(param, price, volume, token, deadline, v, r, s);
+        price = receivePayment(param, price, volume, maxValue, token, deadline, v, r, s);
 
         _tk = exchange.resolveToken(optSymbol);
         OptionToken tk = OptionToken(_tk);
@@ -314,7 +315,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         returns (address _tk)
     {
         bytes32 x;
-        _tk = buy(optSymbol, price, volume, token, 0, 0, x, x);
+        uint maxValue = price.mul(volume).div(volumeBase);
+        _tk = buy(optSymbol, price, volume, token, maxValue, 0, 0, x, x);
     }
 
     function sell(
@@ -370,6 +372,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         PricingParameters memory param,
         uint price,
         uint volume,
+        uint maxValue,
         address token,
         uint deadline,
         uint8 v,
@@ -379,7 +382,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         private
         returns (uint)
     {
-        uint maxValue = price.mul(volume).div(volumeBase);
         price = validatePrice(price, param, Operation.BUY);
         uint value = price.mul(volume).div(volumeBase);
 
