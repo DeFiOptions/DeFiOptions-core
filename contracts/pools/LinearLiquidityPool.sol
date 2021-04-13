@@ -205,7 +205,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint b1 = exchange.balanceOf(address(this));
         int po = exchange.calcExpectedPayout(address(this));
         
-        deposits.push(Deposit(time.getNow().toUint32(), uint(int(b0).add(po)), value));
+        deposits.push(
+            Deposit(time.getNow().toUint32(), uint(int(b0).add(po)), b1.sub(b0))
+        );
 
         uint ts = _totalSupply;
         int expBal = po.add(int(b1));
