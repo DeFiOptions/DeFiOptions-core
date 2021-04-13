@@ -71,6 +71,7 @@ contract OptionToken is RedeemableToken {
         _unliquidatedVolume = _unliquidatedVolume.sub(value);
 
         exchange.cleanUp(address(this), owner);
+        emit Transfer(owner, address(0), value);
     }
 
     function writtenVolume(address owner) external view returns (uint) {
@@ -83,9 +84,10 @@ contract OptionToken is RedeemableToken {
         return _unliquidatedVolume == 0;
     }
 
-    function afterRedeem(address owner, uint, uint) override internal {
+    function afterRedeem(address owner, uint, uint val) override internal {
 
         exchange.cleanUp(address(this), owner);
+        emit Transfer(owner, address(0), val);
     }
 
     function emitTransfer(address from, address to, uint value) override internal {
