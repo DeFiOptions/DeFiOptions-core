@@ -19,20 +19,20 @@ contract TestOptionTrading is Base {
         uint ct10 = MoreMath.sqrtAndMultiply(10, upperVol);
 
         depositTokens(address(bob), ct10);
-        uint id1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
-        bob.transferOptions(address(alice), id1, 1);
+        address _tk1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
+        bob.transferOptions(address(alice), _tk1, 1);
 
         time.setTimeOffset(5 days);
 
         depositTokens(address(alice), ct10);
-        uint id2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
-        alice.transferOptions(address(bob), id2, 1);
+        address _tk2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
+        alice.transferOptions(address(bob), _tk2, 1);
         
         int step = ethInitialPrice;
         feed.setPrice(ethInitialPrice + step);
         time.setTimeOffset(10 days);
         
-        liquidateAndRedeem(id1);
+        liquidateAndRedeem(_tk1);
         feed.setPrice(ethInitialPrice);
         
         alice.withdrawTokens();
@@ -47,27 +47,27 @@ contract TestOptionTrading is Base {
         Assert.equal(creditToken.balanceOf(address(bob)), 0, "bob tokens");
         Assert.equal(creditToken.balanceOf(address(alice)), uint(step) - ct5 - ct10, "alice tokens");
         
-        Assert.equal(exchange.getBookLength(), 2, "book length");
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testDebtInterestRate() public {
 
         uint ct = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), ct);
-        uint id1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
-        bob.transferOptions(address(alice), id1, 1);
+        address _tk1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
+        bob.transferOptions(address(alice), _tk1, 1);
 
         time.setTimeOffset(5 days);
 
         depositTokens(address(alice), ct);
-        uint id2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
-        alice.transferOptions(address(bob), id2, 1);
+        address _tk2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
+        alice.transferOptions(address(bob), _tk2, 1);
         
         int step = ethInitialPrice;
         feed.setPrice(ethInitialPrice + step);
         time.setTimeOffset(10 days);
         
-        liquidateAndRedeem(id1);
+        liquidateAndRedeem(_tk1);
 
         (debtIr, debtBase,) = settings.getDebtInterestRate();
         uint debt = uint(step) - ct;
@@ -85,7 +85,7 @@ contract TestOptionTrading is Base {
         uint debt20 = MoreMath.powAndMultiply(debtIr, debtBase, 20 days / timeBase, debt);
         MoreAssert.equal(d3, debt20, cBase, "debt with 20 day interest");
 
-        Assert.equal(exchange.getBookLength(), 2, "book length");
+        Assert.equal(getBookLength(), 2, "book length");
     }
 
     function testDebtSettlementEarlyWithdraw() public {
@@ -94,26 +94,26 @@ contract TestOptionTrading is Base {
         uint ct10 = MoreMath.sqrtAndMultiply(10, upperVol);
 
         depositTokens(address(bob), ct10);
-        uint id1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
-        bob.transferOptions(address(alice), id1, 1);
+        address _tk1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
+        bob.transferOptions(address(alice), _tk1, 1);
 
         time.setTimeOffset(5 days);
 
         depositTokens(address(alice), ct10);
-        uint id2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
-        alice.transferOptions(address(bob), id2, 1);
+        address _tk2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
+        alice.transferOptions(address(bob), _tk2, 1);
         
         int step = 4 * ethInitialPrice;
         feed.setPrice(ethInitialPrice + step);
         time.setTimeOffset(10 days);
         
-        liquidateAndRedeem(id1);
+        liquidateAndRedeem(_tk1);
 
         alice.withdrawTokens();
 
         time.setTimeOffset(15 days);
 
-        liquidateAndRedeem(id2);
+        liquidateAndRedeem(_tk2);
 
         bob.withdrawTokens();
 
@@ -131,31 +131,31 @@ contract TestOptionTrading is Base {
 
         Assert.equal(creditProvider.totalTokenStock(), ct5 + debt - (uint(step) - ct10), "token stock");
 
-        Assert.equal(exchange.getBookLength(), 0, "book length");
+        Assert.equal(getBookLength(), 0, "book length");
     }
 
     function testDebtSettlementLateWithdraw() public {
 
         uint ct = MoreMath.sqrtAndMultiply(10, upperVol);
         depositTokens(address(bob), ct);
-        uint id1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
-        bob.transferOptions(address(alice), id1, 1);
+        address _tk1 = bob.writeOption(CALL, ethInitialPrice, 10 days);
+        bob.transferOptions(address(alice), _tk1, 1);
 
         time.setTimeOffset(5 days);
 
         depositTokens(address(alice), ct);
-        uint id2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
-        alice.transferOptions(address(bob), id2, 1);
+        address _tk2 = alice.writeOption(CALL, ethInitialPrice, 10 days);
+        alice.transferOptions(address(bob), _tk2, 1);
         
         int step = 4 * ethInitialPrice;
         feed.setPrice(ethInitialPrice + step);
         time.setTimeOffset(10 days);
         
-        liquidateAndRedeem(id1);
+        liquidateAndRedeem(_tk1);
 
         time.setTimeOffset(15 days);
 
-        liquidateAndRedeem(id2);
+        liquidateAndRedeem(_tk2);
 
         alice.withdrawTokens();
         bob.withdrawTokens();
@@ -174,7 +174,7 @@ contract TestOptionTrading is Base {
 
         Assert.equal(creditProvider.totalTokenStock(), ct - uint(step) + debt, "token stock");
 
-        Assert.equal(exchange.getBookLength(), 0, "book length");
+        Assert.equal(getBookLength(), 0, "book length");
     }
 
     function testWriteBurnAndRedeem() public {
@@ -190,24 +190,24 @@ contract TestOptionTrading is Base {
         depositTokens(address(bob), ct);
         depositTokens(address(alice), ct);
 
-        uint id1 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
-        bob.transferOptions(address(alice), id1, 100);
+        address _tk1 = bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
+        bob.transferOptions(address(alice), _tk1, 100);
 
         bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
-        bob.transferOptions(address(alice), id1, 100);
+        bob.transferOptions(address(alice), _tk1, 100);
 
         bob.writeOptions(100, CALL, ethInitialPrice, 30 days);
-        bob.transferOptions(address(alice), id1, 100);
+        bob.transferOptions(address(alice), _tk1, 100);
 
-        uint id2 = alice.writeOptions(300, CALL, ethInitialPrice, 30 days);
-        alice.transferOptions(address(bob), id2, 300);
+        address _tk2 = alice.writeOptions(300, CALL, ethInitialPrice, 30 days);
+        alice.transferOptions(address(bob), _tk2, 300);
 
-        OptionToken tk = OptionToken(exchange.resolveToken(id1));
+        OptionToken tk = OptionToken(_tk1);
 
         Assert.equal(tk.totalSupply(), 600 * volumeBase, "total supply before burn");
 
-        bob.burnOptions(id1, 300);
-        alice.burnOptions(id2, 300);
+        bob.burnOptions(_tk1, 300);
+        alice.burnOptions(_tk2, 300);
 
         Assert.equal(tk.totalSupply(), 0, "total supply after burn");
         Assert.equal(tk.balanceOf(address(bob)), 0, "bob options");
@@ -215,6 +215,6 @@ contract TestOptionTrading is Base {
 
         time.setTimeOffset(30 days);
         liquidateAndRedeem(address(tk));
-        Assert.equal(exchange.getBookLength(), 0, "book length");
+        Assert.equal(getBookLength(), 0, "book length");
     }
 }

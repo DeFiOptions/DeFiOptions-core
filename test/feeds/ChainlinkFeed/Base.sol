@@ -2,13 +2,16 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
+import "../../../contracts/deployment/Deployer.sol";
 import "../../../contracts/feeds/ChainlinkFeed.sol";
 import "../../common/mock/AggregatorV3Mock.sol";
+import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
 
 abstract contract Base {
 
     ChainlinkFeed feed;
+    TimeProviderMock time;
     
     uint[] roundIds;
     int[] answers;
@@ -28,7 +31,8 @@ abstract contract Base {
 
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
-        TimeProviderMock time = TimeProviderMock(DeployedAddresses.TimeProviderMock());
+        Deployer deployer = Deployer(DeployedAddresses.Deployer());
+        time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         time.setFixedTime(10 days);
 
         feed = new ChainlinkFeed(
