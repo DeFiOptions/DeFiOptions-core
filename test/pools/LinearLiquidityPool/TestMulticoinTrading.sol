@@ -190,7 +190,7 @@ Verify that Trader B balances is a combination of Stablecoins “A”, “B” a
         Assert.equal(pool.balanceOf(address(userA)), pool_total, "userA stablecoinB after deposit");
         emit LogUint("3.balanceOf(pool) userA deposit",exchange.balanceOf(address(pool)));
 
-        //Trader B deposits the amount of 50*P Stablecoins C in the OptionsExchange
+        //Trader B deposits the amount of 10*P Stablecoins C in the OptionsExchange
         PoolTrader userB = new PoolTrader(address(stablecoinA), address(exchange), address(pool),address(feed));  
 
         decimals_diff=1e12;
@@ -218,20 +218,27 @@ Verify that Trader B balances is a combination of Stablecoins “A”, “B” a
         emit LogUint("3.balanceOf(ex) userB selltopool",exchange.balanceOf(address(userB)));
         emit LogUint("3.userB surplus before liquidate",userB.calcSurplus());
 
-        //todo:???The option expires OTM (out-of-the-money)
+        //The option expires OTM (out-of-the-money)
         uint step = 40e18;
         feed.setPrice(int(test_strike - step));
         time.setTimeOffset(30 days);
         
         userB.liquidateOptions(id);
         emit LogUint("3.userB surplus after liquidate",userB.calcSurplus());
-
         //Trader B withdraws all his exchange balance
-        emit LogUint("3.balanceOf(ex) userB liquidate",exchange.balanceOf(address(userB)));
+        emit LogUint("3.balanceOf(ex) userB after liquidate",exchange.balanceOf(address(userB)));
         userB.withdrawTokens(exchange.calcSurplus(address(userB)));
-        emit LogUint("3.balanceOf(ex) userB withdraw",exchange.balanceOf(address(userB)));
+        Assert.equal(exchange.balanceOf(address(userB)), 0, "userB exchange balance is zero after withdraw.");
 
-        //todo:??Verify that Trader B balances is a combination of Stablecoins “A”, “B” and “C” whose value add up to 6*P
+        //todo:Verify that Trader B balances is a combination of Stablecoins “A”, “B” and “C” whose value add up to (10+1)*P
+        Assert.notEqual(stablecoinA.balanceOf(address(userB)),0,'stablecoinA balance not zero');
+        Assert.notEqual(stablecoinB.balanceOf(address(userB)),0,'stablecoinA balance not zero');
+        Assert.notEqual(stablecoinC.balanceOf(address(userB)),0,'stablecoinA balance not zero');
+        uint totalValue=stablecoinA.balanceOf(address(userB))+stablecoinB.balanceOf(address(userB))*1e9+stablecoinC.balanceOf(address(userB))*1e12;
+
+        emit LogUint("3.balanceOf(total) userB",totalValue);
+        Assert.equal(OptionsPrice*11, totalValue, "userB total value is 11*op");
+
     }
     
 }
