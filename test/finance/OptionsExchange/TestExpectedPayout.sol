@@ -11,8 +11,8 @@ contract TestExpectedPayout is Base {
         int step = 30e18;
         depositTokens(address(bob), upperVol);
 
-        uint id = bob.writeOption(CALL, ethInitialPrice, 1 days);
-        bob.transferOptions(address(alice), id, 1);
+        address _tk = bob.writeOption(CALL, ethInitialPrice, 1 days);
+        bob.transferOptions(address(alice), _tk, 1);
 
         feed.setPrice(ethInitialPrice - step);
         Assert.equal(exchange.calcExpectedPayout(address(bob)), 0, "bob payout below strike");
@@ -32,11 +32,11 @@ contract TestExpectedPayout is Base {
         int step = 30e18;
         depositTokens(address(bob), 15 * upperVol);
         
-        uint id1 = bob.writeOptions(3, CALL, ethInitialPrice, 5 days);
-        bob.transferOptions(address(alice), id1, 3);
+        address _tk1 = bob.writeOptions(3, CALL, ethInitialPrice, 5 days);
+        bob.transferOptions(address(alice), _tk1, 3);
         
-        uint id2 = bob.writeOption(PUT, ethInitialPrice + step, 5 days);
-        bob.transferOptions(address(alice), id2, 1);
+        address _tk2 = bob.writeOption(PUT, ethInitialPrice + step, 5 days);
+        bob.transferOptions(address(alice), _tk2, 1);
 
         feed.setPrice(ethInitialPrice - step);
         Assert.equal(exchange.calcExpectedPayout(address(bob)), -2 * step, "bob payout below strike");

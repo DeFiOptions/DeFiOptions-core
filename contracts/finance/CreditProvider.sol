@@ -25,7 +25,6 @@ contract CreditProvider is ManagedContract {
     mapping(address => uint) private callers;
 
     address private ctAddr;
-    uint private _totalTokenStock;
     uint private _totalAccruedFees;
 
     event TransferBalance(address indexed from, address indexed to, uint value);
@@ -49,13 +48,17 @@ contract CreditProvider is ManagedContract {
         callers[address(settings)] = 1;
         callers[deployer.getContractAddress("CreditToken")] = 1;
         callers[deployer.getContractAddress("OptionsExchange")] = 1;
+        callers[deployer.getContractAddress("LinearLiquidityPool")] = 1;
 
         ctAddr = address(creditToken);
     }
 
-    function totalTokenStock() external view returns (uint) {
+    function totalTokenStock() external view returns (uint v) {
 
-        return _totalTokenStock;
+        address[] memory tokens = settings.getAllowedTokens();
+        for (uint i = 0; i < tokens.length; i++) {
+            v = v.add(ERC20(tokens[i]).balanceOf(address(this)));
+        }
     }
 
     function totalAccruedFees() external view returns (uint) {
@@ -161,7 +164,6 @@ contract CreditProvider is ManagedContract {
             value = value.mul(b).div(r);
             addBalance(to, value);
             emit TransferBalance(address(0), to, value);
-            _totalTokenStock = _totalTokenStock.add(value);
         }
     }
     
@@ -231,7 +233,6 @@ contract CreditProvider is ManagedContract {
             if (b != 0) {
                 uint v = MoreMath.min(value, t.balanceOf(address(this)).mul(b).div(r));
                 t.transfer(to, v.mul(r).div(b));
-                _totalTokenStock = _totalTokenStock.sub(v);
                 value = value.sub(v);
             }
         }
