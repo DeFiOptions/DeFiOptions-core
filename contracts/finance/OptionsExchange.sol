@@ -368,19 +368,20 @@ contract OptionsExchange is ManagedContract {
         external view
         returns (
             string memory symbols,
+            address[] memory tokens,
             uint[] memory holding,
             uint[] memory written,
             int[] memory iv
         )
     {
-        address[] memory _book = book[owner];
-        holding = new uint[](_book.length);
-        written = new uint[](_book.length);
-        iv = new int[](_book.length);
+        tokens = book[owner];
+        holding = new uint[](tokens.length);
+        written = new uint[](tokens.length);
+        iv = new int[](tokens.length);
 
-        for (uint i = 0; i < _book.length; i++) {
-            OptionToken tk = OptionToken(_book[i]);
-            OptionData memory opt = options[_book[i]];
+        for (uint i = 0; i < tokens.length; i++) {
+            OptionToken tk = OptionToken(tokens[i]);
+            OptionData memory opt = options[tokens[i]];
             if (i == 0) {
                 symbols = getOptionSymbol(opt);
             } else {
