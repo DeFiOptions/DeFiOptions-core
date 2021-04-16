@@ -227,9 +227,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     function calcFreeBalance() public view returns (uint balance) {
 
         uint exBal = exchange.balanceOf(address(this));
-        balance = exBal.mul(reserveRatio).div(fractionBase);
+        uint reserve = exBal.mul(reserveRatio).div(fractionBase);
         uint sp = exBal.sub(exchange.collateral(address(this)));
-        balance = sp > balance ? sp.sub(balance) : 0;
+        balance = sp > reserve ? sp.sub(reserve) : 0;
     }
     
     function listSymbols() override external view returns (string memory available) {
@@ -506,6 +506,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         returns (uint volume)
     {
         uint fb = calcFreeBalance();
+        uint r = fractionBase.sub(reserveRatio);
 
         if (op == Operation.BUY) {
 
@@ -518,9 +519,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             );
 
             volume = coll <= price ? uint(-1) :
-                fb.mul(volumeBase).div(coll.sub(price));
+                fb.mul(volumeBase).div(
+                    coll.sub(price.mul(r).div(fractionBase))
+                );
 
         } else {
+
+            uint bal = exchange.balanceOf(address(this));
+
+            uint coll = exchange.collateral(address(this));
             
             uint iv = uint(exchange.calcIntrinsicValue(
                 p.udlFeed,
@@ -530,11 +537,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             ));
 
             volume = price <= iv ? uint(-1) :
-                fb.mul(volumeBase).div(price.sub(iv));
+                bal.sub(coll.mul(fractionBase).div(r)).mul(volumeBase).div(
+                    price.sub(iv)
+                );
 
             volume = MoreMath.min(
                 volume, 
-                exchange.balanceOf(address(this)).mul(volumeBase).div(price)
+                bal.mul(volumeBase).div(price)
             );
         }
     }
