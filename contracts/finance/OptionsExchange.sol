@@ -220,8 +220,9 @@ contract OptionsExchange is ManagedContract {
         if (tk.balanceOf(owner) == 0 && tk.writtenVolume(owner) == 0) {
             Arrays.removeItem(book[owner], _tk);
         }
-        collateral[owner] = collateral[owner].sub(
-            calcCollateral(options[_tk], volume)
+        uint coll = collateral[owner];
+        collateral[owner] = coll.sub(
+            MoreMath.min(coll, calcCollateral(options[_tk], volume))
         );
     }
 
