@@ -398,4 +398,4 @@ There are a few major technical challenges that will need to get dealt with if t
 
 ### Support mainnet
 
-A [governance token distribution plan](https://docs.defioptions.org/governance/token-distribution) is being draft for launching DeFi Options on mainnet once it finishes its development and validation goals. Stay tunned to ower docs for finding out how you can become a project supporter either as a [validator](https://docs.defioptions.org/roles/validators) or simply as an [early user](https://docs.defioptions.org/roles/traders).
+A [governance token distribution plan](https://docs.defioptions.org/governance/token-distribution) is being draft for launching DeFi Options on mainnet once it finishes its development and validation goals. Stay tuned for finding out how you can become a project supporter either as a [validator](https://docs.defioptions.org/roles/validators) or simply as an [early user](https://docs.defioptions.org/roles/traders).
