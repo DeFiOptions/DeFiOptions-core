@@ -70,7 +70,7 @@ contract OptionToken is RedeemableToken {
         _issued[owner] = w.sub(value);
         _unliquidatedVolume = _unliquidatedVolume.sub(value);
 
-        exchange.cleanUp(address(this), owner);
+        exchange.cleanUp(address(this), owner, value);
         emit Transfer(owner, address(0), value);
     }
 
@@ -86,7 +86,7 @@ contract OptionToken is RedeemableToken {
 
     function afterRedeem(address owner, uint, uint val) override internal {
 
-        exchange.cleanUp(address(this), owner);
+        exchange.cleanUp(address(this), owner, val);
         emit Transfer(owner, address(0), val);
     }
 
