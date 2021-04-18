@@ -167,7 +167,7 @@ contract CreditProvider is ManagedContract {
         }
     }
     
-    function addBalance(address owner, uint value) public {
+    function addBalance(address owner, uint value) private {
 
         if (value > 0) {
 
