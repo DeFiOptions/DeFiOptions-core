@@ -27,6 +27,8 @@ contract TestQueryPool is Base {
 
         uint balance = 50 * calcCollateralUnit();
         uint freeBalance = 80 * balance / 100;
+        uint r = fractionBase - reserveRatio;
+
         depositInPool(address(bob), balance);
 
         addSymbol();
@@ -34,19 +36,31 @@ contract TestQueryPool is Base {
         time.setFixedTime(1 days);
 
         uint p0 = applyBuySpread(y[10]);
-        queryBuyAndAssert(p0, freeBalance * volumeBase / (calcCollateralUnit() - p0), "buy ATM");
+        queryBuyAndAssert(
+            p0,
+            freeBalance * volumeBase / (calcCollateralUnit() - (p0 * r / fractionBase)),
+            "buy ATM"
+        );
         querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell ATM");
 
         feed.setPrice(525e18);
 
         uint p1 = applyBuySpread(y[10]);
-        queryBuyAndAssert(p1, freeBalance * volumeBase / (calcCollateralUnit() - p1), "buy OTM");
+        queryBuyAndAssert(
+            p1,
+            freeBalance * volumeBase / (calcCollateralUnit() - (p1 * r / fractionBase)),
+            "buy OTM"
+        );
         querySellAndAssert(applySellSpread(y[10]), 200 * volumeBase, "sell OTM");
 
         feed.setPrice(575e18);
 
         uint p2 = applyBuySpread((y[10] + y[11]) / 2);
-        queryBuyAndAssert(p2, freeBalance * volumeBase / (calcCollateralUnit() - p2), "buy ITM");
+        queryBuyAndAssert(
+            p2,
+            freeBalance * volumeBase / (calcCollateralUnit() - (p2 * r / fractionBase)),
+            "buy ITM"
+        );
         querySellAndAssert(applySellSpread((y[10] + y[11]) / 2), 200 * volumeBase, "sell ITM");
     }
 

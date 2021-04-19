@@ -214,12 +214,16 @@ contract OptionsExchange is ManagedContract {
         ensureFunds(from);
     }
 
-    function cleanUp(address _tk, address owner) public {
+    function cleanUp(address _tk, address owner, uint volume) public {
 
         OptionToken tk = OptionToken(_tk);
         if (tk.balanceOf(owner) == 0 && tk.writtenVolume(owner) == 0) {
             Arrays.removeItem(book[owner], _tk);
         }
+        uint coll = collateral[owner];
+        collateral[owner] = coll.sub(
+            MoreMath.min(coll, calcCollateral(options[_tk], volume))
+        );
     }
 
     function liquidateExpired(address _tk, address[] calldata owners) external {

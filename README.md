@@ -12,11 +12,11 @@ A dynamic approach was implemented for ensuring collateral for writing options, 
 
 The exchange accepts stablecoin deposits as collateral for issuing ERC20 option tokens. [Chainlink](https://chain.link/) based price feeds provide the exchange onchain underlying price and volatility updates.
 
-Upon maturity each [option contract](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionToken.sol) is liquidated, cash settled by the credit provider contract and destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
+Upon maturity each each [option contract](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionToken.sol) is liquidated and cash settled by the credit provider contract, becoming open for redemption by token holders. In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
 
-Registered debt will accrue interest until it's repaid by the borrower. Payment occurs either automatically when any of the borrower's open option positions matures and is cash settled (pending debt will be discounted from profits) or manually if the borrower makes a new stablecoin deposit.
+Registered debt will accrue interest until it's repaid by the borrower. Payment occurs either implicitly when any of the borrower's open option positions matures and is cash settled (pending debt will be discounted from profits) or explicitly if the borrower makes a new stablecoin deposit in the exchange.
 
-Exchange's balances not allocated as collateral can be withdrawn by respective owners in the form of stablecoins. If there aren't enough stablecoins available the solicitant will receive ERC20 credit tokens issued by the credit provider.
+Exchange's balances not allocated as collateral can be withdrawn by respective owners in the form of stablecoins. If there aren't enough stablecoins available at the moment of the request due to operational reasons the solicitant will receive ERC20 credit tokens issued by the credit provider instead. These credit tokens are a promise of future payment, serving as a proxy for stablecoins since they can be redeemed for stablecoins at a 1:1 value conversion ratio, and are essential for keeping the exchange afloat during episodes of high withdrawal demand.
 
 Holders of credit tokens can request to withdraw (and burn) their balance for stablecoins as long as there are sufficient funds available in the exchange to process the operation, otherwise the withdraw request will be FIFO-queued while the exchange gathers funds, accruing interest until it's finally processed to compensate for the delay.
 
@@ -61,12 +61,16 @@ stablecoin.approve(address(exchange), value);
 exchange.depositTokens(to, address(stablecoin), value);
 ```
 
+*Obs: An [EIP-2612 compatible](https://eips.ethereum.org/EIPS/eip-2612) `depositTokens` function is also provided for deposit functions in a single transaction.*
+
 After the operation completes check total exchange balance for an address using the `balanceOf` function:
 
 ```solidity
 address owner = 0x456...;
 uint balance = exchange.balanceOf(owner);
 ```
+
+Balance is returned in dollars considering 18 decimal places.
 
 In case you wish to withdraw funds (ex: profits from an operation) call the `withdrawTokens` function:
 
@@ -103,32 +107,34 @@ The snippet above calculates the collateral needed for writing ten ETH call opti
 After checking that the writer has enough unallocated balance to provide as collateral, proceed to write options by calling the `writeOptions` function:
 
 ```solidity
-uint id = exchange.writeOptions(
+address holder = 0xDEF...;
+
+address tkAddr = exchange.writeOptions(
     eth_usd_feed, 
     10 * volumeBase, 
     OptionsExchange.OptionType.CALL, 
     strikePrice, 
-    maturity
+    maturity,
+    holder
 );
 ```
 
-Options are issued as ERC20 tokens, and the `writeOptions` function returns an `id` for the operation which can be used to resolve the respective token contract address:
+Options are issued as ERC20 tokens and sent to the specified `holder` address. The `writeOptions` function returns the option token contract address for convenience:
 
 ```solidity
-address tokenAddress = exchange.resolveToken(id);
-ERC20 token = ERC20(tokenAddress);
-uint balance = token.balanceOf(owner); // equal to written volume
+ERC20 token = ERC20(tkAddr);
+uint balance = token.balanceOf(holder); // equal to written volume
 
-address to = 0xDEF...;
+address to = 0x567...;
 token.transfer(to, 5 * volumeBase); // considering 'msg.sender == owner'
 ```
 
 Options are aggregated by their underlying, strike price and maturity, each of which will resolve to a specific ERC20 token contract address. Take advantage of already existent option token contracts when writing options for increased liquidity.
 
-The `calcIntrinsicValue` allows callers to check the updated intrinsict value for an option, resolved by an operation `id`:
+The `calcIntrinsicValue` allows callers to check the updated intrinsict value for an option, specified by its token contract address `tkAddr`:
 
 ```solidity
-uint iv = exchange.calcIntrinsicValue(id);
+uint iv = exchange.calcIntrinsicValue(tkAddr);
 ```
 
 Suppose the ETH price has gone up to US$ 1400, and considering that the strike price was set to US$ 1300, then the intrinsic value returned would be `100e18`, i.e., US$ 100. Multiply this value by the held volume to obtain the position's aggregated intrinsic value.
@@ -163,11 +169,11 @@ Options can be liquidated either individually due to a writer not meeting collat
 
 In the first case, when a writer doesn't meet the collateral requirements for covering his open positions, any of his positions will be susceptible to liquidation for reducing liabilities until the writer starts meeting collateral requirements again.
 
-To liquidate a specific writer option in this situation call the `liquidateOptions` function providing the original operation `id`:
+To liquidate a specific writer option in this situation call the `liquidateOptions` function providing both the option token contract address and the writer address:
 
 
 ```solidity
-uint value = exchange.liquidateOptions(id);
+uint value = exchange.liquidateOptions(tkAddr, owner);
 ```
 
 The function returns the value resulting from liquidating the position (either partially or fully), which is transferred to the respective option token contract and held until maturity, whereupon the contract is fully liquidated and profits are distributed to option holders proportionally to their share of the total supply.
@@ -184,14 +190,22 @@ Here two constants are employed, k<sub>upper</sub> and k<sub>lower</sub>, whose 
 <img src="https://latex.codecogs.com/svg.latex?value%20%3D%20%5Cleft%20%5B%20k_%7Blower%7D%20%5Ctimes%20%5Csigma%20_%7Bunderlying%7D%20%5Ctimes%20%5Csqrt%7Bdays%20%5C%20to%5C%20maturity%7D%20%2B%20%5Cupsilon%5Cleft%20%28%20option%20%5Cright%20%29%20%5Cright%20%5D%20%5Ctimes%20volume">
 </p>
 
-Now in the second case, when the option matures, the option token contract is liquidated through its `destroy` function:
+Now in the second case, when the option matures, all option token contract written positions can be liquidated for their intrinsic value. The exchange offers a function overload that accpets an array of options writers addresses for liquidating their positions in a more gas usage efficient way:
 
 ```solidity
-OptionToken token = OptionToken(tokenAddress);
-token.destroy();
+address[] memory owners = new address[](length);
+// initialize array (...)
+exchange.liquidateOptions(tkAddr, owners);
 ```
 
-By calling this function all still active written options from the token contract are liquidated, cash settled by the credit provider contract and profits are distributed among option holders proportionally to their share of the total supply. Then the token contract is destroyed (through `selfdestruct`). In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
+Liquidated options are cash settled by the credit provider contract and the accumulated capital becomes available for redemption among option holders proportionally to their share of the total token supply:
+
+```solidity
+OptionToken optionToken = OptionToken(tkAddr);
+optionToken.redeem(holder);
+```
+
+In case any option writer happens to be short on funds during settlement the credit provider will register a debt and cover payment obligations, essentially performing a lending operation.
 
 ### Burning options
 
@@ -292,6 +306,8 @@ interface LiquidityPool {
 }
 ```
 
+*Obs: [EIP-2612 compatible](https://eips.ethereum.org/EIPS/eip-2612) `buy` and `sell` functions are also provided for trading options in a single transaction.*
+
 Liquidity providers can call the `depositTokens` function for depositing compatible stablecoin tokens into the pool and receive pool tokens in return following a “post-money” valuation strategy, i.e., proportionally to their contribution to the total amount of capital allocated in the pool including the expected value of open option positions. This allows new liquidity providers to enter the pool at any time without harm to pre-existent providers.
 
 Funds are locked in the pool until it reaches the pre-defined liquidation date, whereupon the pool ceases operations and profits are distributed to liquidity providers proportionally to their participation in the total supply of pool tokens.
@@ -340,9 +356,9 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0xc9457ab09432bd0042871428066c0631f9a47c18](https://kovan.etherscan.io/address/0xc9457ab09432bd0042871428066c0631f9a47c18) |
-| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0x1db75d0b246edacdb0f535b01a7d76852cdeb368](https://kovan.etherscan.io/address/0x1db75d0b246edacdb0f535b01a7d76852cdeb368) |
-| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xc14ddeda05103268c09ff5c40ef0fa99a5f5fb00](https://kovan.etherscan.io/address/0xc14ddeda05103268c09ff5c40ef0fa99a5f5fb00) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x2e3a331db52a689c707020bc9de8150c5b6bb4c5](https://kovan.etherscan.io/address/0x2e3a331db52a689c707020bc9de8150c5b6bb4c5) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xa77609ac2a1fde38978d4b88a0981232e087a725](https://kovan.etherscan.io/address/0xa77609ac2a1fde38978d4b88a0981232e087a725) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xaa19cc295e0772c1f6cd12051e2630494fe43117](https://kovan.etherscan.io/address/0xaa19cc295e0772c1f6cd12051e2630494fe43117) |
 | [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
 | [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
@@ -382,12 +398,4 @@ There are a few major technical challenges that will need to get dealt with if t
 
 ### Support mainnet
 
-If you want to see this project on mainnet you can contribute with an ETH donation to the following address:
-
-* [0xb48E85248d3FD32bBa0ad94916F64674Ab151B3E](https://etherscan.io/address/0xb48E85248d3FD32bBa0ad94916F64674Ab151B3E)
-
-The goal is to collect `10 ETH`. Donations will be strictly used to support deployment and operational costs. Operational costs include execution of daily calls to deployed contracts functions that help keep the exchange afloat, such as calls to underlying price feeds "pre-fetch" functions and to option token contracts "destroy" function.
-
-As an incentive, upon deployment to mainnet credit tokens will be issued to all addresses from which donations are received considering the highest ETH price recorded since the donation up to the deployment date plus a 100% gratitude reward.
-
-If the project doesn't reach its validation and donation goals all collected ETH will be returned to original senders, discounted only by the transaction processing fee.
+A [governance token distribution plan](https://docs.defioptions.org/governance/token-distribution) is being draft for launching DeFi Options on mainnet once it finishes its development and validation goals. Stay tunned to ower docs for finding out how you can become a project supporter either as a [validator](https://docs.defioptions.org/roles/validators) or simply as an [early user](https://docs.defioptions.org/roles/traders).
