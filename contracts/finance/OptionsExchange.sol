@@ -54,6 +54,7 @@ contract OptionsExchange is ManagedContract {
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    string private constant _name = "OptionsExchange";
 
     event CreateSymbol(address indexed token, address indexed sender);
 
@@ -80,7 +81,6 @@ contract OptionsExchange is ManagedContract {
 
     constructor(address deployer) public {
 
-        string memory _name = "OptionsExchange";
         Deployer(deployer).setContractAddress(_name);
 
         uint chainId;
@@ -108,6 +108,10 @@ contract OptionsExchange is ManagedContract {
         volumeBase = 1e18;
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
+    }
+    
+    function name() external view returns (string memory) {
+
     }
 
     function depositTokens(
