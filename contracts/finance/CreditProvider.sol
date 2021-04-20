@@ -66,6 +66,11 @@ contract CreditProvider is ManagedContract {
         return _totalAccruedFees;
     }
 
+    function ensureCaller(address addr) public view {
+        
+        require(callers[addr] == 1, "unauthorized caller");
+    }
+
     function issueCredit(address to, uint value) external {
         
         ensureCaller();
@@ -251,8 +256,8 @@ contract CreditProvider is ManagedContract {
         creditToken.issue(to, value);
     }
 
-    function ensureCaller()  private view {
+    function ensureCaller() private view {
         
-        require(callers[msg.sender] == 1, "unauthorized caller");
+        ensureCaller(msg.sender);
     }
 }

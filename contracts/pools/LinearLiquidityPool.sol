@@ -396,7 +396,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
             value = value.mul(tv).div(tb);
             depositTokensInExchange(token, value);
         } else {
-            exchange.transferBalance(msg.sender, address(this), value, maxValue, deadline, v, r, s);
+            exchange.transferBalance(msg.sender, address(this), value);
         }
 
         return price;

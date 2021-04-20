@@ -147,6 +147,18 @@ contract OptionsExchange is ManagedContract {
     function transferBalance(
         address from, 
         address to, 
+        uint value
+    )
+        external
+    {
+        creditProvider.ensureCaller(msg.sender);
+        creditProvider.transferBalance(from, to, value);
+        ensureFunds(from);
+    }
+
+    function transferBalance(
+        address from, 
+        address to, 
         uint value,
         uint maxValue,
         uint deadline,
