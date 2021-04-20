@@ -100,6 +100,8 @@ contract OptionsExchange is ManagedContract {
 
     function initialize(Deployer deployer) override internal {
 
+        DOMAIN_SEPARATOR = OptionsExchange(getImplementation()).DOMAIN_SEPARATOR();
+
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
@@ -112,6 +114,7 @@ contract OptionsExchange is ManagedContract {
     
     function name() external view returns (string memory) {
 
+        return _name;
     }
 
     function depositTokens(
