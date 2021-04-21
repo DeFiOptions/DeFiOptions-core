@@ -112,7 +112,7 @@ contract OptionsExchange is ManagedContract {
         sqrtTimeBase = 1e9;
     }
     
-    function name() external view returns (string memory) {
+    function name() external pure returns (string memory) {
 
         return _name;
     }
@@ -373,6 +373,13 @@ contract OptionsExchange is ManagedContract {
     {
         (OptionData memory opt,) = createOptionInMemory(udlFeed, optType, strike, maturity);
         return calcIntrinsicValue(opt);
+    }
+
+    function getUnderlyingPrice(string calldata symbol) external view returns (int) {
+        
+        address _ts = tokenAddress[symbol];
+        require(_ts != address(0), "token not found");
+        return getUdlPrice(options[_ts]);
     }
 
     function resolveToken(string memory symbol) public view returns (address) {
