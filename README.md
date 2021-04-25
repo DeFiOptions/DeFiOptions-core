@@ -380,7 +380,7 @@ Before starting simply [shoot me a message](mailto:thomas.vilhena@protonmail.com
 
 ### Validate code
 
-The main goal of this project is to deploy Options Exchange to mainnet, however before doing that a deeper validation of the contracts source code is necessary. You can help by:
+We aim to provide a reliable, bug-free protocol to the community, however to achieve that a deeper validation of the contracts source code is necessary. You can help by:
 
 * Executing tests against the kovan contract addresses for identifying potential bugs
 * Auditing contracts source code files for identifying security issues
@@ -389,7 +389,7 @@ The main goal of this project is to deploy Options Exchange to mainnet, however 
 
 ### Open challenges
 
-There are a few major technical challenges that will need to get dealt with if the project gains traction and is deployed to mainnet:
+There are a few major technical challenges that need to get dealt with for DeFi Options to offer a fully featured user experience:
 
 * Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
