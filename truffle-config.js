@@ -15,6 +15,18 @@ module.exports = {
       network_id: 42,
       networkCheckTimeout: 1000000,
       timeoutBlocks: 200
+    },
+  
+    matic: {
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.MNENOMIC,
+          "wss://rpc-mumbai.maticvigil.com/ws/v1/" + process.env.MATIC_RPC_KEY
+        )
+      },
+      network_id: 80001,
+      confirmations: 2,
+      timeoutBlocks: 200
     }
   },
 
