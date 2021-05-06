@@ -11,7 +11,7 @@ abstract contract RedeemableToken is ERC20 {
 
     OptionsExchange internal exchange;
 
-    function redeemAllowed() virtual public returns(bool);
+    function redeemAllowed() virtual public view returns(bool);
 
     function redeem(address owner) external returns (uint value) {
 

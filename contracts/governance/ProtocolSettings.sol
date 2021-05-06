@@ -204,6 +204,7 @@ contract ProtocolSettings is ManagedContract {
 
     function setVolatilityPeriod(uint _volatilityPeriod) external {
 
+        ensureWritePriviledge();
         volatilityPeriod = _volatilityPeriod;
     }
 

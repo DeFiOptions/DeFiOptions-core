@@ -15,11 +15,6 @@ contract OptionTokenFactory is ManagedContract {
 
     }
 
-    function create(string calldata symbol) external returns (address) {
-
-        return address(new OptionToken(symbol, msg.sender));
-    }
-
     function create(string calldata symbol, address udlFeed) external returns (address) {
 
         bytes memory sb1 = bytes(UnderlyingFeed(udlFeed).symbol());

@@ -102,7 +102,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         _maturity = _mt;
     }
 
-    function redeemAllowed() override public returns (bool) {
+    function redeemAllowed() override public view returns (bool) {
         
         return time.getNow() >= _maturity;
     }

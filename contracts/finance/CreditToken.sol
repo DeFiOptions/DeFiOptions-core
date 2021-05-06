@@ -56,12 +56,6 @@ contract CreditToken is ManagedContract, ERC20 {
         return _symbol;
     }
 
-    function setIssuer(address _issuer) public {
-
-        require(issuer == address(0), "issuer already set");
-        issuer = _issuer;
-    }
-
     function issue(address to, uint value) public {
 
         require(msg.sender == issuer, "issuance unallowed");

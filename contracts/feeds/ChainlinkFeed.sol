@@ -52,34 +52,9 @@ contract ChainlinkFeed is UnderlyingFeed {
     function initialize(uint[] memory _timestamps, int[] memory _prices) public {
 
         require(samples.length == 0, "already initialized");
-
-        int exchangeDecimals = 18;
-        int diff = exchangeDecimals.sub(int(aggregator.decimals()));
-        require(-18 <= diff && diff <= 18, "invalid decimals");
-        if (diff > 0) {
-            priceN = int(10 ** uint(diff));
-            priceD = 1;
-        } else {
-            priceN = 1;
-            priceD = int(10 ** uint(-diff));
-        }
-
-        for (uint i = 0; i < _timestamps.length; i++) {
-
-            uint ts = _timestamps[i];
-            int pc = _prices[i];
-            Sample memory s = Sample(ts.toUint32(), rescalePrice(pc));
-
-            if (ts.mod(1 days) == 0) {
-                dailyPrices[ts] = s;
-            }
-            
-            samples.push(s);
-        }
-    }
-
-    function initializeDecimals() private {
-
+        
+        initializeDecimals();
+        initializeSamples(_timestamps, _prices);
     }
 
     function symbol() override external view returns (string memory) {
@@ -232,6 +207,38 @@ contract ChainlinkFeed is UnderlyingFeed {
             (uint vol, bool cached) = getDailyVolatilityCached(timespan);
             require(!cached, "already cached");
             dailyVolatilities[timespan][today()] = encodeValue(vol);
+        }
+    }
+
+    function initializeDecimals() private {
+
+        int exchangeDecimals = 18;
+        int diff = exchangeDecimals.sub(int(aggregator.decimals()));
+
+        require(-18 <= diff && diff <= 18, "invalid decimals");
+
+        if (diff > 0) {
+            priceN = int(10 ** uint(diff));
+            priceD = 1;
+        } else {
+            priceN = 1;
+            priceD = int(10 ** uint(-diff));
+        }
+    }
+
+    function initializeSamples(uint[] memory _timestamps, int[] memory _prices) private {
+
+        for (uint i = 0; i < _timestamps.length; i++) {
+
+            uint ts = _timestamps[i];
+            int pc = _prices[i];
+            Sample memory s = Sample(ts.toUint32(), rescalePrice(pc));
+
+            if (ts.mod(1 days) == 0) {
+                dailyPrices[ts] = s;
+            }
+            
+            samples.push(s);
         }
     }
 

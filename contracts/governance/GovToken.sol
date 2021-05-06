@@ -58,7 +58,7 @@ contract GovToken is ManagedContract, ERC20 {
     function registerProposal(address addr) public returns (uint id) {
         
         require(
-            proposingDate[addr] == 0 || time.getNow() - proposingDate[addr] > 1 days,
+            proposingDate[addr] == 0 || time.getNow().sub(proposingDate[addr]) > 1 days,
             "minimum interval between proposals not met"
         );
 

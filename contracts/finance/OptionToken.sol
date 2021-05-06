@@ -79,7 +79,7 @@ contract OptionToken is RedeemableToken {
         return _issued[owner];
     }
 
-    function redeemAllowed() override public returns (bool) {
+    function redeemAllowed() override public view returns (bool) {
         
         return _unliquidatedVolume == 0;
     }
