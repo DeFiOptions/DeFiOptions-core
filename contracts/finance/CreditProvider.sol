@@ -33,12 +33,6 @@ contract CreditProvider is ManagedContract {
 
     event BurnDebt(address indexed from, uint value);
 
-    constructor(address deployer) public {
-
-        Deployer(deployer).setContractAddress("CreditProvider");
-        Deployer(deployer).addAlias("CreditIssuer", "CreditProvider");
-    }
-
     function initialize(Deployer deployer) override internal {
 
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));

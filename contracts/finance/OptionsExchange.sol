@@ -79,9 +79,7 @@ contract OptionsExchange is ManagedContract {
         uint volume
     );
 
-    constructor(address deployer) public {
-
-        Deployer(deployer).setContractAddress(_name);
+    constructor() public {
 
         uint chainId;
         assembly {

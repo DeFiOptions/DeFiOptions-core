@@ -33,9 +33,8 @@ contract CreditToken is ManagedContract, ERC20 {
     address private headAddr;
     address private tailAddr;
 
-    constructor(address deployer) ERC20(_name) public {
-
-        Deployer(deployer).setContractAddress("CreditToken");
+    constructor() ERC20(_name) public {
+        
     }
 
     function initialize(Deployer deployer) override internal {

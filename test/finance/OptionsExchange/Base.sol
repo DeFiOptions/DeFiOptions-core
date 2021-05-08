@@ -45,13 +45,13 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
+        deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         feed = EthFeedMock(deployer.getContractAddress("UnderlyingFeed"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
-        deployer.deploy();
 
         bob = createTrader();
         alice = createTrader();

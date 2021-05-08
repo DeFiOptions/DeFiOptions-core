@@ -1,28 +1,51 @@
-const Deployer = artifacts.require("Deployer");
+var test = true;
 
+const Deployer = artifacts.require("Deployer");
+const BlockTimeProvider = artifacts.require("BlockTimeProvider");
 const TimeProviderMock = artifacts.require("TimeProviderMock");
 const EthFeedMock = artifacts.require("EthFeedMock");
-
 const ProtocolSettings = artifacts.require("ProtocolSettings");
 const GovToken = artifacts.require("GovToken");
-
 const CreditToken = artifacts.require("CreditToken");
 const CreditProvider = artifacts.require("CreditProvider");
 const OptionTokenFactory = artifacts.require("OptionTokenFactory");
 const OptionsExchange = artifacts.require("OptionsExchange");
-
 const LinearLiquidityPool = artifacts.require("LinearLiquidityPool");
 
 module.exports = async function(deployer) {
 
-  await deployer.deploy(Deployer, "0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
-  await deployer.deploy(TimeProviderMock, Deployer.address);
-  await deployer.deploy(EthFeedMock, Deployer.address);
-  await deployer.deploy(ProtocolSettings, Deployer.address);
-  await deployer.deploy(CreditToken, Deployer.address);
-  await deployer.deploy(GovToken, Deployer.address);
-  await deployer.deploy(CreditProvider, Deployer.address);
-  await deployer.deploy(OptionTokenFactory, Deployer.address);
-  await deployer.deploy(OptionsExchange, Deployer.address);
-  await deployer.deploy(LinearLiquidityPool, Deployer.address);
+  if (test) {
+    await deployer.deploy(Deployer, "0x0000000000000000000000000000000000000000");
+    await deployer.deploy(TimeProviderMock);
+    await deployer.deploy(EthFeedMock);
+  } else {
+    await deployer.deploy(Deployer, "0x16ceF4db1a82ce9D46A0B294d6290D47f5f3A669");
+    await deployer.deploy(BlockTimeProvider);
+  }
+
+  await deployer.deploy(ProtocolSettings);
+  await deployer.deploy(CreditToken);
+  await deployer.deploy(GovToken);
+  await deployer.deploy(CreditProvider);
+  await deployer.deploy(OptionTokenFactory);
+  await deployer.deploy(OptionsExchange);
+  await deployer.deploy(LinearLiquidityPool);
+
+  var d = await Deployer.deployed();
+  
+  if (test) {
+    d.setContractAddress("TimeProvider", TimeProviderMock.address);
+    d.setContractAddress("UnderlyingFeed", EthFeedMock.address);
+  } else {
+    d.setContractAddress("TimeProvider", BlockTimeProvider.address);
+  }
+  
+  d.setContractAddress("CreditProvider", CreditProvider.address);
+  d.addAlias("CreditIssuer", "CreditProvider");
+  d.setContractAddress("CreditToken", CreditToken.address);
+  d.setContractAddress("OptionsExchange", OptionsExchange.address);
+  d.setContractAddress("OptionTokenFactory", OptionTokenFactory.address);
+  d.setContractAddress("GovToken", GovToken.address);
+  d.setContractAddress("ProtocolSettings", ProtocolSettings.address);
+  d.setContractAddress("LinearLiquidityPool", LinearLiquidityPool.address);
 };

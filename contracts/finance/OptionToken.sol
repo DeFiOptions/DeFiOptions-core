@@ -1,7 +1,7 @@
 pragma solidity >=0.6.0;
 
-import "../../contracts/finance/OptionsExchange.sol";
-import "../../contracts/finance/RedeemableToken.sol";
+import "../finance/OptionsExchange.sol";
+import "../finance/RedeemableToken.sol";
 import "../utils/ERC20.sol";
 import "../utils/Arrays.sol";
 import "../utils/SafeMath.sol";

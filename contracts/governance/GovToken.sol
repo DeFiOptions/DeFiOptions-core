@@ -25,9 +25,8 @@ contract GovToken is ManagedContract, ERC20 {
     uint private serial;
     uint[] private proposals;
 
-    constructor(address deployer) ERC20(_name) public {
+    constructor() ERC20(_name) public {
 
-        Deployer(deployer).setContractAddress("GovToken");
     }
     
     function initialize(Deployer deployer) override internal {

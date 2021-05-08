@@ -31,12 +31,12 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
+        deployer.setContractAddress("CreditIssuer", address(new CreditHolder()));
+        deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
-        deployer.setContractAddress("CreditIssuer", address(new CreditHolder()));
-        deployer.deploy();
 
         erc20 = new ERC20Mock();
         settings.setOwner(address(this));

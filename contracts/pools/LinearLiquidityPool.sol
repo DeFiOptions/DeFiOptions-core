@@ -60,9 +60,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private volumeBase;
     uint private fractionBase;
 
-    constructor(address deployer) ERC20(_name) public {
-
-        Deployer(deployer).setContractAddress("LinearLiquidityPool");
+    constructor() ERC20(_name) public {
+        
     }
 
     function initialize(Deployer deployer) override internal {

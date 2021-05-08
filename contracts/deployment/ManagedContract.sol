@@ -13,7 +13,7 @@ contract ManagedContract {
 
     function initializeAndLock(Deployer deployer) public {
 
-        require(!locked, "locked");
+        require(!locked, "initialization locked");
         locked = true;
         initialize(deployer);
     }

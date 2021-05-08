@@ -9,11 +9,6 @@ contract EthFeedMock is UnderlyingFeed, ManagedContract {
     
     int ethPrice = 550e18;
     TimeProvider private time;
-    
-    constructor(address deployer) public {
-
-        Deployer(deployer).setContractAddress("UnderlyingFeed");
-    }
 
     function initialize(Deployer deployer) override internal {
 

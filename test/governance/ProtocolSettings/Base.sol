@@ -6,6 +6,7 @@ import "../../../contracts/governance/ProtocolSettings.sol";
 import "../../../contracts/governance/GovToken.sol";
 import "../../../contracts/deployment/Deployer.sol";
 import "../../common/actors/ShareHolder.sol";
+import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
 import "../../common/samples/ChangeInterestRateProposal.sol";
 
@@ -23,10 +24,10 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
+        deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         govToken = GovToken(deployer.getPayableContractAddress("GovToken"));
-        deployer.deploy();
 
         alpha = new ShareHolder();
         beta = new ShareHolder();
