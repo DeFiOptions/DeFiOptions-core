@@ -27,6 +27,10 @@ contract CreditProvider is ManagedContract {
     address private ctAddr;
     uint private _totalAccruedFees;
 
+    event DepositTokens(address indexed owner, address indexed token, uint value);
+
+    event WithdrawTokens(address indexed owner, address indexed token, uint value);
+
     event TransferBalance(address indexed from, address indexed to, uint value);
 
     event AccumulateDebt(address indexed to, uint value);
@@ -95,6 +99,7 @@ contract CreditProvider is ManagedContract {
 
         ERC20(token).transferFrom(msg.sender, address(this), value);
         addBalance(to, token, value, true);
+        emit DepositTokens(to, token, value);
     }
 
     function withdrawTokens(address owner, uint value) external {
@@ -232,6 +237,7 @@ contract CreditProvider is ManagedContract {
             if (b != 0) {
                 uint v = MoreMath.min(value, t.balanceOf(address(this)).mul(b).div(r));
                 t.transfer(to, v.mul(r).div(b));
+                emit WithdrawTokens(to, tokens[i], v.mul(r).div(b));
                 value = value.sub(v);
             }
         }
@@ -248,6 +254,7 @@ contract CreditProvider is ManagedContract {
             value = value.mul(r).div(b);
         }
         creditToken.issue(to, value);
+        emit WithdrawTokens(to, ctAddr, value);
     }
 
     function ensureCaller() private view {
