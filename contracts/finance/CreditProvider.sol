@@ -55,7 +55,9 @@ contract CreditProvider is ManagedContract {
 
         address[] memory tokens = settings.getAllowedTokens();
         for (uint i = 0; i < tokens.length; i++) {
-            v = v.add(ERC20(tokens[i]).balanceOf(address(this)));
+            (uint r, uint b) = settings.getTokenRate(tokens[i]);
+            uint value = ERC20(tokens[i]).balanceOf(address(this));
+            v = v.add(value.mul(b).div(r));
         }
     }
 
