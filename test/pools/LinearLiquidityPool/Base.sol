@@ -99,7 +99,6 @@ contract Base {
         ];
         
         pool.addSymbol(
-            symbol,
             address(feed),
             strike,
             maturity,

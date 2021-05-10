@@ -136,7 +136,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
 
     function addSymbol(
-        string calldata optSymbol,
         address udlFeed,
         uint strike,
         uint _mt,
@@ -153,6 +152,13 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureCaller();
         require(_mt < _maturity, "invalid maturity");
         require(x.length > 0 && x.length.mul(2) == y.length, "invalid pricing surface");
+
+        string memory optSymbol = exchange.getOptionSymbol(
+            udlFeed,
+            optType,
+            strike,
+            _mt
+        );
 
         if (parameters[optSymbol].x.length == 0) {
             optSymbols.push(optSymbol);

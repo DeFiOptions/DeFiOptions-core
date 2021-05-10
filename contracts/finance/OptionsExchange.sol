@@ -193,6 +193,28 @@ contract OptionsExchange is ManagedContract {
         emit CreateSymbol(tk, msg.sender);
     }
 
+    function getOptionSymbol(
+        address udlFeed,
+        OptionType optType,
+        uint strike, 
+        uint maturity
+    )
+        public
+        view
+        returns (string memory symbol)
+    {    
+        symbol = string(abi.encodePacked(
+            UnderlyingFeed(udlFeed).symbol(),
+            "-",
+            "E",
+            optType == OptionType.CALL ? "C" : "P",
+            "-",
+            MoreMath.toString(strike),
+            "-",
+            MoreMath.toString(maturity)
+        ));
+    }
+
     function writeOptions(
         address udlFeed,
         uint volume,
@@ -629,16 +651,12 @@ contract OptionsExchange is ManagedContract {
 
     function getOptionSymbol(OptionData memory opt) private view returns (string memory symbol) {    
 
-        symbol = string(abi.encodePacked(
-            UnderlyingFeed(opt.udlFeed).symbol(),
-            "-",
-            "E",
-            opt._type == OptionType.CALL ? "C" : "P",
-            "-",
-            MoreMath.toString(opt.strike),
-            "-",
-            MoreMath.toString(opt.maturity)
-        ));
+        symbol = getOptionSymbol(
+            opt.udlFeed,
+            opt._type,
+            opt.strike,
+            opt.maturity
+        );
     }
 
     function calcCollateral(
