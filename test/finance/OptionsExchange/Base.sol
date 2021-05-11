@@ -87,7 +87,7 @@ contract Base {
 
         total = 0;
         for (uint i = 0; i < traders.length; i++) {
-            (,uint[] memory holding,,) = exchange.getBook(traders[i]);
+            (,,uint[] memory holding,,) = exchange.getBook(traders[i]);
             total += holding.length;
         }
     }

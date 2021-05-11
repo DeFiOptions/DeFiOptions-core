@@ -32,6 +32,8 @@ contract GovToken is ManagedContract, ERC20 {
     
     function initialize(Deployer deployer) override internal {
 
+        DOMAIN_SEPARATOR = ERC20(getImplementation()).DOMAIN_SEPARATOR();
+
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         serial = 1;
