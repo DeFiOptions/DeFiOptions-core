@@ -11,14 +11,13 @@ import "../utils/MoreMath.sol";
 import "../utils/SafeCast.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
+import "./LinearInterpolator.sol";
 
 contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken {
 
     using SafeCast for uint;
     using SafeMath for uint;
     using SignedSafeMath for int;
-
-    enum Operation { BUY, SELL }
 
     struct PricingParameters {
         address udlFeed;
@@ -42,6 +41,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     TimeProvider private time;
     ProtocolSettings private settings;
     CreditProvider private creditProvider;
+    LinearInterpolator private interpolator;
 
     mapping(string => PricingParameters) private parameters;
 
@@ -73,6 +73,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
+        interpolator = LinearInterpolator(deployer.getContractAddress("LinearInterpolator"));
 
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
@@ -238,11 +239,11 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint sp = exBal.sub(exchange.collateral(address(this)));
         balance = sp > reserve ? sp.sub(reserve) : 0;
     }
-    
-    function listSymbols() override external view returns (string memory available) {
+
+    function listSymbols(Operation op) override public view returns (string memory available) {
 
         for (uint i = 0; i < optSymbols.length; i++) {
-            if (parameters[optSymbols[i]].maturity > time.getNow()) {
+            if (isAvailable(optSymbols[i], op)) {
                 if (bytes(available).length == 0) {
                     available = optSymbols[i];
                 } else {
@@ -261,10 +262,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
         PricingParameters memory param = parameters[optSymbol];
         price = calcOptPrice(param, Operation.BUY);
-        address _tk = exchange.resolveToken(optSymbol);
         volume = MoreMath.min(
             calcVolume(optSymbol, param, price, Operation.BUY),
-            uint(param.buyStock).sub(OptionToken(_tk).writtenVolume(address(this)))
+            getAvailableStock(optSymbol, param, Operation.BUY)
         );
     }
 
@@ -277,10 +277,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
         PricingParameters memory param = parameters[optSymbol];
         price = calcOptPrice(param, Operation.SELL);
-        address _tk = exchange.resolveToken(optSymbol);
         volume = MoreMath.min(
             calcVolume(optSymbol, param, price, Operation.SELL),
-            uint(param.sellStock).sub(OptionToken(_tk).balanceOf(address(this)))
+            getAvailableStock(optSymbol, param, Operation.SELL)
         );
     }
     
@@ -376,6 +375,53 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         sell(optSymbol, price, volume, 0, 0, x, x);
     }
 
+    function isAvailable(string memory optSymbol, Operation op) private view returns (bool b) {
+
+        b = true;
+
+        PricingParameters memory param = parameters[optSymbol];
+
+        if (param.maturity <= time.getNow()) {
+            
+            b = false;
+
+        } else if (op == Operation.BUY || op == Operation.SELL) {
+
+            UnderlyingFeed feed = UnderlyingFeed(param.udlFeed);
+            (,int udlPrice) = feed.getLatestPrice();
+
+            if (udlPrice < param.x[0] || udlPrice > param.x[param.x.length - 1]) {
+                b = false;
+            } else {
+                b = getAvailableStock(optSymbol, param, op) > 0;
+            }
+        }
+    }
+
+    function getAvailableStock(
+        string memory optSymbol,
+        PricingParameters memory param,
+        Operation op
+    )
+        private
+        view
+        returns (uint)
+    {    
+        uint stock = 0;
+        uint bal = 0;
+        OptionToken tk = OptionToken(
+            exchange.resolveToken(optSymbol)
+        );
+        if (op == Operation.BUY) {
+            stock = uint(param.buyStock);
+            bal = tk.writtenVolume(address(this));
+        } else {
+            stock = uint(param.sellStock);
+            bal = tk.balanceOf(address(this));
+        }
+        return stock > bal ? stock - bal : 0;
+    }
+
     function receivePayment(
         PricingParameters memory param,
         uint price,
@@ -452,54 +498,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         returns (uint price)
     {
         uint f = op == Operation.BUY ? spread.add(fractionBase) : fractionBase.sub(spread);
-        
-        (uint j, uint xp) = findUdlPrice(p);
-
-        uint _now = time.getNow();
-        uint dt = uint(p.t1).sub(uint(p.t0));
-        require(_now >= p.t0 && _now <= p.t1, "invalid pricing parameters");
-        uint t = _now.sub(p.t0);
-        uint p0 = calcOptPriceAt(p, 0, j, xp);
-        uint p1 = calcOptPriceAt(p, p.x.length, j, xp);
-
-        price = p0.mul(dt).sub(
-            t.mul(p0.sub(p1))
-        ).mul(f).div(fractionBase).div(dt);
-    }
-
-    function findUdlPrice(PricingParameters memory p) private view returns (uint j, uint xp) {
-
-        UnderlyingFeed feed = UnderlyingFeed(p.udlFeed);
-        (,int udlPrice) = feed.getLatestPrice();
-        
-        j = 0;
-        xp = uint(udlPrice);
-        while (p.x[j] < xp && j < p.x.length) {
-            j++;
-        }
-        require(j > 0 && j < p.x.length, "invalid pricing parameters");
-    }
-
-    function calcOptPriceAt(
-        PricingParameters memory p,
-        uint offset,
-        uint j,
-        uint xp
-    )
-        private
-        pure
-        returns (uint price)
-    {
-        uint k = offset.add(j);
-        int yA = int(p.y[k]);
-        int yB = int(p.y[k - 1]);
-        price = uint(
-            yA.sub(yB).mul(
-                int(xp.sub(p.x[j - 1]))
-            ).div(
-                int(p.x[j]).sub(int(p.x[j - 1]))
-            ).add(yB)
-        );
+        price = interpolator.interpolate(p.udlFeed, p.t0, p.t1, p.x, p.y, f);
     }
 
     function calcVolume(

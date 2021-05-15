@@ -56,6 +56,8 @@ contract OptionsExchange is ManagedContract {
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     string private constant _name = "OptionsExchange";
 
+    event WithdrawTokens(address indexed from, uint value);
+
     event CreateSymbol(address indexed token, address indexed sender);
 
     event WriteOptions(
@@ -182,6 +184,7 @@ contract OptionsExchange is ManagedContract {
         
         require(value <= calcSurplus(msg.sender), "insufficient surplus");
         creditProvider.withdrawTokens(msg.sender, value);
+        emit WithdrawTokens(msg.sender, value);
     }
 
     function createSymbol(string memory symbol, address udlFeed) public returns (address tk) {
