@@ -202,7 +202,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         override
         external
     {
-        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IERC20Permit(token).permit(msg.sender, address(this), value, deadline, v, r, s);
         depositTokens(to, token, value);
     }
 
@@ -284,7 +284,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     }
     
     function buy(
-        string memory optSymbol,
+        string calldata optSymbol,
         uint price,
         uint volume,
         address token,
@@ -295,6 +295,15 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         bytes32 s
     )
         override
+        external
+        returns (address _tk)
+    {        
+        IERC20Permit(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
+        _tk = buy(optSymbol, price, volume, token);
+    }
+
+    function buy(string memory optSymbol, uint price, uint volume, address token)
+        override
         public
         returns (address _tk)
     {
@@ -302,7 +311,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
-        price = receivePayment(param, price, volume, maxValue, token, deadline, v, r, s);
+        price = receivePayment(param, price, volume, token);
 
         _tk = exchange.resolveToken(optSymbol);
         OptionToken tk = OptionToken(_tk);
@@ -315,16 +324,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         }
 
         emit Buy(_tk, msg.sender, price, volume);
-    }
-
-    function buy(string calldata optSymbol, uint price, uint volume, address token)
-        override
-        external
-        returns (address _tk)
-    {
-        bytes32 x;
-        uint maxValue = price.mul(volume).div(volumeBase);
-        _tk = buy(optSymbol, price, volume, token, maxValue, 0, 0, x, x);
     }
 
     function sell(
@@ -426,12 +425,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         PricingParameters memory param,
         uint price,
         uint volume,
-        uint maxValue,
-        address token,
-        uint deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        address token
     )
         private
         returns (uint)
@@ -441,9 +435,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
         if (token != address(exchange)) {
             (uint tv, uint tb) = settings.getTokenRate(token);
-            if (deadline > 0) {
-                ERC20(token).permit(msg.sender, address(this), maxValue, deadline, v, r, s);
-            }
             value = value.mul(tv).div(tb);
             depositTokensInExchange(token, value);
         } else {

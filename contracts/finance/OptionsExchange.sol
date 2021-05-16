@@ -128,7 +128,7 @@ contract OptionsExchange is ManagedContract {
     )
         external
     {
-        ERC20(token).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IERC20Permit(token).permit(msg.sender, address(this), value, deadline, v, r, s);
         depositTokens(to, token, value);
     }
 

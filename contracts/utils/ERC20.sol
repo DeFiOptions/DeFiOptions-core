@@ -1,9 +1,10 @@
 pragma solidity >=0.6.0;
 
 import "../interfaces/IERC20Details.sol";
+import "../interfaces/IERC20Permit.sol";
 import "../utils/SafeMath.sol";
 
-abstract contract ERC20 is IERC20Details {
+abstract contract ERC20 is IERC20Details, IERC20Permit {
 
     using SafeMath for uint;
 
@@ -115,6 +116,7 @@ abstract contract ERC20 is IERC20Details {
         bytes32 r,
         bytes32 s
     )
+        override
         external
     {
         require(deadline >= block.timestamp, "permit expired");
