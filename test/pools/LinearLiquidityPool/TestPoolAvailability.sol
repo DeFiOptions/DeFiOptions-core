@@ -16,6 +16,8 @@ contract TestPoolAvailability is Base {
 
         Assert.isTrue(pool.isAvailable(symbol, BUY), "buy 1");
         Assert.isTrue(pool.isAvailable(symbol, SELL), "sell 1");
+
+        Assert.equal(pool.listSymbols(NONE), symbol, "listSymbols");
     }
 
     function testSymbolAvailabilityWithRanges() public {
@@ -52,5 +54,81 @@ contract TestPoolAvailability is Base {
 
         Assert.isFalse(pool.isAvailable(symbol, BUY), "buy 5");
         Assert.isFalse(pool.isAvailable(symbol, SELL), "sell 5");
+
+        Assert.equal(pool.listSymbols(NONE), symbol, "listSymbols");
+    }
+
+    function testUndeployedSymbolAvailability() public {
+
+        string memory putSymbol = "ETHM-EP-55e19-2592e3";
+
+        pool.addSymbol(
+            address(feed),
+            strike,
+            maturity,
+            PUT,
+            time.getNow(),
+            time.getNow() + 1 days,
+            x,
+            y,
+            100 * volumeBase, // buy stock
+            200 * volumeBase  // sell stock
+        );
+
+        Assert.isTrue(pool.isAvailable(putSymbol, NONE), "undeployed symbol");
+    }
+
+    function testUndeployedSymbolBuyAvailability() public {
+
+        string memory putSymbol = "ETHM-EP-55e19-2592e3";
+
+        pool.addSymbol(
+            address(feed),
+            strike,
+            maturity,
+            PUT,
+            time.getNow(),
+            time.getNow() + 1 days,
+            x,
+            y,
+            100 * volumeBase, // buy stock
+            200 * volumeBase  // sell stock
+        );
+        
+        (bool success,) = address(pool).call(
+            abi.encodePacked(
+                pool.isAvailable.selector,
+                abi.encode(putSymbol, BUY)
+            )
+        );
+        
+        Assert.isFalse(success, "isAvailable BUY should fail");
+    }
+
+    function testUndeployedSymbolSellAvailability() public {
+
+        string memory putSymbol = "ETHM-EP-55e19-2592e3";
+
+        pool.addSymbol(
+            address(feed),
+            strike,
+            maturity,
+            PUT,
+            time.getNow(),
+            time.getNow() + 1 days,
+            x,
+            y,
+            100 * volumeBase, // buy stock
+            200 * volumeBase  // sell stock
+        );
+        
+        (bool success,) = address(pool).call(
+            abi.encodePacked(
+                pool.isAvailable.selector,
+                abi.encode(putSymbol, SELL)
+            )
+        );
+        
+        Assert.isFalse(success, "isAvailable SELL should fail");
     }
 }
