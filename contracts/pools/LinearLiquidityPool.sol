@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "../deployment/ManagedContract.sol";
 import "../finance/RedeemableToken.sol";
+import "../finance/YieldTracker.sol";
 import "../governance/ProtocolSettings.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/LiquidityPool.sol";
@@ -32,18 +33,19 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint120[] y;
     }
 
-    struct Deposit {
-        uint32 date;
-        uint balance;
-        uint value;
+    struct Range {
+        uint120 start;
+        uint120 end;
     }
 
     TimeProvider private time;
     ProtocolSettings private settings;
     CreditProvider private creditProvider;
     LinearInterpolator private interpolator;
+    YieldTracker private tracker;
 
     mapping(string => PricingParameters) private parameters;
+    mapping(string => mapping(uint => Range)) private ranges;
 
     string private constant _name = "Linear Liquidity Pool Redeemable Token";
     string private constant _symbol = "LLPTK";
@@ -53,7 +55,6 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     uint private reserveRatio;
     uint private _maturity;
     string[] private optSymbols;
-    Deposit[] private deposits;
 
     uint private timeBase;
     uint private sqrtTimeBase;
@@ -74,6 +75,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         interpolator = LinearInterpolator(deployer.getContractAddress("LinearInterpolator"));
+        tracker = YieldTracker(deployer.getContractAddress("YieldTracker"));
 
         timeBase = 1e18;
         sqrtTimeBase = 1e9;
@@ -114,26 +116,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
     function yield(uint dt) override external view returns (uint y) {
         
-        y = fractionBase;
-
-        if (deposits.length > 0) {
-            
-            uint _now = time.getNow();
-            uint start = _now.sub(dt);
-            
-            uint i = 0;
-            for (i = 0; i < deposits.length; i++) {
-                if (deposits[i].date > start) {
-                    break;
-                }
-            }
-
-            for (; i <= deposits.length; i++) {
-                if (i > 0) {
-                    y = y.mul(calcYield(i, start)).div(fractionBase);
-                }
-            }
-        }
+        y = tracker.yield(address(this), dt);
     }
 
     function addSymbol(
@@ -181,6 +164,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         emit AddSymbol(optSymbol);
     }
     
+    function setRange(string calldata optSymbol, Operation op, uint start, uint end) external {
+
+        ensureCaller();
+        ranges[optSymbol][uint(op)] = Range(start.toUint120(), end.toUint120());
+    }
+    
     function removeSymbol(string calldata optSymbol) external {
 
         ensureCaller();
@@ -213,8 +202,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         uint b1 = exchange.balanceOf(address(this));
         int po = exchange.calcExpectedPayout(address(this));
         
-        deposits.push(
-            Deposit(time.getNow().toUint32(), uint(int(b0).add(po)), b1.sub(b0))
+        tracker.push(
+            time.getNow().toUint32(), uint(int(b0).add(po)), b1.sub(b0)
         );
 
         uint ts = _totalSupply;
@@ -249,6 +238,26 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
                 } else {
                     available = string(abi.encodePacked(available, "\n", optSymbols[i]));
                 }
+            }
+        }
+    }
+
+    function isAvailable(string memory optSymbol, Operation op) public view returns (bool b) {
+
+        b = true;
+
+        PricingParameters memory param = parameters[optSymbol];
+
+        if (param.maturity <= time.getNow()) {
+            
+            b = false;
+
+        } else if (op == Operation.BUY || op == Operation.SELL) {
+
+            if (!isInRange(optSymbol, op, param.udlFeed)) {
+                b = false;
+            } else {
+                b = getAvailableStock(optSymbol, param, op) > 0;
             }
         }
     }
@@ -311,6 +320,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
+
+        require(isInRange(optSymbol, Operation.BUY, param.udlFeed), "out of range");
+
         price = receivePayment(param, price, volume, token);
 
         _tk = exchange.resolveToken(optSymbol);
@@ -342,6 +354,9 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         ensureValidSymbol(optSymbol);
 
         PricingParameters memory param = parameters[optSymbol];
+        
+        require(isInRange(optSymbol, Operation.SELL, param.udlFeed), "out of range");
+
         price = validatePrice(price, param, Operation.SELL);
 
         address _tk = exchange.resolveToken(optSymbol);
@@ -374,27 +389,21 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         sell(optSymbol, price, volume, 0, 0, x, x);
     }
 
-    function isAvailable(string memory optSymbol, Operation op) private view returns (bool b) {
-
-        b = true;
-
-        PricingParameters memory param = parameters[optSymbol];
-
-        if (param.maturity <= time.getNow()) {
-            
-            b = false;
-
-        } else if (op == Operation.BUY || op == Operation.SELL) {
-
-            UnderlyingFeed feed = UnderlyingFeed(param.udlFeed);
-            (,int udlPrice) = feed.getLatestPrice();
-
-            if (udlPrice < param.x[0] || udlPrice > param.x[param.x.length - 1]) {
-                b = false;
-            } else {
-                b = getAvailableStock(optSymbol, param, op) > 0;
-            }
+    function isInRange(
+        string memory optSymbol,
+        Operation op,
+        address udlFeed
+    )
+        private
+        view
+        returns(bool)
+    {
+        Range memory r = ranges[optSymbol][uint(op)];
+        if (r.start == 0 && r.end == 0) {
+            return true;
         }
+        int udlPrice = getUdlPrice(udlFeed);
+        return uint(udlPrice) >= r.start && uint(udlPrice) <= r.end;
     }
 
     function getAvailableStock(
@@ -489,7 +498,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         returns (uint price)
     {
         uint f = op == Operation.BUY ? spread.add(fractionBase) : fractionBase.sub(spread);
-        price = interpolator.interpolate(p.udlFeed, p.t0, p.t1, p.x, p.y, f);
+        int udlPrice = getUdlPrice(p.udlFeed);
+        price = interpolator.interpolate(udlPrice, p.t0, p.t1, p.x, p.y, f);
     }
 
     function calcVolume(
@@ -556,25 +566,10 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         }
     }
 
-    function calcYield(uint index, uint start) private view returns (uint y) {
+    function getUdlPrice(address udlFeed) private view returns (int udlPrice) {
 
-        uint t0 = deposits[index - 1].date;
-        uint t1 = index < deposits.length ?
-            deposits[index].date : time.getNow();
-
-        int v0 = int(deposits[index - 1].value.add(deposits[index - 1].balance));
-        int v1 = index < deposits.length ? 
-            int(deposits[index].balance) :
-            exchange.calcExpectedPayout(address(this)).add(int(exchange.balanceOf(address(this))));
-
-        y = uint(v1.mul(int(fractionBase)).div(v0));
-        if (start > t0) {
-            y = MoreMath.powDecimal(
-                y, 
-                (t1.sub(start)).mul(fractionBase).div(t1.sub(t0)), 
-                fractionBase
-            );
-        }
+        UnderlyingFeed feed = UnderlyingFeed(udlFeed);
+        (, udlPrice) = feed.getLatestPrice();
     }
 
     function depositTokensInExchange(address token, uint value) private {

@@ -22,4 +22,4 @@ jobs:
       - run: npm install dotenv
 
       - run: truffle test .\test\finance\OptionsExchange\TestExchangeDeposit.sol .\test\finance\OptionsExchange\TestExpectedPayout.sol .\test\finance\OptionsExchange\TestOptionIntrinsicValue.sol .\test\finance\OptionsExchange\TestOptionLiquidation.sol .\test\finance\OptionsExchange\TestOptionTrading.sol .\test\finance\OptionsExchange\TestWriteOptions.sol --compile-all
-      - run: truffle test .\test\pools\LinearLiquidityPool\TestPoolYield.sol .\test\pools\LinearLiquidityPool\TestQueryPool.sol .\test\pools\LinearLiquidityPool\TestPoolTrading.sol .\test\pools\LinearLiquidityPool\TestPoolShares.sol .\test\pools\LinearLiquidityPool\TestPoolVolumes.sol --compile-all
+      - run: truffle test .\test\pools\LinearLiquidityPool\TestPoolAvailability.sol .\test\pools\LinearLiquidityPool\TestPoolYield.sol .\test\pools\LinearLiquidityPool\TestQueryPool.sol .\test\pools\LinearLiquidityPool\TestPoolTrading.sol .\test\pools\LinearLiquidityPool\TestPoolShares.sol .\test\pools\LinearLiquidityPool\TestPoolVolumes.sol --compile-all

@@ -23,7 +23,7 @@ contract LinearInterpolator is ManagedContract {
     }
 
     function interpolate(
-        address udlFeed,
+        int udlPrice,
         uint32 t0,
         uint32 t1,
         uint120[] calldata x,
@@ -34,7 +34,7 @@ contract LinearInterpolator is ManagedContract {
         view
         returns (uint price)
     {
-        (uint j, uint xp) = findUdlPrice(udlFeed, x);
+        (uint j, uint xp) = findUdlPrice(udlPrice, x);
 
         uint _now = time.getNow();
         uint dt = uint(t1).sub(uint(t0));
@@ -50,16 +50,13 @@ contract LinearInterpolator is ManagedContract {
     }
 
     function findUdlPrice(
-        address udlFeed,
+        int udlPrice,
         uint120[] memory x
     )
         private
-        view
+        pure
         returns (uint j, uint xp)
-    {
-        UnderlyingFeed feed = UnderlyingFeed(udlFeed);
-        (,int udlPrice) = feed.getLatestPrice();
-        
+    {        
         j = 0;
         xp = uint(udlPrice);
         while (x[j] < xp && j < x.length) {
