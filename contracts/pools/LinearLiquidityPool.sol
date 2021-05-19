@@ -20,6 +20,8 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
     using SafeMath for uint;
     using SignedSafeMath for int;
 
+    enum Operation { NONE, BUY, SELL }
+
     struct PricingParameters {
         address udlFeed;
         OptionsExchange.OptionType optType;
@@ -229,7 +231,12 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
         balance = sp > reserve ? sp.sub(reserve) : 0;
     }
 
-    function listSymbols(Operation op) override public view returns (string memory available) {
+    function listSymbols() override external view returns (string memory available) {
+
+        available = listSymbols(Operation.BUY);
+    }
+
+    function listSymbols(Operation op) public view returns (string memory available) {
 
         for (uint i = 0; i < optSymbols.length; i++) {
             if (isAvailable(optSymbols[i], op)) {

@@ -42,9 +42,9 @@ contract Base {
     OptionsExchange.OptionType CALL = OptionsExchange.OptionType.CALL;
     OptionsExchange.OptionType PUT = OptionsExchange.OptionType.PUT;
     
-    LiquidityPool.Operation NONE = LiquidityPool.Operation.NONE;
-    LiquidityPool.Operation BUY = LiquidityPool.Operation.BUY;
-    LiquidityPool.Operation SELL = LiquidityPool.Operation.SELL;
+    LinearLiquidityPool.Operation NONE = LinearLiquidityPool.Operation.NONE;
+    LinearLiquidityPool.Operation BUY = LinearLiquidityPool.Operation.BUY;
+    LinearLiquidityPool.Operation SELL = LinearLiquidityPool.Operation.SELL;
 
     uint120[] x;
     uint120[] y;
