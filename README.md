@@ -356,11 +356,11 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x2e3a331db52a689c707020bc9de8150c5b6bb4c5](https://kovan.etherscan.io/address/0x2e3a331db52a689c707020bc9de8150c5b6bb4c5) |
-| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xa77609ac2a1fde38978d4b88a0981232e087a725](https://kovan.etherscan.io/address/0xa77609ac2a1fde38978d4b88a0981232e087a725) |
-| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xaa19cc295e0772c1f6cd12051e2630494fe43117](https://kovan.etherscan.io/address/0xaa19cc295e0772c1f6cd12051e2630494fe43117) |
-| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
-| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x9b3470b6251ba170afd3e94be56c985df7bdb0a4](https://kovan.etherscan.io/address/0x9b3470b6251ba170afd3e94be56c985df7bdb0a4) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xdccbade5c7e19dbdef68f9d9babef763b519345b](https://kovan.etherscan.io/address/0xdccbade5c7e19dbdef68f9d9babef763b519345b) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x371792f1021e8121afa0bb133dd0b33aa82a5037](https://kovan.etherscan.io/address/0x371792f1021e8121afa0bb133dd0b33aa82a5037) |
+| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xa11D54B9C0bb71e610190b34657fA8767e98e0CD](https://kovan.etherscan.io/address/0xa11D54B9C0bb71e610190b34657fA8767e98e0CD) |
+| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0107EEBcC4711EA4E67766b2E495E4569B444b62](https://kovan.etherscan.io/address/0x0107EEBcC4711EA4E67766b2E495E4569B444b62) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:

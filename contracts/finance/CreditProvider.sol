@@ -44,7 +44,7 @@ contract CreditProvider is ManagedContract {
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
 
         callers[address(settings)] = 1;
-        callers[deployer.getContractAddress("CreditToken")] = 1;
+        callers[address(creditToken)] = 1;
         callers[deployer.getContractAddress("OptionsExchange")] = 1;
         callers[deployer.getContractAddress("LinearLiquidityPool")] = 1;
 
