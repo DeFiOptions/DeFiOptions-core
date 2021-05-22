@@ -38,7 +38,7 @@ abstract contract ERC20 is IERC20Details {
         );
     }
 
-    function decimals() override external view returns (uint8) {
+    function decimals() override virtual external view returns (uint8) {
         return 18;
     }
 
