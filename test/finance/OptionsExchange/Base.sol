@@ -45,13 +45,13 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
+        deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         feed = EthFeedMock(deployer.getContractAddress("UnderlyingFeed"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
-        deployer.deploy();
 
         bob = createTrader();
         alice = createTrader();
@@ -60,7 +60,7 @@ contract Base {
         lowerVol = feed.calcLowerVolatility(vol);
         upperVol = feed.calcUpperVolatility(vol);
 
-        erc20 = new ERC20Mock();
+        erc20 = new ERC20Mock(18);
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         settings.setUdlFeed(address(feed), 1);

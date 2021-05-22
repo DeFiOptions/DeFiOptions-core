@@ -40,7 +40,7 @@ Test cases defined in [test/finance](https://github.com/DeFiOptions/DeFiOptions-
 * [Get involved](https://github.com/DeFiOptions/DeFiOptions-core#get-involved)
   * [Validate code](https://github.com/DeFiOptions/DeFiOptions-core#validate-code)
   * [Open challenges](https://github.com/DeFiOptions/DeFiOptions-core#open-challenges)
-  * [Support mainnet](https://github.com/DeFiOptions/DeFiOptions-core#support-mainnet)
+* [Disclaimer](https://github.com/DeFiOptions/DeFiOptions-core#disclaimer)
 * [Licensing](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/LICENSE)
 
 ## Coding Reference
@@ -356,11 +356,11 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x2e3a331db52a689c707020bc9de8150c5b6bb4c5](https://kovan.etherscan.io/address/0x2e3a331db52a689c707020bc9de8150c5b6bb4c5) |
-| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xa77609ac2a1fde38978d4b88a0981232e087a725](https://kovan.etherscan.io/address/0xa77609ac2a1fde38978d4b88a0981232e087a725) |
-| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xaa19cc295e0772c1f6cd12051e2630494fe43117](https://kovan.etherscan.io/address/0xaa19cc295e0772c1f6cd12051e2630494fe43117) |
-| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x22AFC1Fafb92edDabE94A0B67D335A954396ab08](https://kovan.etherscan.io/address/0x22AFC1Fafb92edDabE94A0B67D335A954396ab08) |
-| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xfeBdDF580F67F60AC04348B520502598C135Ad76](https://kovan.etherscan.io/address/0xfeBdDF580F67F60AC04348B520502598C135Ad76) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x9b3470b6251ba170afd3e94be56c985df7bdb0a4](https://kovan.etherscan.io/address/0x9b3470b6251ba170afd3e94be56c985df7bdb0a4) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xdccbade5c7e19dbdef68f9d9babef763b519345b](https://kovan.etherscan.io/address/0xdccbade5c7e19dbdef68f9d9babef763b519345b) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x371792f1021e8121afa0bb133dd0b33aa82a5037](https://kovan.etherscan.io/address/0x371792f1021e8121afa0bb133dd0b33aa82a5037) |
+| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xa11D54B9C0bb71e610190b34657fA8767e98e0CD](https://kovan.etherscan.io/address/0xa11D54B9C0bb71e610190b34657fA8767e98e0CD) |
+| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x0107EEBcC4711EA4E67766b2E495E4569B444b62](https://kovan.etherscan.io/address/0x0107EEBcC4711EA4E67766b2E495E4569B444b62) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
@@ -374,13 +374,13 @@ fakecoin.issue(to, value);
 
 ## Get involved
 
-Did you like this project and wanna get involved? There are three ways in which you can contribute! See below.
+Did you like this project and wanna get involved? There are a couple of ways in which you can contribute! See below.
 
-Before starting simply [shoot me a message](mailto:thomas.vilhena+defioptions@gmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute so we can arrange a plan accordingly.</i>
+Before starting simply [shoot me a message](mailto:thomas.vilhena@protonmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute so we can arrange a plan accordingly.</i>
 
 ### Validate code
 
-The main goal of this project is to deploy Options Exchange to mainnet, however before doing that a deeper validation of the contracts source code is necessary. You can help by:
+We aim to provide a reliable, bug-free protocol to the community, however to achieve that a deeper validation of the contracts source code is necessary. You can help by:
 
 * Executing tests against the kovan contract addresses for identifying potential bugs
 * Auditing contracts source code files for identifying security issues
@@ -389,13 +389,15 @@ The main goal of this project is to deploy Options Exchange to mainnet, however 
 
 ### Open challenges
 
-There are a few major technical challenges that will need to get dealt with if the project gains traction and is deployed to mainnet:
+There are a few major technical challenges that need to get dealt with for DeFi Options to offer a fully featured user experience:
 
 * Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
 * Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
 * Improvement of the incipient governance functionality ([contracts/governance](https://github.com/DeFiOptions/DeFiOptions-core/tree/master/contracts/governance))
 
-### Support mainnet
+## Disclaimer
 
-A [governance token distribution plan](https://docs.defioptions.org/governance/token-distribution) is being draft for launching DeFi Options on mainnet once it finishes its development and validation goals. Stay tuned for finding out how you can become a project supporter either as a [validator](https://docs.defioptions.org/roles/validators) or simply as an [early user](https://docs.defioptions.org/roles/traders).
+DeFi Options is a proof-of-concept open source software project target for testnets and not intended for use in live environments where financial values are involved. As an open source project our code is provided to the general public under the [GPL-3.0 License](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/LICENSE) without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
+
+We strongly advise you to seek legal counseling for all relevant jurisdictions before planning to deploy DeFi Options to a live environment to ensure all required regulations are being met. Use it at your own risk.

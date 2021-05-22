@@ -7,11 +7,6 @@ contract ManagedContractMock is ManagedContract {
     
     bool initialized;
     
-    constructor(address deployer) public {
-
-        Deployer(deployer).setContractAddress("ManagedContract");
-    }
-    
     function initialize(Deployer deployer) override internal {
 
         require(address(deployer) != address(0), "invalid deployer variable");

@@ -10,8 +10,11 @@ contract ERC20Mock is ERC20 {
     string private constant _name = "ERC20Mock";
     string private constant _symbol = "MOCK";
 
-    constructor() ERC20(_name) public {
+    uint8 private _decimals;
 
+    constructor(uint8 decimals) ERC20(_name) public {
+
+        _decimals = decimals;
     }
 
     function name() override external view returns (string memory) {
@@ -21,6 +24,10 @@ contract ERC20Mock is ERC20 {
     function symbol() override external view returns (string memory) {
 
         return _symbol;
+    }
+
+    function decimals() override external view returns (uint8) {
+        return _decimals;
     }
 
     function issue(address to, uint value) public {

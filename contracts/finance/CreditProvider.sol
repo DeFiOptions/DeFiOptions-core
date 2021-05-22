@@ -27,17 +27,15 @@ contract CreditProvider is ManagedContract {
     address private ctAddr;
     uint private _totalAccruedFees;
 
+    event DepositTokens(address indexed to, address indexed token, uint value);
+
+    event WithdrawTokens(address indexed from, address indexed token, uint value);
+
     event TransferBalance(address indexed from, address indexed to, uint value);
 
     event AccumulateDebt(address indexed to, uint value);
 
     event BurnDebt(address indexed from, uint value);
-
-    constructor(address deployer) public {
-
-        Deployer(deployer).setContractAddress("CreditProvider");
-        Deployer(deployer).addAlias("CreditIssuer", "CreditProvider");
-    }
 
     function initialize(Deployer deployer) override internal {
 
@@ -46,7 +44,7 @@ contract CreditProvider is ManagedContract {
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
 
         callers[address(settings)] = 1;
-        callers[deployer.getContractAddress("CreditToken")] = 1;
+        callers[address(creditToken)] = 1;
         callers[deployer.getContractAddress("OptionsExchange")] = 1;
         callers[deployer.getContractAddress("LinearLiquidityPool")] = 1;
 
@@ -57,7 +55,9 @@ contract CreditProvider is ManagedContract {
 
         address[] memory tokens = settings.getAllowedTokens();
         for (uint i = 0; i < tokens.length; i++) {
-            v = v.add(ERC20(tokens[i]).balanceOf(address(this)));
+            (uint r, uint b) = settings.getTokenRate(tokens[i]);
+            uint value = ERC20(tokens[i]).balanceOf(address(this));
+            v = v.add(value.mul(b).div(r));
         }
     }
 
@@ -101,6 +101,7 @@ contract CreditProvider is ManagedContract {
 
         ERC20(token).transferFrom(msg.sender, address(this), value);
         addBalance(to, token, value, true);
+        emit DepositTokens(to, token, value);
     }
 
     function withdrawTokens(address owner, uint value) external {
@@ -227,7 +228,7 @@ contract CreditProvider is ManagedContract {
         debtsDate[owner] = time.getNow();
     }
 
-    function transferTokens(address to, uint value) private returns (uint) {
+    function transferTokens(address to, uint value) private {
         
         require(to != address(this) && to != ctAddr, "invalid token transfer address");
 
@@ -238,6 +239,7 @@ contract CreditProvider is ManagedContract {
             if (b != 0) {
                 uint v = MoreMath.min(value, t.balanceOf(address(this)).mul(b).div(r));
                 t.transfer(to, v.mul(r).div(b));
+                emit WithdrawTokens(to, tokens[i], v.mul(r).div(b));
                 value = value.sub(v);
             }
         }
@@ -254,6 +256,7 @@ contract CreditProvider is ManagedContract {
             value = value.mul(r).div(b);
         }
         creditToken.issue(to, value);
+        emit WithdrawTokens(to, ctAddr, value);
     }
 
     function ensureCaller() private view {

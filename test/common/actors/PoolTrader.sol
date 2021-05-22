@@ -66,7 +66,7 @@ contract PoolTrader {
         ERC20(exchange.resolveToken(symbol)).approve(address(pool), price * volume / volumeBase);
         pool.sell(symbol, price, volume);
     }
-    //add by topabomb
+    
     function withdrawTokens(uint amount) public {
         exchange.withdrawTokens(amount);
     }

@@ -41,6 +41,10 @@ contract Base {
     
     OptionsExchange.OptionType CALL = OptionsExchange.OptionType.CALL;
     OptionsExchange.OptionType PUT = OptionsExchange.OptionType.PUT;
+    
+    LinearLiquidityPool.Operation NONE = LinearLiquidityPool.Operation.NONE;
+    LinearLiquidityPool.Operation BUY = LinearLiquidityPool.Operation.BUY;
+    LinearLiquidityPool.Operation SELL = LinearLiquidityPool.Operation.SELL;
 
     uint120[] x;
     uint120[] y;
@@ -50,12 +54,12 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
+        deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         feed = EthFeedMock(deployer.getContractAddress("UnderlyingFeed"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         pool = LinearLiquidityPool(deployer.getContractAddress("LinearLiquidityPool"));
-        deployer.deploy();
 
         pool.setParameters(
             spread,
@@ -63,7 +67,7 @@ contract Base {
             90 days
         );
 
-        erc20 = new ERC20Mock();
+        erc20 = new ERC20Mock(18);
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         settings.setUdlFeed(address(feed), 1);
@@ -99,7 +103,6 @@ contract Base {
         ];
         
         pool.addSymbol(
-            symbol,
             address(feed),
             strike,
             maturity,
@@ -124,5 +127,10 @@ contract Base {
             strike,
             maturity
         );
+    }
+
+    function createPoolTrader(address stablecoinAddr) internal returns (PoolTrader) {
+
+        return new PoolTrader(stablecoinAddr, address(exchange), address(pool), address(feed));  
     }
 }
