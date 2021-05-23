@@ -1,9 +1,10 @@
 pragma solidity >=0.6.0;
 
+import "../../../contracts/deployment/ManagedContract.sol";
 import "../../../contracts/utils/ERC20.sol";
 import "../../../contracts/utils/SafeMath.sol";
 
-contract ERC20Mock is ERC20 {
+contract ERC20Mock is ERC20, ManagedContract {
 
     using SafeMath for uint;
 

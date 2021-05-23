@@ -60,6 +60,7 @@ contract Base {
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         pool = LinearLiquidityPool(deployer.getContractAddress("LinearLiquidityPool"));
+        erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
 
         pool.setParameters(
             spread,
@@ -67,7 +68,6 @@ contract Base {
             90 days
         );
 
-        erc20 = new ERC20Mock(18);
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         settings.setUdlFeed(address(feed), 1);

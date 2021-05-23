@@ -15,13 +15,15 @@ contract TestMulticoinTrading is Base {
     uint optionSellPrice;
 
     function beforeEach() public {
+        
+        Deployer deployer = Deployer(DeployedAddresses.Deployer());
 
         stablecoinA = erc20;
 
-        stablecoinB = new ERC20Mock(9);
+        stablecoinB = ERC20Mock(deployer.getContractAddress("StablecoinB"));
         settings.setAllowedToken(address(stablecoinB), 1, 1e9);
 
-        stablecoinC = new ERC20Mock(6);
+        stablecoinC = ERC20Mock(deployer.getContractAddress("StablecoinC"));
         settings.setAllowedToken(address(stablecoinC), 1, 1e12);
 
         addSymbol();

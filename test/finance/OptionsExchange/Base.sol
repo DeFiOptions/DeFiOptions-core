@@ -52,6 +52,7 @@ contract Base {
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
+        erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
 
         bob = createTrader();
         alice = createTrader();
@@ -60,7 +61,6 @@ contract Base {
         lowerVol = feed.calcLowerVolatility(vol);
         upperVol = feed.calcUpperVolatility(vol);
 
-        erc20 = new ERC20Mock(18);
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         settings.setUdlFeed(address(feed), 1);

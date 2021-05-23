@@ -37,8 +37,8 @@ contract Base {
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
-
-        erc20 = new ERC20Mock(18);
+        erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
+        
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         
