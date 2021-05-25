@@ -44,9 +44,9 @@ contract LinearInterpolator is ManagedContract {
         uint p0 = calcOptPriceAt(x, y, 0, j, xp);
         uint p1 = calcOptPriceAt(x, y, x.length, j, xp);
 
-        price = p0.mul(dt).sub(
-            t.mul(p0.sub(p1))
-        ).mul(f).div(fractionBase).div(dt);
+        price = p0.mul(dt);
+        price = p0 > p1 ? price.sub(t.mul(p0.sub(p1))) : price.add(t.mul(p1.sub(p0)));
+        price = price.mul(f).div(fractionBase).div(dt);
     }
 
     function findUdlPrice(
