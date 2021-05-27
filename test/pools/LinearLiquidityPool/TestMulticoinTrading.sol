@@ -41,7 +41,7 @@ contract TestMulticoinTrading is Base {
     Trader A deposits the amount of 20*P Stablecoins A in the LiquidityPool
     Trader B buys an option from the pool paying the amount of P with Stablecoin B
     Trader C buys an option from the pool paying the amount of P with Stablecoin C
-    Verify that all options were issued correctly and that the liquidity pool balance is 102*P
+    Verify that all options were issued correctly and that the liquidity pool balance is 22*P
 */
     function testBuyWithMultipleCoins() public {
 
