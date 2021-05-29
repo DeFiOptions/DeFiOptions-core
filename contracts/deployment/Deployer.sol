@@ -8,6 +8,7 @@ contract Deployer {
     struct ContractData {
         string key;
         address origAddr;
+        bool upgradeable;
     }
 
     mapping(string => address) private contractMap;
@@ -34,10 +35,15 @@ contract Deployer {
 
     function setContractAddress(string memory key, address addr) public {
 
+        setContractAddress(key, addr, true);
+    }
+
+    function setContractAddress(string memory key, address addr, bool upgradeable) public {
+
         ensureNotDeployed();
         ensureCaller();
         
-        contracts.push(ContractData(key, addr));
+        contracts.push(ContractData(key, addr, upgradeable));
         contractMap[key] = address(1);
     }
 
@@ -78,8 +84,12 @@ contract Deployer {
 
         for (uint i = contracts.length - 1; i != uint(-1); i--) {
             if (contractMap[contracts[i].key] == address(1)) {
-                Proxy p = new Proxy(getOwner(), contracts[i].origAddr);
-                contractMap[contracts[i].key] = address(p);
+                if (contracts[i].upgradeable) {
+                    Proxy p = new Proxy(getOwner(), contracts[i].origAddr);
+                    contractMap[contracts[i].key] = address(p);
+                } else {
+                    contractMap[contracts[i].key] = contracts[i].origAddr;
+                }
             } else {
                 contracts[i] = contracts[contracts.length - 1];
                 contracts.pop();
@@ -87,8 +97,10 @@ contract Deployer {
         }
 
         for (uint i = 0; i < contracts.length; i++) {
-            address p = contractMap[contracts[i].key];
-            ManagedContract(p).initializeAndLock(this);
+            if (contracts[i].upgradeable) {
+                address p = contractMap[contracts[i].key];
+                ManagedContract(p).initializeAndLock(this);
+            }
         }
     }
 

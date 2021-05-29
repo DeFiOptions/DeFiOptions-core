@@ -21,9 +21,11 @@ contract TestMulticoinTrading is Base {
         stablecoinA = erc20;
 
         stablecoinB = ERC20Mock(deployer.getContractAddress("StablecoinB"));
+        stablecoinB.reset();
         settings.setAllowedToken(address(stablecoinB), 1, 1e9);
 
         stablecoinC = ERC20Mock(deployer.getContractAddress("StablecoinC"));
+        stablecoinC.reset();
         settings.setAllowedToken(address(stablecoinC), 1, 1e12);
 
         addSymbol();

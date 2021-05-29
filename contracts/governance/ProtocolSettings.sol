@@ -35,6 +35,10 @@ contract ProtocolSettings is ManagedContract {
     Rate private processingFee;
     uint private volatilityPeriod;
 
+    address private swapRouter;
+    address private swapToken;
+    Rate private swapTolerance;
+
     uint private MAX_UINT;
     
     function initialize(Deployer deployer) override internal {
@@ -205,6 +209,31 @@ contract ProtocolSettings is ManagedContract {
     function getVolatilityPeriod() external view returns(uint) {
 
         return volatilityPeriod;
+    }
+
+    function setSwapRouterInfo(address router, address token) external {
+        
+        ensureWritePrivilege();
+        swapRouter = router;
+        swapToken = token;
+    }
+
+    function getSwapRouterInfo() external view returns (address router, address token) {
+
+        router = swapRouter;
+        token = swapToken;
+    }
+
+    function setSwapRouterTolerance(uint r, uint b) external {
+        
+        ensureWritePrivilege();
+        swapTolerance = Rate(r, b, MAX_UINT);
+    }
+
+    function getSwapRouterTolerance() external view returns (uint r, uint b) {
+
+        r = swapTolerance.value;
+        b = swapTolerance.base;
     }
 
     function applyRates(Rate[] storage rates, uint value, uint date) private view returns (uint) {

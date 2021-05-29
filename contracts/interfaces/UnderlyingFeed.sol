@@ -4,6 +4,8 @@ interface UnderlyingFeed {
 
     function symbol() external view returns (string memory);
 
+    function getUnderlyingAddr() external view returns (address);
+
     function getLatestPrice() external view returns (uint timestamp, int price);
 
     function getPrice(uint position) external view returns (uint timestamp, int price);

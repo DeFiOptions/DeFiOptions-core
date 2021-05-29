@@ -1,11 +1,11 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "./Base.sol";
 import "../../../contracts/finance/OptionToken.sol";
 import "../../../contracts/utils/MoreMath.sol";
 import "../../common/actors/OptionsTrader.sol";
 import "../../common/utils/MoreAssert.sol";
+import "./Base.sol";
 
 contract TestWriteOptions is Base {
 

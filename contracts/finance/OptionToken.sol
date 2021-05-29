@@ -67,10 +67,17 @@ contract OptionToken is RedeemableToken {
             _totalSupply = _totalSupply.sub(value);
         }
         
-        _issued[owner] = w.sub(value);
+        uint uc = uncoveredVolume(owner);
+        uint coll = MoreMath.min(value, uc);
+
+        w = w.sub(value);
+        _issued[owner] = w;
         _unliquidatedVolume = _unliquidatedVolume.sub(value);
 
-        exchange.cleanUp(address(this), owner, value);
+        uint udl = value > uc ? value.sub(uc) : 0;
+
+        exchange.release(owner, udl, coll);
+        exchange.cleanUp(owner, address(this));
         emit Transfer(owner, address(0), value);
     }
 
@@ -79,15 +86,22 @@ contract OptionToken is RedeemableToken {
         return _issued[owner];
     }
 
+    function uncoveredVolume(address owner) public view returns (uint) {
+
+        uint covered = exchange.underlyingBalance(owner, address(this));
+        uint w = _issued[owner];
+        return w > covered ? w.sub(covered) : 0;
+    }
+
     function redeemAllowed() override public view returns (bool) {
         
         return _unliquidatedVolume == 0;
     }
 
-    function afterRedeem(address owner, uint, uint val) override internal {
+    function afterRedeem(address owner, uint, uint value) override internal {
 
-        exchange.cleanUp(address(this), owner, val);
-        emit Transfer(owner, address(0), val);
+        exchange.cleanUp(owner, address(this));
+        emit Transfer(owner, address(0), value);
     }
 
     function emitTransfer(address from, address to, uint value) override internal {

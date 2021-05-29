@@ -2,11 +2,12 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../../../contracts/deployment/Deployer.sol";
 import "../../../contracts/feeds/ChainlinkFeed.sol";
 import "../../common/mock/AggregatorV3Mock.sol";
+import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
+import "../../common/mock/UniswapV2RouterMock.sol";
 
 abstract contract Base {
 
@@ -23,6 +24,8 @@ abstract contract Base {
 
     function beforeEachDeploy() public {
 
+        time = new TimeProviderMock();
+
         roundIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         answers = [20e8, 25e8, 28e8, 18e8, 19e8, 12e8, 12e8, 13e8, 18e8, 20e8];
         prices = [20e18, 25e18, 28e18, 18e18, 19e18, 12e18, 12e18, 13e18, 18e18, 20e18];
@@ -31,17 +34,16 @@ abstract contract Base {
 
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
-        Deployer deployer = Deployer(DeployedAddresses.Deployer());
-        time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
-        time.setFixedTime(10 days);
-
         feed = new ChainlinkFeed(
             "ETH/USD",
+            address(0),
             address(mock), 
             address(time),
             0, 
             new uint[](0), 
             new int[](0)
         );
+        
+        time.setFixedTime(10 days);
     }
 }

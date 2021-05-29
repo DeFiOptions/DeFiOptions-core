@@ -1,10 +1,11 @@
 pragma solidity >=0.6.0;
 
+import "../interfaces/IERC20.sol";
 import "../interfaces/IERC20Details.sol";
 import "../interfaces/IERC20Permit.sol";
 import "../utils/SafeMath.sol";
 
-abstract contract ERC20 is IERC20Details, IERC20Permit {
+abstract contract ERC20 is IERC20, IERC20Details, IERC20Permit {
 
     using SafeMath for uint;
 
@@ -17,10 +18,6 @@ abstract contract ERC20 is IERC20Details, IERC20Permit {
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
     uint _totalSupply;
-
-    event Transfer(address indexed from, address indexed to, uint value);
-
-    event Approval(address indexed owner, address indexed spender, uint value);
 
     constructor(string memory _name) public {
 
@@ -43,22 +40,22 @@ abstract contract ERC20 is IERC20Details, IERC20Permit {
         return 18;
     }
 
-    function totalSupply() virtual public view returns (uint) {
+    function totalSupply() override public view returns (uint) {
 
         return _totalSupply;
     }
 
-    function balanceOf(address owner) virtual public view returns (uint) {
+    function balanceOf(address owner) override virtual public view returns (uint) {
 
         return balances[owner];
     }
 
-    function allowance(address owner, address spender) virtual public view returns (uint) {
+    function allowance(address owner, address spender) override public view returns (uint) {
 
         return allowed[owner][spender];
     }
 
-    function transfer(address to, uint value) virtual external returns (bool) {
+    function transfer(address to, uint value) override external returns (bool) {
 
         require(value <= balanceOf(msg.sender));
         require(to != address(0));
@@ -69,12 +66,12 @@ abstract contract ERC20 is IERC20Details, IERC20Permit {
         return true;
     }
 
-    function approve(address spender, uint value) virtual external returns (bool) {
+    function approve(address spender, uint value) override external returns (bool) {
 
         return approve(msg.sender, spender, value);
     }
 
-    function transferFrom(address from, address to, uint value) virtual public returns (bool) {
+    function transferFrom(address from, address to, uint value) override public returns (bool) {
 
         require(value <= balanceOf(from));
         require(value <= allowed[from][msg.sender]);
@@ -84,26 +81,6 @@ abstract contract ERC20 is IERC20Details, IERC20Permit {
         addBalance(to, value);
         allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
         emitTransfer(from, to, value);
-        return true;
-    }
-
-    function increaseAllowance(address spender, uint addedValue) virtual public returns (bool) {
-
-        require(spender != address(0));
-
-        allowed[msg.sender][spender] = (
-            allowed[msg.sender][spender].add(addedValue));
-        emitApproval(msg.sender, spender, allowed[msg.sender][spender]);
-        return true;
-    }
-
-    function decreaseAllowance(address spender, uint subtractedValue) virtual public returns (bool) {
-
-        require(spender != address(0));
-
-        allowed[msg.sender][spender] = (
-            allowed[msg.sender][spender].sub(subtractedValue));
-        emitApproval(msg.sender, spender, allowed[msg.sender][spender]);
         return true;
     }
 

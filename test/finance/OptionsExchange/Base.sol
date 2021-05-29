@@ -12,6 +12,7 @@ import "../../common/actors/OptionsTrader.sol";
 import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
+import "../../common/mock/UniswapV2RouterMock.sol";
 
 contract Base {
     
@@ -25,9 +26,11 @@ contract Base {
     uint timeBase = 1 hours;
 
     address[] traders;
+    address router;
     
     EthFeedMock feed;
     ERC20Mock erc20;
+    ERC20Mock underlying;
     TimeProviderMock time;
 
     ProtocolSettings settings;
@@ -53,6 +56,16 @@ contract Base {
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
+        router = deployer.getContractAddress("SwapRouter");
+
+        erc20.reset();
+
+        settings.setOwner(address(this));
+        settings.setAllowedToken(address(erc20), 1, 1);
+        settings.setUdlFeed(address(feed), 1);
+
+        underlying = ERC20Mock(feed.getUnderlyingAddr());
+        underlying.reset();
 
         bob = createTrader();
         alice = createTrader();
@@ -60,10 +73,6 @@ contract Base {
         uint vol = feed.getDailyVolatility(182 days);
         lowerVol = feed.calcLowerVolatility(vol);
         upperVol = feed.calcUpperVolatility(vol);
-
-        settings.setOwner(address(this));
-        settings.setAllowedToken(address(erc20), 1, 1);
-        settings.setUdlFeed(address(feed), 1);
 
         feed.setPrice(ethInitialPrice);
         time.setTimeOffset(0);

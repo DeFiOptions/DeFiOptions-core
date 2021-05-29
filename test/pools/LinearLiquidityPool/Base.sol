@@ -11,6 +11,7 @@ import "../../common/actors/PoolTrader.sol";
 import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
+import "../../common/mock/UniswapV2RouterMock.sol";
 
 contract Base {
     
@@ -62,18 +63,20 @@ contract Base {
         pool = LinearLiquidityPool(deployer.getContractAddress("LinearLiquidityPool"));
         erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
 
+        erc20.reset();
+
+        settings.setOwner(address(this));
+        settings.setAllowedToken(address(erc20), 1, 1);
+        settings.setUdlFeed(address(feed), 1);
+
         pool.setParameters(
             spread,
             reserveRatio,
             90 days
         );
 
-        settings.setOwner(address(this));
-        settings.setAllowedToken(address(erc20), 1, 1);
-        settings.setUdlFeed(address(feed), 1);
-
-        bob = new PoolTrader(address(erc20), address(exchange), address(pool), address(feed));
-        alice = new PoolTrader(address(erc20), address(exchange), address(pool), address(feed));
+        bob = createPoolTrader(address(erc20));
+        alice = createPoolTrader(address(erc20));
 
         feed.setPrice(ethInitialPrice);
         time.setFixedTime(0);

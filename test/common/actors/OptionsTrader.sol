@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "../../../contracts/finance/OptionsExchange.sol";
 import "../../../contracts/interfaces/TimeProvider.sol";
+import "../../../contracts/interfaces/UnderlyingFeed.sol";
 
 contract OptionsTrader {
     
@@ -56,7 +57,12 @@ contract OptionsTrader {
         returns (address _tk)
     {
         _tk = exchange.writeOptions(
-            feed, volume * volumeBase, optType, uint(strike), time.getNow() + timeToMaturity, address(this)
+            feed,
+            volume * volumeBase,
+            optType,
+            uint(strike),
+            time.getNow() + timeToMaturity,
+            address(this)
         );
     }
 

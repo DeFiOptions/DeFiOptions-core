@@ -2,15 +2,15 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
+import "../../../contracts/deployment/Deployer.sol";
 import "../../../contracts/finance/CreditProvider.sol";
 import "../../../contracts/finance/CreditToken.sol";
 import "../../../contracts/governance/ProtocolSettings.sol";
-import "../../../contracts/deployment/Deployer.sol";
 import "../../common/actors/CreditHolder.sol";
-import "../../common/actors/ShareHolder.sol";
 import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
+import "../../common/mock/UniswapV2RouterMock.sol";
 
 contract Base {
     
@@ -39,6 +39,8 @@ contract Base {
         creditToken = CreditToken(deployer.getContractAddress("CreditToken"));
         erc20 = ERC20Mock(deployer.getContractAddress("StablecoinA"));
         
+        erc20.reset();
+
         settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         

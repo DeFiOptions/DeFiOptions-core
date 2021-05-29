@@ -1,10 +1,9 @@
 pragma solidity >=0.6.0;
 
-import "../../../contracts/deployment/ManagedContract.sol";
 import "../../../contracts/utils/ERC20.sol";
 import "../../../contracts/utils/SafeMath.sol";
 
-contract ERC20Mock is ERC20, ManagedContract {
+contract ERC20Mock is ERC20 {
 
     using SafeMath for uint;
 
@@ -19,6 +18,7 @@ contract ERC20Mock is ERC20, ManagedContract {
     }
 
     function name() override external view returns (string memory) {
+
         return _name;
     }
 
@@ -28,10 +28,21 @@ contract ERC20Mock is ERC20, ManagedContract {
     }
 
     function decimals() override external view returns (uint8) {
+
         return _decimals;
     }
 
-    function issue(address to, uint value) public {
+    function reset() external {
+
+        _totalSupply = 0;
+    }
+
+    function reset(address addr) external {
+
+        removeBalance(addr, balanceOf(addr));
+    }
+
+    function issue(address to, uint value) external {
 
         addBalance(to, value);
         _totalSupply = _totalSupply.add(value);

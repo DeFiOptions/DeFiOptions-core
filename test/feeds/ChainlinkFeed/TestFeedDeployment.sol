@@ -2,8 +2,6 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "./Base.sol";
-import "../../../contracts/feeds/ChainlinkFeed.sol";
-import "../../common/mock/AggregatorV3Mock.sol";
 
 contract TestFeedDeployment is Base {
 
@@ -19,6 +17,7 @@ contract TestFeedDeployment is Base {
 
         feed = new ChainlinkFeed(
             "ETH/USD",
+            address(0),
             address(mock), 
             address(time),
             0,
@@ -52,6 +51,7 @@ contract TestFeedDeployment is Base {
 
         feed = new ChainlinkFeed(
             "ETH/USD",
+            address(0),
             address(mock), 
             address(time),
             0,

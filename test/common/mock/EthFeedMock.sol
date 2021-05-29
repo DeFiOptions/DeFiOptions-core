@@ -5,19 +5,26 @@ import "../../../contracts/deployment/ManagedContract.sol";
 import "../../../contracts/interfaces/TimeProvider.sol";
 import "../../../contracts/interfaces/UnderlyingFeed.sol";
 
-contract EthFeedMock is UnderlyingFeed, ManagedContract {
+contract EthFeedMock is ManagedContract, UnderlyingFeed {
     
-    int ethPrice = 550e18;
     TimeProvider private time;
+    int ethPrice = 550e18;
+    address underlying;
 
     function initialize(Deployer deployer) override internal {
 
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
+        underlying = deployer.getContractAddress("UnderlyingToken");
     }
 
     function symbol() override external view returns (string memory) {
 
         return "ETHM";
+    }
+
+    function getUnderlyingAddr() override external view returns (address) {
+
+        return underlying;
     }
     
     function getPrice() external view returns (int) {

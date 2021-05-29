@@ -1,8 +1,8 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "./Base.sol";
 import "../../common/utils/MoreAssert.sol";
+import "./Base.sol";
 
 contract TestPoolShares is Base {
 

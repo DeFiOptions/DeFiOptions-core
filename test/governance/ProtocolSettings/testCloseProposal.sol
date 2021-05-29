@@ -1,8 +1,8 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "./Base.sol";
 import "../../common/samples/ChangeInterestRateProposal.sol";
+import "./Base.sol";
 
 contract TestCloseProposal is Base {
 

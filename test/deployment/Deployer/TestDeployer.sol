@@ -3,9 +3,11 @@ pragma solidity >=0.6.0;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../../../contracts/deployment/Deployer.sol";
+import "../../common/mock/ERC20Mock.sol";
 import "../../common/mock/EthFeedMock.sol";
 import "../../common/mock/ManagedContractMock.sol";
 import "../../common/mock/TimeProviderMock.sol";
+import "../../common/mock/UniswapV2RouterMock.sol";
 
 contract TestDeployer {
 

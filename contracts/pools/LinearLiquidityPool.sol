@@ -14,7 +14,7 @@ import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./LinearInterpolator.sol";
 
-contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken {
+contract LinearLiquidityPool is ManagedContract, LiquidityPool, RedeemableToken {
 
     using SafeCast for uint;
     using SafeMath for uint;
@@ -581,7 +581,7 @@ contract LinearLiquidityPool is LiquidityPool, ManagedContract, RedeemableToken 
 
     function depositTokensInExchange(address token, uint value) private {
         
-        ERC20 t = ERC20(token);
+        IERC20 t = IERC20(token);
         t.transferFrom(msg.sender, address(creditProvider), value);
         creditProvider.addBalance(address(this), token, value);
     }
