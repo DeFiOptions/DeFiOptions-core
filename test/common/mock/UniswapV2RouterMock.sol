@@ -283,24 +283,14 @@ contract UniswapV2RouterMock is ManagedContract, IUniswapV2Router01 {
     }
 
     function getAmountsIn(
-        uint amountOut,
-        address[] calldata path
+        uint,
+        address[] calldata
     )
         override
         external
         view
-        returns (uint[] memory amounts)
+        returns (uint[] memory)
     {
-        require(
-            path[0] == address(underlying) && path[1] == address(stablecoin),
-            "invalid path"
-        );
-
-        (uint r, uint b) = settings.getTokenRate(path[1]);
-        (, int p) = feed.getLatestPrice();
-        uint v = amountOut.mul(10 ** uint(underlying.decimals())).div(uint(p).mul(r).div(b));
-
-        amounts = new uint[](1);
-        amounts[0] = v;
+        revert("not implemented");
     }
 }

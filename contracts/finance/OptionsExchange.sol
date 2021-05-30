@@ -214,8 +214,9 @@ contract OptionsExchange is ManagedContract {
         }
         
         address underlying = getUnderlyingAddr(opt);
+        require(underlying != address(0), "underlying token not set");
         IERC20(underlying).transferFrom(msg.sender, address(vault), volume);
-        vault.lock(msg.sender, _tk, underlying, volume);
+        vault.lock(msg.sender, _tk, volume);
 
         writeOptionsInternal(opt, symbol, volume, to);
         ensureFunds(msg.sender);
@@ -249,15 +250,16 @@ contract OptionsExchange is ManagedContract {
         OptionToken tk = OptionToken(msg.sender);
         require(tokenAddress[tk.symbol()] == msg.sender, "unauthorized release");
 
+        OptionData memory opt = options[msg.sender];
+
         if (udl > 0) {
-            address underlying = getUnderlyingAddr(options[msg.sender]);
-            vault.release(owner,  msg.sender, underlying, udl);
+            vault.release(owner,  msg.sender, opt.udlFeed, udl);
         }
         
         if (coll > 0) {
             uint c = collateral[owner];
             collateral[owner] = c.sub(
-                MoreMath.min(c, calcCollateral(options[msg.sender], coll))
+                MoreMath.min(c, calcCollateral(opt, coll))
             );
         }
     }
@@ -528,8 +530,7 @@ contract OptionsExchange is ManagedContract {
         iv = iv.mul(written);
 
         if (isExpired) {
-            address underlying = getUnderlyingAddr(opt);
-            value = liquidateAfterMaturity(owner, tk, underlying, written, iv);
+            value = liquidateAfterMaturity(owner, tk, opt.udlFeed, written, iv);
             emit LiquidateExpired(address(tk), msg.sender, owner, written);
         } else {
             require(written > 0, "invalid volume");
@@ -540,7 +541,7 @@ contract OptionsExchange is ManagedContract {
     function liquidateAfterMaturity(
         address owner,
         OptionToken tk,
-        address underlying,
+        address feed,
         uint written,
         uint iv
     )
@@ -549,11 +550,11 @@ contract OptionsExchange is ManagedContract {
     {
         if (iv > 0) {
             value = iv.div(volumeBase);
-            vault.liquidate(owner, address(tk), underlying, value);
+            vault.liquidate(owner, address(tk), feed, value);
             creditProvider.processPayment(owner, address(tk), value);
         }
 
-        vault.release(owner, address(tk), underlying, uint(-1));
+        vault.release(owner, address(tk), feed, uint(-1));
 
         if (written > 0) {
             tk.burn(owner, written);

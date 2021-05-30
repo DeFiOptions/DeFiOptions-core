@@ -5,6 +5,7 @@ import "../governance/ProtocolSettings.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IUniswapV2Router01.sol";
 import "../interfaces/TimeProvider.sol";
+import "../interfaces/UnderlyingFeed.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
@@ -42,13 +43,12 @@ contract UnderlyingVault is ManagedContract {
         return allocation[owner][token];
     }
 
-    function lock(address owner, address token, address underlying, uint value) external {
+    function lock(address owner, address token, uint value) external {
 
         ensureCaller();
         
         require(owner != address(0), "invalid owner");
         require(token != address(0), "invalid token");
-        require(underlying != address(0), "invalid underlying");
 
         allocation[owner][token] = allocation[owner][token].add(value);
         emit Lock(owner, token, value);
@@ -57,17 +57,17 @@ contract UnderlyingVault is ManagedContract {
     function liquidate(
         address owner,
         address token,
-        address underlying,
+        address feed,
         uint amountOut
     )
         external
-        returns (uint v)
+        returns (uint _in, uint _out)
     {
         ensureCaller();
         
         require(owner != address(0), "invalid owner");
         require(token != address(0), "invalid token");
-        require(underlying != address(0), "invalid underlying");
+        require(feed != address(0), "invalid feed");
 
         uint balance = balanceOf(owner, token);
 
@@ -80,37 +80,39 @@ contract UnderlyingVault is ManagedContract {
             );
 
             IUniswapV2Router01 router = IUniswapV2Router01(_router);
+            (, int p) = UnderlyingFeed(feed).getLatestPrice();
 
             address[] memory path = new address[](2);
-            path[0] = underlying;
+            path[0] = UnderlyingFeed(feed).getUnderlyingAddr();
             path[1] = _stablecoin;
 
-            (uint _in, uint _out) = swapUnderlyingForStablecoin(
+            (_in, _out) = swapUnderlyingForStablecoin(
                 owner,
                 router,
                 path,
+                p,
                 balance,
                 amountOut
             );
 
-            v = _in;
             allocation[owner][token] = allocation[owner][token].sub(_in);
             emit Liquidate(owner, token, _in, _out);
         }
     }
 
-    function release(address owner, address token, address underlying, uint value) external {
+    function release(address owner, address token, address feed, uint value) external {
         
         ensureCaller();
         
         require(owner != address(0), "invalid owner");
         require(token != address(0), "invalid token");
-        require(underlying != address(0), "invalid underlying");
+        require(feed != address(0), "invalid feed");
 
         uint bal = allocation[owner][token];
         value = MoreMath.min(bal, value);
 
         if (bal > 0) {
+            address underlying = UnderlyingFeed(feed).getUnderlyingAddr();
             allocation[owner][token] = bal.sub(value);
             IERC20(underlying).transfer(owner, value);
             emit Release(owner, token, value);
@@ -121,24 +123,25 @@ contract UnderlyingVault is ManagedContract {
         address owner,
         IUniswapV2Router01 router,
         address[] memory path,
+        int price,
         uint balance,
         uint amountOut
     )
         private
         returns (uint _in, uint _out)
-    {                
-        (uint r, uint b) = settings.getTokenRate(path[1]);
-        uint amountInMax = router.getAmountsIn(
-            amountOut.mul(r).div(b),
+    {
+        uint amountInMax = getAmountInMax(
+            price,
+            amountOut,
             path
-        )[0];
-        
-        (uint rTol, uint bTol) = settings.getSwapRouterTolerance();
-        amountInMax = amountInMax.mul(rTol).div(bTol);
+        );
+
         if (amountInMax > balance) {
             amountOut = amountOut.mul(balance).div(amountInMax);
             amountInMax = balance;
         }
+
+        (uint r, uint b) = settings.getTokenRate(path[1]);
         IERC20(path[0]).approve(address(router), amountInMax);
 
         _out = amountOut;
@@ -153,6 +156,22 @@ contract UnderlyingVault is ManagedContract {
         if (amountOut > 0) {
             creditProvider.addBalance(owner, path[1], amountOut.mul(r).div(b));
         }
+    }
+
+    function getAmountInMax(
+        int price,
+        uint amountOut,
+        address[] memory path
+    )
+        private
+        view
+        returns (uint amountInMax)
+    {
+        uint8 d = IERC20Details(path[0]).decimals();
+        amountInMax = amountOut.mul(10 ** uint(d)).div(uint(price));
+        
+        (uint rTol, uint bTol) = settings.getSwapRouterTolerance();
+        amountInMax = amountInMax.mul(rTol).div(bTol);
     }
 
     function ensureCaller() private view {
