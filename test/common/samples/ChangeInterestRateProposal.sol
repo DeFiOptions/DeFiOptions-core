@@ -1,23 +1,20 @@
 pragma solidity >=0.6.0;
 
 import "../../../contracts/governance/Proposal.sol";
-import "../../../contracts/governance/ProtocolSettings.sol";
 
 contract ChangeInterestRateProposal is Proposal {
-
-    ProtocolSettings settings;
 
     uint interestRate;
     uint interestRateBase;
 
     constructor(
         address _timeProvider,
-        address _settings,
         address _govToken,
+        address _settings,
         Proposal.Quorum _quorum,
         uint expiresAt
-    ) public Proposal(_timeProvider, _govToken, _quorum, expiresAt) {
-        settings = ProtocolSettings(_settings);
+    ) public Proposal(_timeProvider, _govToken, _settings, _quorum, expiresAt) {
+        
     }
 
     function setInterestRate(uint ir, uint b) public {
@@ -29,7 +26,7 @@ contract ChangeInterestRateProposal is Proposal {
         interestRateBase = b;
     }
 
-    function execute() public override {
+    function execute(ProtocolSettings settings) public override {
         
         require(interestRate > 0, "interest rate value not set");
         settings.setDebtInterestRate(interestRate, interestRateBase);

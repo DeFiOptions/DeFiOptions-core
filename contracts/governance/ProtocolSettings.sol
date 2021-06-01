@@ -33,6 +33,8 @@ contract ProtocolSettings is ManagedContract {
     Rate[] private debtInterestRates;
     Rate[] private creditInterestRates;
     Rate private processingFee;
+
+    uint private circulatingSupply;
     uint private volatilityPeriod;
 
     address private swapRouter;
@@ -86,6 +88,19 @@ contract ProtocolSettings is ManagedContract {
 
         require(msg.sender == owner || owner == address(0));
         owner = _owner;
+    }
+
+    function getCirculatingSupply() external view returns (uint) {
+
+        return circulatingSupply;
+    }
+
+    function setCirculatingSupply(uint supply) external {
+
+        ensureWritePrivilege();
+        require(supply <= govToken.totalSupply(), "invalid supply");
+        require(supply > circulatingSupply, "cannot decrease supply");
+        circulatingSupply = supply;
     }
 
     function getTokenRate(address token) external view returns (uint v, uint b) {

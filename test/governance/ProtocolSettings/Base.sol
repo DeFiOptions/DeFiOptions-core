@@ -37,6 +37,9 @@ contract Base {
         
         govToken.setInitialSupply(address(alpha), 1 ether);
         
+        settings.setOwner(address(this));
+        settings.setCirculatingSupply(1 ether);
+        
         alpha.setGovToken(address(govToken));
         beta.setGovToken(address(govToken));
         gama.setGovToken(address(govToken));
@@ -51,8 +54,8 @@ contract Base {
 
         p = new ChangeInterestRateProposal(
             address(time),
-            address(settings),
             address(govToken),
+            address(settings),
             Proposal.Quorum.SIMPLE_MAJORITY,
             now + expiration
         );
