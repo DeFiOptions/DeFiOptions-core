@@ -118,7 +118,7 @@ contract Base {
             200 * volumeBase  // sell stock
         );
 
-        exchange.createSymbol(symbol, address(feed));
+        exchange.createSymbol(address(feed), CALL, strike, maturity);
     }
 
     function calcCollateralUnit() internal view returns (uint) {

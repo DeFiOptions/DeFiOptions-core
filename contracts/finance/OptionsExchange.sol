@@ -147,12 +147,25 @@ contract OptionsExchange is ManagedContract {
         emit WithdrawTokens(msg.sender, value);
     }
 
-    function createSymbol(string memory symbol, address udlFeed) public returns (address tk) {
+    function createSymbol(
+        address udlFeed,
+        OptionType optType,
+        uint strike, 
+        uint maturity
+    )
+        public
+        returns (address tk)
+    {
+        (OptionData memory opt, string memory symbol) =
+            createOptionInMemory(udlFeed, optType, strike, maturity);
 
         require(tokenAddress[symbol] == address(0), "already created");
+
         tk = factory.create(symbol, udlFeed);
         tokenAddress[symbol] = tk;
+        options[tk] = opt;
         prefetchFeedData(udlFeed);
+
         emit CreateSymbol(tk, msg.sender);
     }
 
@@ -210,7 +223,7 @@ contract OptionsExchange is ManagedContract {
         _tk = tokenAddress[symbol];
 
         if (_tk == address(0)) {
-            _tk = createSymbol(symbol, opt.udlFeed);
+            _tk = createSymbol(opt.udlFeed, OptionType.CALL, strike, maturity);
         }
         
         address underlying = getUnderlyingAddr(opt);
@@ -488,7 +501,7 @@ contract OptionsExchange is ManagedContract {
 
         _tk = tokenAddress[symbol];
         if (_tk == address(0)) {
-            _tk = createSymbol(symbol, opt.udlFeed);
+            _tk = createSymbol(opt.udlFeed, opt._type, opt.strike, opt.maturity);
         }
 
         OptionToken tk = OptionToken(_tk);
