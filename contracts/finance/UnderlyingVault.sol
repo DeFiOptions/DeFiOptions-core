@@ -82,9 +82,10 @@ contract UnderlyingVault is ManagedContract {
             IUniswapV2Router01 router = IUniswapV2Router01(_router);
             (, int p) = UnderlyingFeed(feed).getLatestPrice();
 
-            address[] memory path = new address[](2);
-            path[0] = UnderlyingFeed(feed).getUnderlyingAddr();
-            path[1] = _stablecoin;
+            address[] memory path = settings.getSwapPath(
+                UnderlyingFeed(feed).getUnderlyingAddr(),
+                _stablecoin
+            );
 
             (_in, _out) = swapUnderlyingForStablecoin(
                 owner,

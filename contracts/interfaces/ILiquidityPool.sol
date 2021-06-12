@@ -1,6 +1,6 @@
 pragma solidity >=0.6.0;
 
-interface LiquidityPool {
+interface ILiquidityPool {
 
     event AddSymbol(string optSymbol);
     

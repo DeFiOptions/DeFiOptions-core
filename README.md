@@ -285,10 +285,10 @@ A fixed spread is applied on top of the option’s target price for deriving its
 
 #### Pool interface
 
-The following [liquidity pool interface](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/LiquidityPool.sol) functions are provided for those willing to interact with the options exchange environment:
+The following [liquidity pool interface](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/ILiquidityPool.sol) functions are provided for those willing to interact with the options exchange environment:
 
 ```solidity
-interface LiquidityPool {
+interface ILiquidityPool {
 
     function depositTokens(address to, address token, uint value) external;
 
@@ -393,7 +393,7 @@ There are a few major technical challenges that need to get dealt with for DeFi 
 
 * Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
-* Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them
+* ~~Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them~~
 * Improvement of the incipient governance functionality ([contracts/governance](https://github.com/DeFiOptions/DeFiOptions-core/tree/master/contracts/governance))
 
 ## Disclaimer

@@ -2,13 +2,13 @@ pragma solidity >=0.6.0;
 
 import "../../../contracts/finance/OptionsExchange.sol";
 import "../../../contracts/interfaces/IERC20.sol";
-import "../../../contracts/interfaces/LiquidityPool.sol";
+import "../../../contracts/interfaces/ILiquidityPool.sol";
 
 contract PoolTrader {
     
     IERC20 private erc20;
     OptionsExchange private exchange;
-    LiquidityPool private pool;
+    ILiquidityPool private pool;
     
     address private addr;
     address private feed;
@@ -18,7 +18,7 @@ contract PoolTrader {
 
         erc20 = IERC20(_erc20);
         exchange = OptionsExchange(_exchange);
-        pool = LiquidityPool(_pool);
+        pool = ILiquidityPool(_pool);
         addr = address(this);
         feed = _feed;
     }

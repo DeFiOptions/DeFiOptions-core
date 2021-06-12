@@ -26,6 +26,7 @@ contract ProtocolSettings is ManagedContract {
 
     mapping(address => int) private underlyingFeeds;
     mapping(address => Rate) private tokenRates;
+    mapping(address => mapping(address => address[])) private paths;
 
     address private owner;
     address[] private tokens;
@@ -249,6 +250,22 @@ contract ProtocolSettings is ManagedContract {
 
         r = swapTolerance.value;
         b = swapTolerance.base;
+    }
+
+    function setSwapPath(address from, address to, address[] calldata path) external {
+
+        ensureWritePrivilege();
+        paths[from][to] = path;
+    }
+
+    function getSwapPath(address from, address to) external view returns (address[] memory path) {
+
+        path = paths[from][to];
+        if (path.length == 0) {
+            path = new address[](2);
+            path[0] = from;
+            path[1] = to;
+        }
     }
 
     function applyRates(Rate[] storage rates, uint value, uint date) private view returns (uint) {
