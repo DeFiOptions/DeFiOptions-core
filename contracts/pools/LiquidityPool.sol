@@ -107,6 +107,14 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         y = tracker.yield(address(this), dt);
     }
 
+    function valueOf(address account) external view returns (uint) {
+
+        int exBal = int(exchange.balanceOf(address(this)));
+        int payout = exchange.calcExpectedPayout(address(this));
+        return uint(exBal.add(payout))
+            .mul(balanceOf(account)).div(totalSupply());
+    }
+
     function addSymbol(
         address udlFeed,
         uint strike,
