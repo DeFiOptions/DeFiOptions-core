@@ -82,9 +82,9 @@ contract CreditToken is ManagedContract, ERC20 {
         }
     }
 
-    function processWithdraws() public {
+    function processWithdraws(uint limit) public {
         
-        while (headAddr != address(0)) {
+        while (headAddr != address(0) && (limit-- > 0)) {
             (uint sent, bool dequeue) = withdrawTokens(
                 queue[headAddr].addr,
                 queue[headAddr].value
