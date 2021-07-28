@@ -50,6 +50,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     address private owner;
     uint internal spread;
     uint internal reserveRatio;
+    uint internal withdrawFee;
     uint private _maturity;
     string[] private optSymbols;
 
@@ -82,6 +83,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     function setParameters(
         uint _spread,
         uint _reserveRatio,
+        uint _withdrawFee,
         uint _mt
     )
         external
@@ -89,6 +91,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         ensureCaller();
         spread = _spread;
         reserveRatio = _reserveRatio;
+        withdrawFee = _withdrawFee;
         _maturity = _mt;
     }
 
@@ -107,12 +110,11 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         y = tracker.yield(address(this), dt);
     }
 
-    function valueOf(address account) external view returns (uint) {
+    function valueOf(address ownr) public view returns (uint) {
 
-        int exBal = int(exchange.balanceOf(address(this)));
-        int payout = exchange.calcExpectedPayout(address(this));
-        return uint(exBal.add(payout))
-            .mul(balanceOf(account)).div(totalSupply());
+        (uint bal, int pOut) = getBalanceAndPayout();
+        return uint(int(bal).add(pOut))
+            .mul(balanceOf(ownr)).div(totalSupply());
     }
 
     function addSymbol(
@@ -193,14 +195,11 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
     function depositTokens(address to, address token, uint value) override public {
 
-        uint b0 = exchange.balanceOf(address(this));
+        (uint b0, int po) = getBalanceAndPayout();
         depositTokensInExchange(token, value);
         uint b1 = exchange.balanceOf(address(this));
-        int po = exchange.calcExpectedPayout(address(this));
         
-        tracker.push(
-            time.getNow().toUint32(), uint(int(b0).add(po)), b1.sub(b0)
-        );
+        tracker.push(int(b0).add(po), b1.sub(b0).toInt256());
 
         uint ts = _totalSupply;
         int expBal = po.add(int(b1));
@@ -215,6 +214,23 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         addBalance(to, v);
         _totalSupply = ts.add(v);
         emitTransfer(address(0), to, v);
+    }
+
+    function withdraw(uint amount) override external {
+
+        uint bal = balanceOf(msg.sender);
+        require(bal >= amount, "insufficient caller balance");
+
+        uint val = valueOf(msg.sender).mul(amount).div(bal);
+        uint discountedValue = val.mul(fractionBase.sub(withdrawFee)).div(fractionBase);
+        require(discountedValue <= calcFreeBalance(), "insufficient pool balance");
+
+        (uint b0, int po) = getBalanceAndPayout();
+        exchange.transferBalance(address(this), msg.sender, discountedValue);
+        tracker.push(int(b0).add(po), -(val.toInt256()));
+        
+        removeBalance(msg.sender, amount);
+        emitTransfer(msg.sender, address(0), amount);
     }
 
     function calcFreeBalance() public view returns (uint balance) {
@@ -420,6 +436,12 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
         UnderlyingFeed feed = UnderlyingFeed(udlFeed);
         (, udlPrice) = feed.getLatestPrice();
+    }
+
+    function getBalanceAndPayout() private view returns (uint bal, int pOut) {
+        
+        bal = exchange.balanceOf(address(this));
+        pOut = exchange.calcExpectedPayout(address(this));
     }
 
     function isInRange(

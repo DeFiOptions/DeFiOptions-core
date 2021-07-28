@@ -4,18 +4,20 @@ import "../deployment/Deployer.sol";
 import "../deployment/ManagedContract.sol";
 import "../finance/OptionsExchange.sol";
 import "../interfaces/TimeProvider.sol";
+import "../utils/SafeCast.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 
 contract YieldTracker is ManagedContract {
 
+    using SafeCast for uint;
     using SafeMath for uint;
     using SignedSafeMath for int;
 
     struct Deposit {
         uint32 date;
-        uint balance;
-        uint value;
+        int balance;
+        int value;
     }
     
     TimeProvider private time;
@@ -32,7 +34,12 @@ contract YieldTracker is ManagedContract {
         fractionBase = 1e9;
     }
 
-    function push(uint32 date, uint balance, uint value) external {
+    function push(int balance, int value) external {
+
+        push(time.getNow().toUint32(), balance, value);
+    }
+
+    function push(uint32 date, int balance, int value) public {
 
         deposits[msg.sender].push(
             Deposit(date, balance, value)
@@ -81,7 +88,7 @@ contract YieldTracker is ManagedContract {
         uint t1 = index < _deposits.length ?
             _deposits[index].date : time.getNow();
 
-        int v0 = int(_deposits[index - 1].value.add(_deposits[index - 1].balance));
+        int v0 = _deposits[index - 1].value.add(_deposits[index - 1].balance);
         int v1 = index < _deposits.length ? 
             int(_deposits[index].balance) :
             exchange.calcExpectedPayout(target).add(int(exchange.balanceOf(target)));

@@ -52,6 +52,11 @@ contract PoolTrader {
             feed, volume * volumeBase, optType, strike, maturity, address(this)
         );
     }
+
+    function withdrawFromPool() external {
+
+        pool.withdraw(IERC20(address(pool)).balanceOf(address(this)));
+    }
     
     function buyFromPool(string calldata symbol, uint price, uint volume)
         external

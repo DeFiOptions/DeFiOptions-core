@@ -26,6 +26,7 @@ contract Base {
 
     uint spread = 5e7; // 5%
     uint reserveRatio = 20e7; // 20%
+    uint withdrawFee = 3e7; // 3%
     uint fractionBase = 1e9;
 
     EthFeedMock feed;
@@ -72,6 +73,7 @@ contract Base {
         pool.setParameters(
             spread,
             reserveRatio,
+            withdrawFee,
             90 days
         );
 
