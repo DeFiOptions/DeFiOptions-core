@@ -99,7 +99,6 @@ contract ProtocolSettings is ManagedContract {
     function setCirculatingSupply(uint supply) external {
 
         ensureWritePrivilege();
-        require(supply <= govToken.totalSupply(), "invalid supply");
         require(supply > circulatingSupply, "cannot decrease supply");
         circulatingSupply = supply;
     }

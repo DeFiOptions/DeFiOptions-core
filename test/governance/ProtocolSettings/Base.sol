@@ -35,7 +35,8 @@ contract Base {
         beta = new ShareHolder();
         gama = new ShareHolder();
         
-        govToken.setInitialSupply(address(alpha), 1 ether);
+        govToken.setChildChainManager(address(this));
+        govToken.deposit(address(alpha), abi.encode(1 ether));
         
         settings.setOwner(address(this));
         settings.setCirculatingSupply(1 ether);

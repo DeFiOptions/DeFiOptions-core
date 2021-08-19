@@ -19,19 +19,23 @@ contract GovToken is ManagedContract, ERC20 {
     mapping(uint => Proposal) private proposalsMap;
     mapping(address => uint) private proposingDate;
 
+    address public childChainManagerProxy;
+
     string private constant _name = "Governance Token";
     string private constant _symbol = "GOVTK";
 
     uint private serial;
     uint[] private proposals;
 
-    constructor() ERC20(_name) public {
+    constructor(address _childChainManagerProxy) ERC20(_name) public {
 
+        childChainManagerProxy = _childChainManagerProxy;
     }
     
     function initialize(Deployer deployer) override internal {
 
         DOMAIN_SEPARATOR = ERC20(getImplementation()).DOMAIN_SEPARATOR();
+        childChainManagerProxy = GovToken(getImplementation()).childChainManagerProxy();
 
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
@@ -45,13 +49,31 @@ contract GovToken is ManagedContract, ERC20 {
     function symbol() override external view returns (string memory) {
         return _symbol;
     }
+    
+    function setChildChainManager(address _childChainManagerProxy) external {
 
-    function setInitialSupply(address owner, uint supply) public {
-        
-        require(_totalSupply == 0, "initial supply already set");
-        _totalSupply = supply;
-        balances[owner] = supply;
-        emitTransfer(address(0), owner, supply);
+        require(childChainManagerProxy == address(0), "childChainManagerProxy already set");
+        childChainManagerProxy = _childChainManagerProxy;
+    }
+
+    function deposit(
+        address user,
+        bytes calldata depositData
+    )
+        external
+    {
+        require(msg.sender == childChainManagerProxy, "You're not allowed to deposit");
+        uint256 amount = abi.decode(depositData, (uint256));
+        _totalSupply = _totalSupply.add(amount);
+        addBalance(user, amount);
+        emitTransfer(address(0), user, amount);
+    }
+
+    function withdraw(uint256 amount) external {
+
+        removeBalance(msg.sender, amount);
+        _totalSupply = _totalSupply.sub(amount);
+        emitTransfer(msg.sender, address(0), amount);
     }
 
     function registerProposal(address addr) public returns (uint id) {
