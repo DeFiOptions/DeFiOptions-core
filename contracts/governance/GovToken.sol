@@ -102,7 +102,7 @@ contract GovToken is ManagedContract, ERC20 {
 
     function calcShare(address owner, uint base) private view returns (uint) {
 
-        return balanceOf(owner).mul(base).div(_totalSupply);
+        return balanceOf(owner).mul(base).div(settings.getCirculatingSupply());
     }
 
     function emitTransfer(address from, address to, uint value) override internal {
