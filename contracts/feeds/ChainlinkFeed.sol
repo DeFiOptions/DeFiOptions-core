@@ -240,7 +240,7 @@ contract ChainlinkFeed is UnderlyingFeed {
 
             uint ts = _timestamps[i];
             int pc = _prices[i];
-            Sample memory s = Sample(ts.toUint32(), rescalePrice(pc));
+            Sample memory s = Sample(ts.toUint32(), pc.toInt128());
 
             if (ts.mod(1 days) == 0) {
                 dailyPrices[ts] = s;
