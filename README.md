@@ -356,9 +356,9 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x3DA6A3Ed1d13623d299273e49FA3A0A0CCEaD6E3](https://kovan.etherscan.io/address/0x3DA6A3Ed1d13623d299273e49FA3A0A0CCEaD6E3) |
-| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xe6db9d13848c795d6bd6c667a06708237fda4ce8](https://kovan.etherscan.io/address/0xe6db9d13848c795d6bd6c667a06708237fda4ce8) |
-| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xd14DDa7DdB47069f213EE12D779F276225B7Ba68](https://kovan.etherscan.io/address/0xd14DDa7DdB47069f213EE12D779F276225B7Ba68) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0xd23f05275b95a6bba81b55698d59df92569279d6](https://kovan.etherscan.io/address/0xd23f05275b95a6bba81b55698d59df92569279d6) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xcef16b2522adea82c5ac600b6f7d4dc00413b986](https://kovan.etherscan.io/address/0xcef16b2522adea82c5ac600b6f7d4dc00413b986) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0x71868a1082a7534da35695aafc866ff951e66438](https://kovan.etherscan.io/address/0x71868a1082a7534da35695aafc866ff951e66438) |
 | [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xdcA36DA00AeA3061606C2554A0A61bC1ff73BeB9](https://kovan.etherscan.io/address/0xdcA36DA00AeA3061606C2554A0A61bC1ff73BeB9) |
 | [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x937984F264EA5fdfaC34A02426d04675142d263B](https://kovan.etherscan.io/address/0x937984F264EA5fdfaC34A02426d04675142d263B) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
