@@ -50,8 +50,8 @@ abstract contract RedeemableToken is ERC20 {
         if (bal > 0) {
             uint b = 1e3;
             val = MoreMath.round(valTotal.mul(bal.mul(b)).div(supplyTotal), b);
-            exchange.transferBalance(owner, val);
             removeBalance(owner, bal);
+            exchange.transferBalance(owner, val);
         }
 
         afterRedeem(owner, bal, val);
