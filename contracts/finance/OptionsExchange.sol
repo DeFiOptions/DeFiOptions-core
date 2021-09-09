@@ -9,6 +9,7 @@ import "../interfaces/UnderlyingFeed.sol";
 import "../utils/Arrays.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeCast.sol";
+import "../utils/SafeERC20.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./CreditProvider.sol";
@@ -19,6 +20,7 @@ import "./UnderlyingVault.sol";
 contract OptionsExchange is ManagedContract {
 
     using SafeCast for uint;
+    using SafeERC20 for IERC20;
     using SafeMath for uint;
     using SignedSafeMath for int;
     
@@ -108,7 +110,7 @@ contract OptionsExchange is ManagedContract {
     function depositTokens(address to, address token, uint value) public {
 
         IERC20 t = IERC20(token);
-        t.transferFrom(msg.sender, address(creditProvider), value);
+        t.safeTransferFrom(msg.sender, address(creditProvider), value);
         creditProvider.addBalance(to, token, value);
     }
 

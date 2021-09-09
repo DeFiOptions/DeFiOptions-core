@@ -7,12 +7,14 @@ import "../interfaces/IUniswapV2Router01.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
 import "../utils/MoreMath.sol";
+import "../utils/SafeERC20.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./CreditProvider.sol";
 
 contract UnderlyingVault is ManagedContract {
 
+    using SafeERC20 for IERC20;
     using SafeMath for uint;
     using SignedSafeMath for int;
 
@@ -115,7 +117,7 @@ contract UnderlyingVault is ManagedContract {
         if (bal > 0) {
             address underlying = UnderlyingFeed(feed).getUnderlyingAddr();
             allocation[owner][token] = bal.sub(value);
-            IERC20(underlying).transfer(owner, value);
+            IERC20(underlying).safeTransfer(owner, value);
             emit Release(owner, token, value);
         }
     }
@@ -143,7 +145,7 @@ contract UnderlyingVault is ManagedContract {
         }
 
         (uint r, uint b) = settings.getTokenRate(path[1]);
-        IERC20(path[0]).approve(address(router), amountInMax);
+        IERC20(path[0]).safeApprove(address(router), amountInMax);
 
         _out = amountOut;
         _in = router.swapTokensForExactTokens(
