@@ -8,11 +8,13 @@ library MoreMath {
     using SafeMath for uint;
     using SignedSafeMath for int;
 
+    // rounds "v" considering a base "b"
     function round(uint v, uint b) internal pure returns (uint) {
 
         return v.div(b).add((v % b) >= b.div(2) ? 1 : 0);
     }
 
+    // calculates {[(n/d)^e]*f}
     function powAndMultiply(uint n, uint d, uint e, uint f) internal pure returns (uint) {
         
         if (e == 0) {
@@ -29,6 +31,7 @@ library MoreMath {
         }
     }
 
+    // calculates (n^e)
     function pow(uint n, uint e) internal pure returns (uint) {
         
         if (e == 0) {
@@ -45,6 +48,7 @@ library MoreMath {
         }
     }
 
+    // calculates {n^(e/b)}
     function powDecimal(uint n, uint e, uint b) internal pure returns (uint v) {
         
         if (e == 0) {
@@ -70,6 +74,7 @@ library MoreMath {
         }
     }
     
+    // calculates ceil(n/d)
     function divCeil(uint n, uint d) internal pure returns (uint v) {
         
         v = n.div(d);
@@ -78,14 +83,16 @@ library MoreMath {
         }
     }
     
+    // calculates the square root of "x" and multiplies it by "f"
     function sqrtAndMultiply(uint x, uint f) internal pure returns (uint y) {
     
         y = sqrt(x.mul(1e18)).mul(f).div(1e9);
     }
     
+    // calculates the square root of "x"
     function sqrt(uint x) internal pure returns (uint y) {
     
-        uint z = (x.add(1)).div(2);
+        uint z = (x.div(2)).add(1);
         y = x;
         while (z < y) {
             y = z;
@@ -93,6 +100,7 @@ library MoreMath {
         }
     }
 
+    // calculates the standard deviation
     function std(int[] memory array) internal pure returns (uint _std) {
 
         int avg = sum(array).div(int(array.length));
