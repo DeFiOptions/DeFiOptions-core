@@ -39,6 +39,8 @@ contract Deployer {
     }
 
     function setContractAddress(string memory key, address addr, bool upgradeable) public {
+        
+        require(!hasKey(key), buildKeyAlreadySetMessage(key));
 
         ensureNotDeployed();
         ensureCaller();
@@ -122,6 +124,11 @@ contract Deployer {
     function ensureCaller() private view {
 
         require(owner == address(0) || msg.sender == owner, "unallowed caller");
+    }
+
+    function buildKeyAlreadySetMessage(string memory key) private pure returns(string memory) {
+
+        return string(abi.encodePacked("key already set: ", key));
     }
 
     function buildAddressNotSetMessage(string memory key) private pure returns(string memory) {

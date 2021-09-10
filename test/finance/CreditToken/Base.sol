@@ -31,7 +31,9 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
-        deployer.setContractAddress("CreditIssuer", address(new CreditHolder()));
+        if (!deployer.hasKey("CreditIssuer")) {
+            deployer.setContractAddress("CreditIssuer", address(new CreditHolder()));
+        }
         deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
