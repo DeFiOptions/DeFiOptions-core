@@ -43,6 +43,19 @@ contract ProtocolSettings is ManagedContract {
     Rate private swapTolerance;
 
     uint private MAX_UINT;
+
+    event SetCirculatingSupply(address sender, uint supply);
+    event SetTokenRate(address sender, address token, uint v, uint b);
+    event SetAllowedToken(address proposal, address token, uint v, uint b);
+    event SetMinShareForProposal(address sender, uint s, uint b);
+    event SetDebtInterestRate(address sender, uint i, uint b);
+    event SetCreditInterestRate(address sender, uint i, uint b);
+    event SetProcessingFee(address sender, uint f, uint b);
+    event SetUdlFeed(address sender, address addr, int v);
+    event SetVolatilityPeriod(address sender, uint _volatilityPeriod);
+    event SetSwapRouterInfo(address sender, address router, address token);
+    event SetSwapRouterTolerance(address sender, uint r, uint b);
+    event SetSwapPath(address sender, address from, address to);
     
     function initialize(Deployer deployer) override internal {
 
@@ -87,7 +100,7 @@ contract ProtocolSettings is ManagedContract {
 
     function setOwner(address _owner) external {
 
-        require(msg.sender == owner || owner == address(0));
+        require(msg.sender == owner || owner == address(0), "unallowed");
         owner = _owner;
     }
 
@@ -98,9 +111,11 @@ contract ProtocolSettings is ManagedContract {
 
     function setCirculatingSupply(uint supply) external {
 
-        ensureWritePrivilege();
         require(supply > circulatingSupply, "cannot decrease supply");
+        ensureWritePrivilege();
         circulatingSupply = supply;
+
+        emit SetCirculatingSupply(msg.sender, supply);
     }
 
     function getTokenRate(address token) external view returns (uint v, uint b) {
@@ -111,8 +126,11 @@ contract ProtocolSettings is ManagedContract {
 
     function setTokenRate(address token, uint v, uint b) external {
 
+        require(v != 0 && b != 0, "invalid parameters");
         ensureWritePrivilege();
         tokenRates[token] = Rate(v, b, MAX_UINT);
+
+        emit SetTokenRate(msg.sender, token, v, b);
     }
 
     function getAllowedTokens() external view returns (address[] memory) {
@@ -122,12 +140,16 @@ contract ProtocolSettings is ManagedContract {
 
     function setAllowedToken(address token, uint v, uint b) external {
 
+        require(token != address(0), "invalid token address");
+        require(v != 0 && b != 0, "invalid parameters");
         ensureWritePrivilege();
         if (tokenRates[token].value != 0) {
             Arrays.removeItem(tokens, token);
         }
         tokens.push(token);
         tokenRates[token] = Rate(v, b, MAX_UINT);
+
+        emit SetAllowedToken(msg.sender, token, v, b);
     }
 
     function getMinShareForProposal() external view returns (uint v, uint b) {
@@ -138,8 +160,12 @@ contract ProtocolSettings is ManagedContract {
 
     function setMinShareForProposal(uint s, uint b) external {
         
+        require(b / s <= 100, "minimum share too low");
+        validateFractionLTEOne(s, b);
         ensureWritePrivilege();
         minShareForProposal = Rate(s, b, MAX_UINT);
+
+        emit SetMinShareForProposal(msg.sender, s, b);
     }
 
     function getDebtInterestRate() external view returns (uint v, uint b, uint d) {
@@ -158,9 +184,12 @@ contract ProtocolSettings is ManagedContract {
 
     function setDebtInterestRate(uint i, uint b) external {
         
+        validateFractionGTEOne(i, b);
         ensureWritePrivilege();
         debtInterestRates[debtInterestRates.length - 1].date = time.getNow();
         debtInterestRates.push(Rate(i, b, MAX_UINT));
+
+        emit SetDebtInterestRate(msg.sender, i, b);
     }
 
     function getCreditInterestRate() external view returns (uint v, uint b, uint d) {
@@ -187,9 +216,12 @@ contract ProtocolSettings is ManagedContract {
 
     function setCreditInterestRate(uint i, uint b) external {
         
+        validateFractionGTEOne(i, b);
         ensureWritePrivilege();
         creditInterestRates[creditInterestRates.length - 1].date = time.getNow();
         creditInterestRates.push(Rate(i, b, MAX_UINT));
+
+        emit SetCreditInterestRate(msg.sender, i, b);
     }
 
     function getProcessingFee() external view returns (uint v, uint b) {
@@ -200,8 +232,11 @@ contract ProtocolSettings is ManagedContract {
 
     function setProcessingFee(uint f, uint b) external {
         
+        validateFractionLTEOne(f, b);
         ensureWritePrivilege();
         processingFee = Rate(f, b, MAX_UINT);
+
+        emit SetProcessingFee(msg.sender, f, b);
     }
 
     function getUdlFeed(address addr) external view returns (int) {
@@ -211,14 +246,23 @@ contract ProtocolSettings is ManagedContract {
 
     function setUdlFeed(address addr, int v) external {
 
+        require(addr != address(0), "invalid feed address");
         ensureWritePrivilege();
         underlyingFeeds[addr] = v;
+
+        emit SetUdlFeed(msg.sender, addr, v);
     }
 
     function setVolatilityPeriod(uint _volatilityPeriod) external {
 
+        require(
+            _volatilityPeriod > 30 days && _volatilityPeriod < 720 days,
+            "invalid volatility period"
+        );
         ensureWritePrivilege();
         volatilityPeriod = _volatilityPeriod;
+
+        emit SetVolatilityPeriod(msg.sender, _volatilityPeriod);
     }
 
     function getVolatilityPeriod() external view returns(uint) {
@@ -228,9 +272,12 @@ contract ProtocolSettings is ManagedContract {
 
     function setSwapRouterInfo(address router, address token) external {
         
+        require(router != address(0), "invalid router address");
         ensureWritePrivilege();
         swapRouter = router;
         swapToken = token;
+
+        emit SetSwapRouterInfo(msg.sender, router, token);
     }
 
     function getSwapRouterInfo() external view returns (address router, address token) {
@@ -240,9 +287,12 @@ contract ProtocolSettings is ManagedContract {
     }
 
     function setSwapRouterTolerance(uint r, uint b) external {
-        
+
+        validateFractionGTEOne(r, b);
         ensureWritePrivilege();
         swapTolerance = Rate(r, b, MAX_UINT);
+
+        emit SetSwapRouterTolerance(msg.sender, r, b);
     }
 
     function getSwapRouterTolerance() external view returns (uint r, uint b) {
@@ -253,8 +303,13 @@ contract ProtocolSettings is ManagedContract {
 
     function setSwapPath(address from, address to, address[] calldata path) external {
 
+        require(from != address(0), "invalid 'from' address");
+        require(to != address(0), "invalid 'to' address");
+        require(path.length >= 2, "invalid swap path");
         ensureWritePrivilege();
         paths[from][to] = path;
+
+        emit SetSwapPath(msg.sender, from, to);
     }
 
     function getSwapPath(address from, address to) external view returns (address[] memory path) {
@@ -302,5 +357,15 @@ contract ProtocolSettings is ManagedContract {
             require(govToken.isRegisteredProposal(msg.sender), "proposal not registered");
             require(p.isExecutionAllowed(), "execution not allowed");
         }
+    }
+
+    function validateFractionLTEOne(uint n, uint d) private pure {
+
+        require(d > 0 && d >= n, "fraction should be less then or equal to one");
+    }
+
+    function validateFractionGTEOne(uint n, uint d) private pure {
+
+        require(d > 0 && n >= d, "fraction should be greater than or equal to one");
     }
 }
