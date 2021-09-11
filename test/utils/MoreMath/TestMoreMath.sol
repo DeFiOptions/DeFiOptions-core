@@ -27,6 +27,7 @@ contract TestMoreMath {
     function testPowDecimal() public {
         
         uint b = 1e9;
+        Assert.equal(MoreMath.powDecimal(2e9, 15e8, b), 2823125404, "pow 2^1.50");
         Assert.equal(MoreMath.powDecimal(2e9, 50e7, b), 1411562702, "pow 2^0.50");
         Assert.equal(MoreMath.powDecimal(2e9, 77e7, b), 1703641918, "pow 2^0.77");
         Assert.equal(MoreMath.powDecimal(2e9, 30e7, b), 1229973362, "pow 2^0.30");
