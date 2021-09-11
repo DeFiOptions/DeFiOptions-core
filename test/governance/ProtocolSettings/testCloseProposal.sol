@@ -66,7 +66,7 @@ contract TestCloseProposal is Base {
         beta.castVote(p, false);
         gama.castVote(p, false);
 
-        gama.transfer(address(alpha), 10 finney); // 10%
+        gama.transfer(address(alpha), 10 finney); // 1%
 
         (uint ir1, uint b1,) = settings.getDebtInterestRate();
 
