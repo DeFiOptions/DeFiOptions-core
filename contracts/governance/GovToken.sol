@@ -18,6 +18,8 @@ contract GovToken is ManagedContract, ERC20 {
 
     mapping(uint => Proposal) private proposalsMap;
     mapping(address => uint) private proposingDate;
+    
+    mapping(address => uint) private transferBlock;
 
     mapping(address => address) private delegation;
     mapping(address => uint) private delegated;
@@ -29,7 +31,6 @@ contract GovToken is ManagedContract, ERC20 {
     
     uint private serial;
     uint[] private proposals;
-    address private lastTransferTxOrigin;
 
     event DelegateTo(
         address indexed owner,
@@ -105,7 +106,7 @@ contract GovToken is ManagedContract, ERC20 {
 
         require(
             (settings.allowHotVoting() && !supressHotVoting) || // for unit testing purposes only
-            lastTransferTxOrigin != tx.origin,
+            transferBlock[tx.origin] != block.number,
             "delegation not allowed"
         );
 
@@ -152,7 +153,7 @@ contract GovToken is ManagedContract, ERC20 {
 
     function emitTransfer(address from, address to, uint value) override internal {
 
-        lastTransferTxOrigin = tx.origin;
+        transferBlock[tx.origin] = block.number;
 
         address fromDelegate = delegation[from];
         address toDelegate = delegation[to];
