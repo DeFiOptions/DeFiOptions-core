@@ -133,6 +133,8 @@ contract UnderlyingVault is ManagedContract {
         private
         returns (uint _in, uint _out)
     {
+        require(path.length >= 2, "invalid swap path");
+        
         uint amountInMax = getAmountInMax(
             price,
             amountOut,
@@ -144,7 +146,7 @@ contract UnderlyingVault is ManagedContract {
             amountInMax = balance;
         }
 
-        (uint r, uint b) = settings.getTokenRate(path[1]);
+        (uint r, uint b) = settings.getTokenRate(path[path.length - 1]);
         IERC20(path[0]).safeApprove(address(router), amountInMax);
 
         _out = amountOut;
@@ -157,7 +159,7 @@ contract UnderlyingVault is ManagedContract {
         )[0];
 
         if (amountOut > 0) {
-            creditProvider.addBalance(owner, path[1], amountOut.mul(r).div(b));
+            creditProvider.addBalance(owner, path[path.length - 1], amountOut.mul(r).div(b));
         }
     }
 
