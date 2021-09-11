@@ -28,13 +28,14 @@ module.exports = async function(deployer) {
     await deployer.deploy(UnderlyingToken, 18);
     await deployer.deploy(UnderlyingFeed);
     await deployer.deploy(SwapRouter);
+    await deployer.deploy(ProtocolSettings, true);
   } else {
     await deployer.deploy(Deployer, "0x16ceF4db1a82ce9D46A0B294d6290D47f5f3A669");
     await deployer.deploy(BlockTimeProvider);
     await deployer.deploy(GovToken, "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa");
+    await deployer.deploy(ProtocolSettings, false);
   }
 
-  await deployer.deploy(ProtocolSettings);
   await deployer.deploy(CreditToken);
   await deployer.deploy(UnderlyingVault);
   await deployer.deploy(CreditProvider);

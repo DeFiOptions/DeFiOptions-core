@@ -6,7 +6,7 @@ import "./Base.sol";
 
 contract TestCastVote is Base {
 
-    function testCastVoteForApproval() public {
+    function TestCastVoteForApproval() public {
         
         ChangeInterestRateProposal p = createProposal(10 days);
         

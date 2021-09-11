@@ -30,13 +30,15 @@ contract ProtocolSettings is ManagedContract {
 
     address private owner;
     address[] private tokens;
-    Rate private minShareForProposal;
+
     Rate[] private debtInterestRates;
     Rate[] private creditInterestRates;
     Rate private processingFee;
-
-    uint private circulatingSupply;
     uint private volatilityPeriod;
+
+    bool private hotVoting;
+    Rate private minShareForProposal;
+    uint private circulatingSupply;
 
     address private swapRouter;
     address private swapToken;
@@ -57,6 +59,11 @@ contract ProtocolSettings is ManagedContract {
     event SetSwapRouterTolerance(address sender, uint r, uint b);
     event SetSwapPath(address sender, address from, address to);
     
+    constructor(bool _hotVoting) public {
+        
+        hotVoting = _hotVoting;
+    }
+    
     function initialize(Deployer deployer) override internal {
 
         owner = deployer.getOwner();
@@ -65,6 +72,8 @@ contract ProtocolSettings is ManagedContract {
         govToken = GovToken(deployer.getPayableContractAddress("GovToken"));
 
         MAX_UINT = uint(-1);
+
+        hotVoting = ProtocolSettings(getImplementation()).allowHotVoting();
 
         minShareForProposal = Rate( // 1%
             100,
@@ -150,6 +159,12 @@ contract ProtocolSettings is ManagedContract {
         tokenRates[token] = Rate(v, b, MAX_UINT);
 
         emit SetAllowedToken(msg.sender, token, v, b);
+    }
+
+    function allowHotVoting() external view returns (bool) {
+
+        // IMPORTANT: hot voting should be set to 'false' for mainnet deployment
+        return hotVoting;
     }
 
     function getMinShareForProposal() external view returns (uint v, uint b) {

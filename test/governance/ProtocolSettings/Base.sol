@@ -30,23 +30,23 @@ contract Base {
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         govToken = GovToken(deployer.getPayableContractAddress("GovToken"));
-
-        alpha = new ShareHolder();
-        beta = new ShareHolder();
-        gama = new ShareHolder();
-        
-        govToken.setChildChainManager(address(this));
-        govToken.deposit(address(alpha), abi.encode(1 ether));
         
         settings.setOwner(address(this));
         settings.setCirculatingSupply(1 ether);
+        govToken.setChildChainManager(address(this));
+
+        alpha = new ShareHolder(address(govToken));
+        beta = new ShareHolder(address(govToken));
+        gama = new ShareHolder(address(govToken));
         
-        alpha.setGovToken(address(govToken));
-        beta.setGovToken(address(govToken));
-        gama.setGovToken(address(govToken));
+        govToken.deposit(address(alpha), abi.encode(1 ether));
+        alpha.delegateTo(address(alpha));
 
         alpha.transfer(address(beta),  99 finney); //  9.9%
+        beta.delegateTo(address(beta));
+
         alpha.transfer(address(gama), 410 finney); // 41.0%
+        gama.delegateTo(address(gama));
 
         time.setTimeOffset(0);
     }

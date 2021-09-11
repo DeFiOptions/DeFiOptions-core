@@ -73,8 +73,8 @@ abstract contract Proposal {
 
     function open(uint _id) public {
 
-        require(msg.sender == address(govToken));
-        require(status == Status.PENDING);
+        require(msg.sender == address(govToken), "invalid sender");
+        require(status == Status.PENDING, "invalid status");
         id = _id;
         status = Status.OPEN;
     }
@@ -82,9 +82,9 @@ abstract contract Proposal {
     function castVote(bool support) public {
         
         ensureIsActive();
-        require(votes[msg.sender] == 0);
+        require(votes[msg.sender] == 0, "already voted");
         
-        uint balance = govToken.balanceOf(msg.sender);
+        uint balance = govToken.delegateBalanceOf(msg.sender);
         require(balance > 0);
 
         if (support) {
@@ -114,7 +114,7 @@ abstract contract Proposal {
         } else if (quorum == Proposal.Quorum.TWO_THIRDS) {
             v = total.mul(2).div(3);
         } else {
-            revert();
+            revert("quorum not set");
         }
 
         if (yea > v) {
@@ -133,16 +133,19 @@ abstract contract Proposal {
 
     function ensureIsActive() private view {
 
-        require(!closed);
-        require(status == Status.OPEN);
-        require(expiresAt > time.getNow());
+        require(
+            !closed &&
+            status == Status.OPEN &&
+            expiresAt > time.getNow(),
+            "proposal not active"
+        );
     }
 
     function update(address voter, int diff) private {
-
+        
         if (votes[voter] != 0) {
             ensureIsActive();
-            require(msg.sender == address(govToken));
+            require(msg.sender == address(govToken), "invalid sender");
 
             uint _diff = MoreMath.abs(diff);
             uint oldBalance = MoreMath.abs(votes[voter]);

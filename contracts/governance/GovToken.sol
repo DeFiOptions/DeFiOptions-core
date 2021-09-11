@@ -19,13 +19,24 @@ contract GovToken is ManagedContract, ERC20 {
     mapping(uint => Proposal) private proposalsMap;
     mapping(address => uint) private proposingDate;
 
+    mapping(address => address) private delegation;
+    mapping(address => uint) private delegated;
+
     address public childChainManagerProxy;
 
     string private constant _name = "Governance Token";
     string private constant _symbol = "GOVTK";
-
+    
     uint private serial;
     uint[] private proposals;
+    address private lastTransferTxOrigin;
+
+    event DelegateTo(
+        address indexed owner,
+        address indexed oldDelegate,
+        address indexed newDelegate,
+        uint bal
+    );
 
     constructor(address _childChainManagerProxy) ERC20(_name) public {
 
@@ -76,6 +87,40 @@ contract GovToken is ManagedContract, ERC20 {
         emitTransfer(msg.sender, address(0), amount);
     }
 
+    function delegateBalanceOf(address delegate) external view returns (uint) {
+
+        return delegated[delegate];
+    }
+
+    function delegateTo(address newDelegate) external {
+
+        delegateTo(newDelegate, false);
+    }
+
+    function delegateTo(address newDelegate, bool supressHotVoting) public {
+
+        address oldDelegate = delegation[msg.sender];
+
+        require(newDelegate != address(0), "invalid delegate address");
+
+        require(
+            (settings.allowHotVoting() && !supressHotVoting) || // for unit testing purposes only
+            lastTransferTxOrigin != tx.origin,
+            "delegation not allowed"
+        );
+
+        uint bal = balanceOf(msg.sender);
+
+        if (oldDelegate != address(0)) {
+            delegated[oldDelegate] = delegated[oldDelegate].sub(bal);
+        }
+
+        delegated[newDelegate] = delegated[newDelegate].add(bal);
+        delegation[msg.sender] = newDelegate;
+
+        emit DelegateTo(msg.sender, oldDelegate, newDelegate, bal);
+    }
+
     function registerProposal(address addr) public returns (uint id) {
         
         require(
@@ -85,7 +130,7 @@ contract GovToken is ManagedContract, ERC20 {
 
         Proposal p = Proposal(addr);
         (uint v, uint b) = settings.getMinShareForProposal();
-        require(calcShare(msg.sender, b) >= v);
+        require(calcShare(msg.sender, b) >= v, "insufficient share");
 
         id = serial++;
         p.open(id);
@@ -102,10 +147,15 @@ contract GovToken is ManagedContract, ERC20 {
 
     function calcShare(address owner, uint base) private view returns (uint) {
 
-        return balanceOf(owner).mul(base).div(settings.getCirculatingSupply());
+        return delegated[owner].mul(base).div(settings.getCirculatingSupply());
     }
 
     function emitTransfer(address from, address to, uint value) override internal {
+
+        lastTransferTxOrigin = tx.origin;
+
+        address fromDelegate = delegation[from];
+        address toDelegate = delegation[to];
 
         for (uint i = 0; i < proposals.length; i++) {
             uint id = proposals[i];
@@ -114,8 +164,16 @@ contract GovToken is ManagedContract, ERC20 {
                 Arrays.removeAtIndex(proposals, i);
                 i--;
             } else {
-                p.update(from, to, value);
+                p.update(fromDelegate, toDelegate, value);
             }
+        }
+
+        if (fromDelegate != address(0)) {
+            delegated[fromDelegate] = delegated[fromDelegate].sub(value);
+        }
+
+        if (toDelegate != address(0)) {
+            delegated[toDelegate] = delegated[toDelegate].add(value);
         }
 
         emit Transfer(from, to, value);
