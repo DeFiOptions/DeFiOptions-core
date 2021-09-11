@@ -238,9 +238,13 @@ contract ChainlinkFeed is UnderlyingFeed {
 
         require(_timestamps.length == _prices.length, "length mismatch");
 
+        uint lastTimestamp = 0;
         for (uint i = 0; i < _timestamps.length; i++) {
 
             uint ts = _timestamps[i];
+            require(ts > lastTimestamp, "ascending order required");
+            lastTimestamp = ts;
+
             int pc = _prices[i];
             Sample memory s = Sample(ts.toUint32(), pc.toInt128());
 
