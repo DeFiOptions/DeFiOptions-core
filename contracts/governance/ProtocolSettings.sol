@@ -176,7 +176,7 @@ contract ProtocolSettings is ManagedContract {
         b = minShareForProposal.base;
     }
 
-    function setminShareForProposal(uint s, uint b) external {
+    function setMinShareForProposal(uint s, uint b) external {
         
         require(b / s <= 100, "minimum share too low");
         validateFractionLTEOne(s, b);
