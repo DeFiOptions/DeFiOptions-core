@@ -10,13 +10,13 @@ contract TestRegisterProposal is Base {
         Proposal p = createProposal();
 
         Assert.isFalse(
-            govToken.isRegisteredProposal(address(p)), "proposal not registered"
+            manager.isRegisteredProposal(address(p)), "proposal not registered"
         );
         
         (,ProposalWrapper w) = alpha.registerProposal(p, SIMPLE_MAJORITY, now + 10 days);
 
         Assert.isTrue(
-            govToken.isRegisteredProposal(address(p)), "proposal registered"
+            manager.isRegisteredProposal(address(p)), "proposal registered"
         );
 
         Assert.isTrue(w.getId() > 0, "p ID");

@@ -7,9 +7,9 @@ contract TestDelegate is Base {
 
     function testDelegateBalance() public {
         
-        ShareHolder s1 = new ShareHolder(address(govToken));
-        ShareHolder s2 = new ShareHolder(address(govToken));
-        ShareHolder s3 = new ShareHolder(address(govToken));
+        ShareHolder s1 = new ShareHolder(address(govToken), address(manager));
+        ShareHolder s2 = new ShareHolder(address(govToken), address(manager));
+        ShareHolder s3 = new ShareHolder(address(govToken), address(manager));
         
         govToken.deposit(address(s1), abi.encode(1 ether));
         s1.delegateTo(address(s3));
@@ -40,8 +40,8 @@ contract TestDelegate is Base {
 
     function testDelegateSupressingHotVoting() public {
         
-        ShareHolder s1 = new ShareHolder(address(govToken));
-        ShareHolder s2 = new ShareHolder(address(govToken));
+        ShareHolder s1 = new ShareHolder(address(govToken), address(manager));
+        ShareHolder s2 = new ShareHolder(address(govToken), address(manager));
         
         govToken.deposit(address(s1), abi.encode(1 ether));
         bytes4 sig = bytes4(keccak256(bytes("delegateTo(address,bool)")));

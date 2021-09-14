@@ -5,6 +5,7 @@ import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "./GovToken.sol";
 import "./Proposal.sol";
+import "./ProposalsManager.sol";
 import "./ProtocolSettings.sol";
 
 contract ProposalWrapper {
@@ -17,6 +18,7 @@ contract ProposalWrapper {
 
     TimeProvider private time;
     GovToken private govToken;
+    ProposalsManager private manager;
     ProtocolSettings private settings;
 
     mapping(address => int) private votes;
@@ -35,6 +37,7 @@ contract ProposalWrapper {
         address _implementation,
         address _time,
         address _govToken,
+        address _manager,
         address _settings,
         Quorum _quorum,
         uint _expiresAt
@@ -44,6 +47,7 @@ contract ProposalWrapper {
         implementation = _implementation;
         time = TimeProvider(_time);
         govToken = GovToken(_govToken);
+        manager = ProposalsManager(_manager);
         settings = ProtocolSettings(_settings);
         quorum = _quorum;
         status = Status.PENDING;
@@ -78,7 +82,7 @@ contract ProposalWrapper {
 
     function open(uint _id) public {
 
-        require(msg.sender == address(govToken), "invalid sender");
+        require(msg.sender == address(manager), "invalid sender");
         require(status == Status.PENDING, "invalid status");
         id = _id;
         status = Status.OPEN;
@@ -148,7 +152,7 @@ contract ProposalWrapper {
         
         if (votes[voter] != 0) {
             ensureIsActive();
-            require(msg.sender == address(govToken), "invalid sender");
+            require(msg.sender == address(manager), "invalid sender");
 
             uint _diff = MoreMath.abs(diff);
             uint oldBalance = MoreMath.abs(votes[voter]);

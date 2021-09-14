@@ -4,6 +4,7 @@ const Deployer = artifacts.require("Deployer");
 const BlockTimeProvider = artifacts.require("BlockTimeProvider");
 const TimeProviderMock = artifacts.require("TimeProviderMock");
 const ProtocolSettings = artifacts.require("ProtocolSettings");
+const ProposalsManager = artifacts.require("ProposalsManager");
 const GovToken = artifacts.require("GovToken");
 const CreditToken = artifacts.require("CreditToken");
 const UnderlyingVault = artifacts.require("UnderlyingVault");
@@ -36,6 +37,7 @@ module.exports = async function(deployer) {
     await deployer.deploy(ProtocolSettings, false);
   }
 
+  await deployer.deploy(ProposalsManager);
   await deployer.deploy(CreditToken);
   await deployer.deploy(UnderlyingVault);
   await deployer.deploy(CreditProvider);
@@ -63,6 +65,7 @@ module.exports = async function(deployer) {
   }
   
   d.setContractAddress("ProtocolSettings", ProtocolSettings.address);
+  d.setContractAddress("ProposalsManager", ProposalsManager.address);
   d.setContractAddress("GovToken", GovToken.address);
   d.setContractAddress("CreditToken", CreditToken.address);
   d.setContractAddress("UnderlyingVault", UnderlyingVault.address);

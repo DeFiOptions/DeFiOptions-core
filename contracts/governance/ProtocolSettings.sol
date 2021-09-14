@@ -8,6 +8,7 @@ import "../utils/Arrays.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "./GovToken.sol";
+import "./ProposalsManager.sol";
 import "./ProposalWrapper.sol";
 
 contract ProtocolSettings is ManagedContract {
@@ -22,6 +23,7 @@ contract ProtocolSettings is ManagedContract {
 
     TimeProvider private time;
     CreditProvider private creditProvider;
+    ProposalsManager private manager;
     GovToken private govToken;
 
     mapping(address => int) private underlyingFeeds;
@@ -67,9 +69,10 @@ contract ProtocolSettings is ManagedContract {
     function initialize(Deployer deployer) override internal {
 
         owner = deployer.getOwner();
-        time = TimeProvider(deployer.getPayableContractAddress("TimeProvider"));
-        creditProvider = CreditProvider(deployer.getPayableContractAddress("CreditProvider"));
-        govToken = GovToken(deployer.getPayableContractAddress("GovToken"));
+        time = TimeProvider(deployer.getContractAddress("TimeProvider"));
+        creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
+        manager = ProposalsManager(deployer.getContractAddress("ProposalsManager"));
+        govToken = GovToken(deployer.getContractAddress("GovToken"));
 
         MAX_UINT = uint(-1);
 
@@ -369,8 +372,8 @@ contract ProtocolSettings is ManagedContract {
 
         if (msg.sender != owner) {
 
-            ProposalWrapper w = ProposalWrapper(govToken.resolve(msg.sender));
-            require(govToken.isRegisteredProposal(msg.sender), "proposal not registered");
+            ProposalWrapper w = ProposalWrapper(manager.resolve(msg.sender));
+            require(manager.isRegisteredProposal(msg.sender), "proposal not registered");
             require(w.isExecutionAllowed(), "execution not allowed");
         }
     }

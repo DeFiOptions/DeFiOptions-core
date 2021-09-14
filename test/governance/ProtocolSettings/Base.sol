@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
+import "../../../contracts/governance/ProposalsManager.sol";
 import "../../../contracts/governance/ProposalWrapper.sol";
 import "../../../contracts/governance/ProtocolSettings.sol";
 import "../../../contracts/governance/GovToken.sol";
@@ -17,6 +18,7 @@ contract Base {
     
     TimeProviderMock time;
     ProtocolSettings settings;
+    ProposalsManager manager;
     GovToken govToken;
     
     ShareHolder alpha;
@@ -32,15 +34,16 @@ contract Base {
         deployer.deploy();
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
-        govToken = GovToken(deployer.getPayableContractAddress("GovToken"));
+        manager = ProposalsManager(deployer.getContractAddress("ProposalsManager"));
+        govToken = GovToken(deployer.getContractAddress("GovToken"));
         
         settings.setOwner(address(this));
         settings.setCirculatingSupply(1 ether);
         govToken.setChildChainManager(address(this));
 
-        alpha = new ShareHolder(address(govToken));
-        beta = new ShareHolder(address(govToken));
-        gama = new ShareHolder(address(govToken));
+        alpha = new ShareHolder(address(govToken), address(manager));
+        beta = new ShareHolder(address(govToken), address(manager));
+        gama = new ShareHolder(address(govToken), address(manager));
         
         govToken.deposit(address(alpha), abi.encode(1 ether));
         alpha.delegateTo(address(alpha));
