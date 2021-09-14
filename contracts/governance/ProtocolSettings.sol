@@ -8,7 +8,7 @@ import "../utils/Arrays.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeMath.sol";
 import "./GovToken.sol";
-import "./Proposal.sol";
+import "./ProposalWrapper.sol";
 
 contract ProtocolSettings is ManagedContract {
 
@@ -48,7 +48,7 @@ contract ProtocolSettings is ManagedContract {
 
     event SetCirculatingSupply(address sender, uint supply);
     event SetTokenRate(address sender, address token, uint v, uint b);
-    event SetAllowedToken(address proposal, address token, uint v, uint b);
+    event SetAllowedToken(address sender, address token, uint v, uint b);
     event SetMinShareForProposal(address sender, uint s, uint b);
     event SetDebtInterestRate(address sender, uint i, uint b);
     event SetCreditInterestRate(address sender, uint i, uint b);
@@ -173,7 +173,7 @@ contract ProtocolSettings is ManagedContract {
         b = minShareForProposal.base;
     }
 
-    function setMinShareForProposal(uint s, uint b) external {
+    function setminShareForProposal(uint s, uint b) external {
         
         require(b / s <= 100, "minimum share too low");
         validateFractionLTEOne(s, b);
@@ -368,9 +368,10 @@ contract ProtocolSettings is ManagedContract {
     function ensureWritePrivilege() private view {
 
         if (msg.sender != owner) {
-            Proposal p = Proposal(msg.sender);
+
+            ProposalWrapper w = ProposalWrapper(govToken.resolve(msg.sender));
             require(govToken.isRegisteredProposal(msg.sender), "proposal not registered");
-            require(p.isExecutionAllowed(), "execution not allowed");
+            require(w.isExecutionAllowed(), "execution not allowed");
         }
     }
 

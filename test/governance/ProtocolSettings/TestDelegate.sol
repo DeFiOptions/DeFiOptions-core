@@ -1,7 +1,6 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "../../common/samples/ChangeInterestRateProposal.sol";
 import "./Base.sol";
 
 contract TestDelegate is Base {

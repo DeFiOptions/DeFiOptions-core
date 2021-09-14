@@ -8,17 +8,17 @@ contract TestCloseProposal is Base {
 
     function testCloseProposalBeforeQuorum() public {
         
-        ChangeInterestRateProposal p = createProposal(10 days);
+        ChangeInterestRateProposal p = createProposal();
         
         uint newInterestRate     = 10000000098765432;
         uint newInterestRateBase = 10000000000000001;
         p.setInterestRate(newInterestRate, newInterestRateBase);
 
-        alpha.registerProposal(p);
+        (,ProposalWrapper w) = alpha.registerProposal(p, SIMPLE_MAJORITY, now + 10 days);
             
-        (bool success,) = address(p).call(
+        (bool success,) = address(w).call(
             abi.encodePacked(
-                p.close.selector
+                w.close.selector
             )
         );
         
@@ -27,25 +27,25 @@ contract TestCloseProposal is Base {
 
     function testCloseProposalThenTransferSmallAmountOfGovTokens() public {
         
-        ChangeInterestRateProposal p = createProposal(10 days);
+        ChangeInterestRateProposal p = createProposal();
         
         uint newInterestRate     = 10000000012345678;
         uint newInterestRateBase = 10000000000000004;
         p.setInterestRate(newInterestRate, newInterestRateBase);
 
-        alpha.registerProposal(p);
+        (,ProposalWrapper w) = alpha.registerProposal(p, SIMPLE_MAJORITY, now + 10 days);
 
-        alpha.castVote(p, true);
-        beta.castVote(p, false);
-        gama.castVote(p, false);
+        alpha.castVote(w, true);
+        beta.castVote(w, false);
+        gama.castVote(w, false);
 
         gama.transfer(address(alpha), 5 finney); // 0.5%
 
         (uint ir1, uint b1,) = settings.getDebtInterestRate();
 
-        p.close();
+        w.close();
         
-        Assert.isTrue(p.getStatus() == Proposal.Status.REJECTED, "proposal REJECTED");
+        Assert.isTrue(w.getStatus() == ProposalWrapper.Status.REJECTED, "proposal REJECTED");
 
         (uint ir2, uint b2,) = settings.getDebtInterestRate();
         Assert.equal(ir1, ir2, "old interest rate");
@@ -54,25 +54,25 @@ contract TestCloseProposal is Base {
 
     function testCloseProposalThenTransferLargerAmountOfGovTokens() public {
         
-        ChangeInterestRateProposal p = createProposal(10 days);
+        ChangeInterestRateProposal p = createProposal();
         
         uint newInterestRate     = 10000000012345678;
         uint newInterestRateBase = 10000000000000004;
         p.setInterestRate(newInterestRate, newInterestRateBase);
 
-        alpha.registerProposal(p);
+        (,ProposalWrapper w) = alpha.registerProposal(p, SIMPLE_MAJORITY, now + 10 days);
 
-        alpha.castVote(p, true);
-        beta.castVote(p, false);
-        gama.castVote(p, false);
+        alpha.castVote(w, true);
+        beta.castVote(w, false);
+        gama.castVote(w, false);
 
         gama.transfer(address(alpha), 10 finney); // 1%
 
         (uint ir1, uint b1,) = settings.getDebtInterestRate();
 
-        p.close();
+        w.close();
         
-        Assert.isTrue(p.getStatus() == Proposal.Status.APPROVED, "proposal APPROVED");
+        Assert.isTrue(w.getStatus() == ProposalWrapper.Status.APPROVED, "proposal APPROVED");
 
         (uint ir2, uint b2,) = settings.getDebtInterestRate();
         Assert.notEqual(ir1, ir2, "old interest rate");

@@ -7,32 +7,32 @@ contract TestRegisterProposal is Base {
 
     function testRegisterProposalMeetingMinimumShares() public {
         
-        Proposal p = createProposal(10 days);
+        Proposal p = createProposal();
 
         Assert.isFalse(
             govToken.isRegisteredProposal(address(p)), "proposal not registered"
         );
         
-        alpha.registerProposal(p);
+        (,ProposalWrapper w) = alpha.registerProposal(p, SIMPLE_MAJORITY, now + 10 days);
 
         Assert.isTrue(
             govToken.isRegisteredProposal(address(p)), "proposal registered"
         );
 
-        Assert.isTrue(p.getId() > 0, "p ID");
-        Assert.isTrue(p.getStatus() == Proposal.Status.OPEN, "p OPEN");
+        Assert.isTrue(w.getId() > 0, "p ID");
+        Assert.isTrue(w.getStatus() == ProposalWrapper.Status.OPEN, "p OPEN");
     }
 
     function testRegisterProposalWithoutMinimumShares() public {
         
-        Proposal p = createProposal(10 days);
+        Proposal p = createProposal();
 
         alpha.transfer(address(beta), govToken.balanceOf(address(alpha)) - 5 finney); // 0.5% left
         
         (bool success,) = address(alpha).call(
             abi.encodePacked(
                 alpha.registerProposal.selector,
-                abi.encode(p)
+                abi.encode(p, SIMPLE_MAJORITY, now + 10 days)
             )
         );
         

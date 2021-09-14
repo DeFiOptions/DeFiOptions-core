@@ -6,7 +6,7 @@ import "../utils/ERC20.sol";
 import "../interfaces/TimeProvider.sol";
 import "../utils/Arrays.sol";
 import "../utils/SafeMath.sol";
-import "./Proposal.sol";
+import "./ProposalWrapper.sol";
 import "./ProtocolSettings.sol";
 
 contract GovToken is ManagedContract, ERC20 {
@@ -16,8 +16,8 @@ contract GovToken is ManagedContract, ERC20 {
     TimeProvider private time;
     ProtocolSettings private settings;
 
-    mapping(uint => Proposal) private proposalsMap;
     mapping(address => uint) private proposingDate;
+    mapping(address => address) private wrapper;
     
     mapping(address => uint) private transferBlock;
 
@@ -30,13 +30,20 @@ contract GovToken is ManagedContract, ERC20 {
     string private constant _symbol = "GOVTK";
     
     uint private serial;
-    uint[] private proposals;
+    address[] private proposals;
 
     event DelegateTo(
         address indexed owner,
         address indexed oldDelegate,
         address indexed newDelegate,
         uint bal
+    );
+
+    event RegisterProposal(
+        address indexed wrapper,
+        address indexed addr,
+        ProposalWrapper.Quorum quorum,
+        uint expiresAt
     );
 
     constructor(address _childChainManagerProxy) ERC20(_name) public {
@@ -122,28 +129,55 @@ contract GovToken is ManagedContract, ERC20 {
         emit DelegateTo(msg.sender, oldDelegate, newDelegate, bal);
     }
 
-    function registerProposal(address addr) public returns (uint id) {
-        
+    function registerProposal(
+        address addr,
+        ProposalWrapper.Quorum quorum,
+        uint expiresAt
+    )
+        public
+        returns (uint id, address wp)
+    {    
         require(
-            proposingDate[addr] == 0 || time.getNow().sub(proposingDate[addr]) > 1 days,
+            proposingDate[msg.sender] == 0 || time.getNow().sub(proposingDate[msg.sender]) > 1 days,
             "minimum interval between proposals not met"
         );
-
-        Proposal p = Proposal(addr);
+        
         (uint v, uint b) = settings.getMinShareForProposal();
         require(calcShare(msg.sender, b) >= v, "insufficient share");
 
+        ProposalWrapper w = new ProposalWrapper(
+            addr,
+            address(time), 
+            address(this),
+            address(settings),
+            quorum,
+            expiresAt
+        );
+
+        proposingDate[msg.sender] = time.getNow();
         id = serial++;
-        p.open(id);
-        proposalsMap[id] = p;
-        proposingDate[addr] = time.getNow();
-        proposals.push(id);
+        w.open(id);
+        wp = address(w);
+        proposals.push(wp);
+        wrapper[addr] = wp;
+
+        emit RegisterProposal(wp, addr, quorum, expiresAt);
     }
 
     function isRegisteredProposal(address addr) public view returns (bool) {
         
-        Proposal p = Proposal(addr);
-        return address(proposalsMap[p.getId()]) == addr;
+        address wp = wrapper[addr];
+        if (wp == address(0)) {
+            return false;
+        }
+        
+        ProposalWrapper w = ProposalWrapper(wp);
+        return w.implementation() == addr;
+    }
+
+    function resolve(address addr) public view returns (address) {
+
+        return wrapper[addr];
     }
 
     function calcShare(address owner, uint base) private view returns (uint) {
@@ -159,13 +193,12 @@ contract GovToken is ManagedContract, ERC20 {
         address toDelegate = delegation[to];
 
         for (uint i = 0; i < proposals.length; i++) {
-            uint id = proposals[i];
-            Proposal p = proposalsMap[id];
-            if (p.isClosed()) {
+            ProposalWrapper w = ProposalWrapper(proposals[i]);
+            if (w.isClosed()) {
                 Arrays.removeAtIndex(proposals, i);
                 i--;
             } else {
-                p.update(fromDelegate, toDelegate, value);
+                w.update(fromDelegate, toDelegate, value);
             }
         }
 

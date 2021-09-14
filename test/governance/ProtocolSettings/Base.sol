@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
+import "../../../contracts/governance/ProposalWrapper.sol";
 import "../../../contracts/governance/ProtocolSettings.sol";
 import "../../../contracts/governance/GovToken.sol";
 import "../../../contracts/deployment/Deployer.sol";
@@ -21,6 +22,8 @@ contract Base {
     ShareHolder alpha;
     ShareHolder beta;
     ShareHolder gama;
+
+    ProposalWrapper.Quorum SIMPLE_MAJORITY = ProposalWrapper.Quorum.SIMPLE_MAJORITY;
 
     function beforeEachDeploy() public {
 
@@ -51,14 +54,8 @@ contract Base {
         time.setTimeOffset(0);
     }
 
-    function createProposal(uint expiration) public returns(ChangeInterestRateProposal p) {
+    function createProposal() public returns(ChangeInterestRateProposal p) {
 
-        p = new ChangeInterestRateProposal(
-            address(time),
-            address(govToken),
-            address(settings),
-            Proposal.Quorum.SIMPLE_MAJORITY,
-            now + expiration
-        );
+        p = new ChangeInterestRateProposal();
     }
 }

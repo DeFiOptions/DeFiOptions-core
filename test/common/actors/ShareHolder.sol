@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 import "../../../contracts/governance/GovToken.sol";
 import "../../../contracts/governance/Proposal.sol";
+import "../../../contracts/governance/ProposalWrapper.sol";
 
 contract ShareHolder {
     
@@ -31,13 +32,21 @@ contract ShareHolder {
         govToken.delegateTo(to, suppresHotVoting);
     }
     
-    function registerProposal(Proposal p) public {
-        
-        govToken.registerProposal(address(p));
+    function registerProposal(
+        Proposal p,
+        ProposalWrapper.Quorum quorum,
+        uint expiresAt
+    )
+        public
+        returns (uint id, ProposalWrapper wrapper)
+    {    
+        address w;
+        (id, w) = govToken.registerProposal(address(p), quorum, expiresAt);
+        wrapper = ProposalWrapper(w);
     }
 
-    function castVote(Proposal p, bool support) public {
+    function castVote(ProposalWrapper w, bool support) public {
 
-        p.castVote(support);
+        w.castVote(support);
     }
 }

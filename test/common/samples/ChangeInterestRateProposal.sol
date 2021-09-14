@@ -7,16 +7,6 @@ contract ChangeInterestRateProposal is Proposal {
     uint interestRate;
     uint interestRateBase;
 
-    constructor(
-        address _timeProvider,
-        address _govToken,
-        address _settings,
-        Proposal.Quorum _quorum,
-        uint expiresAt
-    ) public Proposal(_timeProvider, _govToken, _settings, _quorum, expiresAt) {
-        
-    }
-
     function setInterestRate(uint ir, uint b) public {
 
         require(ir > 0);
