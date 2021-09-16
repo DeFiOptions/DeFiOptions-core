@@ -6,14 +6,14 @@ import "./Base.sol";
 contract TestFeedDeployment is Base {
 
     uint[] timestamps3d;
-    int[] answers3d;
+    int[] prices3d;
 
     function testRequestValidData() public {
 
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
         timestamps3d = [1 days, 2 days, 3 days];
-        answers3d = [answers[0], answers[1], answers[2]];
+        prices3d = [prices[0], prices[1], prices[2]];
 
         feed = new ChainlinkFeed(
             "ETH/USD",
@@ -22,7 +22,7 @@ contract TestFeedDeployment is Base {
             address(time),
             0,
             timestamps3d, 
-            answers3d
+            prices3d
         );
         
         (, price, cached) = feed.getPriceCached(1 days);
@@ -47,7 +47,7 @@ contract TestFeedDeployment is Base {
         AggregatorV3Mock mock = new AggregatorV3Mock(roundIds, answers, updatedAts);
 
         timestamps3d = [1 days, 2 days, 3 days];
-        answers3d = [answers[0], answers[1], answers[2]];
+        prices3d = [prices[0], prices[1], prices[2]];
 
         feed = new ChainlinkFeed(
             "ETH/USD",
@@ -56,7 +56,7 @@ contract TestFeedDeployment is Base {
             address(time),
             0,
             timestamps3d, 
-            answers3d
+            prices3d
         );
 
         (bool success,) = address(feed).call(
