@@ -1,5 +1,9 @@
 pragma solidity ^0.6.0;
 
+// *** IMPORTANT ***
+// "onwer" storage variable must be set to a GnosisSafe multisig wallet address:
+// - https://github.com/gnosis/safe-contracts/blob/main/contracts/GnosisSafe.sol
+
 contract Proxy {
 
     // ATTENTION: storage variable alignment

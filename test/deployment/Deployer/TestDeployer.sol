@@ -61,6 +61,58 @@ contract TestDeployer {
         Assert.isTrue(p2.getInitialized(), "proxy 2 initialized");
     }
 
+    function testUpgradeImplementationFromOwnerAddress() public {
+
+        Deployer d = new Deployer(address(0));
+        
+        ManagedContractMock c1 = new ManagedContractMock();
+        d.setContractAddress("ManagedContract", address(c1));
+
+        d.deploy(address(this));
+        Proxy p = Proxy(
+            d.getPayableContractAddress("ManagedContract")
+        );
+
+        Assert.equal(p.implementation(), address(c1), "initial implementation");
+
+        ManagedContractMock c2 = new ManagedContractMock();
+
+        (bool success,) = address(p).call(
+            abi.encodePacked(
+                p.setImplementation.selector,
+                abi.encode(address(c2))
+            )
+        );
+
+        Assert.isTrue(success, "setImplementation should succed");
+        Assert.equal(p.implementation(), address(c2), "updated implementation");
+        Assert.notEqual(address(c1), address(c2), "different addresses");
+    }
+
+    function testUpgradeImplementationFromAnotherAddress() public {
+
+        Deployer d = new Deployer(address(0));
+        
+        ManagedContractMock c1 = new ManagedContractMock();
+        d.setContractAddress("ManagedContract", address(c1));
+
+        d.deploy(address(0x0000000000000000000000000000000000000001));
+        Proxy p = Proxy(
+            d.getPayableContractAddress("ManagedContract")
+        );
+
+        ManagedContractMock c2 = new ManagedContractMock();
+
+        (bool success,) = address(p).call(
+            abi.encodePacked(
+                p.setImplementation.selector,
+                abi.encode(address(c2))
+            )
+        );
+
+        Assert.isFalse(success, "setImplementation should fail");
+    }
+
     function testMigrationInitialization() public {
 
         Deployer d = Deployer(DeployedAddresses.Deployer());

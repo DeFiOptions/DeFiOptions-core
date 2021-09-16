@@ -1,6 +1,9 @@
 pragma solidity ^0.6.0;
 
 import "./Deployer.sol";
+// *** IMPORTANT ***
+// "onwer" storage variable must be set to a GnosisSafe multisig wallet address:
+// - https://github.com/gnosis/safe-contracts/blob/main/contracts/GnosisSafe.sol
 
 contract ManagedContract {
 
@@ -20,6 +23,11 @@ contract ManagedContract {
 
     function initialize(Deployer deployer) virtual internal {
 
+    }
+
+    function getOwner() internal view returns (address) {
+
+        return owner;
     }
 
     function getImplementation() internal view returns (address) {

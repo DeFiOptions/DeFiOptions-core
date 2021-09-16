@@ -34,7 +34,7 @@ contract Base {
         if (!deployer.hasKey("CreditIssuer")) {
             deployer.setContractAddress("CreditIssuer", address(new CreditHolder()));
         }
-        deployer.deploy();
+        deployer.deploy(address(this));
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
@@ -43,7 +43,6 @@ contract Base {
         
         erc20.reset();
 
-        settings.setOwner(address(this));
         settings.setAllowedToken(address(erc20), 1, 1);
         
         issuer = CreditHolder(deployer.getContractAddress("CreditIssuer"));

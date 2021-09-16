@@ -31,13 +31,12 @@ contract Base {
 
         Deployer deployer = Deployer(DeployedAddresses.Deployer());
         deployer.reset();
-        deployer.deploy();
+        deployer.deploy(address(this));
         time = TimeProviderMock(deployer.getContractAddress("TimeProvider"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
         manager = ProposalsManager(deployer.getContractAddress("ProposalsManager"));
         govToken = GovToken(deployer.getContractAddress("GovToken"));
         
-        settings.setOwner(address(this));
         settings.setCirculatingSupply(1 ether);
         govToken.setChildChainManager(address(this));
 

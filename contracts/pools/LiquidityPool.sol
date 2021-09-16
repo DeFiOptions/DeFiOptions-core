@@ -47,7 +47,6 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     mapping(string => PricingParameters) private parameters;
     mapping(string => mapping(uint => Range)) private ranges;
 
-    address private owner;
     uint internal spread;
     uint internal reserveRatio;
     uint internal withdrawFee;
@@ -67,7 +66,6 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
         DOMAIN_SEPARATOR = ERC20(getImplementation()).DOMAIN_SEPARATOR();
 
-        owner = deployer.getOwner();
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
@@ -538,6 +536,6 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
     function ensureCaller() private view {
 
-        require(owner == address(0) || msg.sender == owner, "unauthorized caller");
+        require(msg.sender == getOwner(), "unauthorized caller");
     }
 }

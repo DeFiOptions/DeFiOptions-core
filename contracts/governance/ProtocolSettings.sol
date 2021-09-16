@@ -30,7 +30,6 @@ contract ProtocolSettings is ManagedContract {
     mapping(address => Rate) private tokenRates;
     mapping(address => mapping(address => address[])) private paths;
 
-    address private owner;
     address[] private tokens;
 
     Rate[] private debtInterestRates;
@@ -68,7 +67,6 @@ contract ProtocolSettings is ManagedContract {
     
     function initialize(Deployer deployer) override internal {
 
-        owner = deployer.getOwner();
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         manager = ProposalsManager(deployer.getContractAddress("ProposalsManager"));
@@ -103,17 +101,6 @@ contract ProtocolSettings is ManagedContract {
         );
 
         volatilityPeriod = 90 days;
-    }
-
-    function getOwner() external view returns (address) {
-
-        return owner;
-    }
-
-    function setOwner(address _owner) external {
-
-        require(msg.sender == owner || owner == address(0), "unallowed");
-        owner = _owner;
     }
 
     function getCirculatingSupply() external view returns (uint) {
@@ -370,7 +357,7 @@ contract ProtocolSettings is ManagedContract {
 
     function ensureWritePrivilege() private view {
 
-        if (msg.sender != owner) {
+        if (msg.sender != getOwner()) {
 
             ProposalWrapper w = ProposalWrapper(manager.resolve(msg.sender));
             require(manager.isRegisteredProposal(msg.sender), "proposal not registered");

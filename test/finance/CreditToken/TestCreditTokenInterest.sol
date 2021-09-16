@@ -32,8 +32,6 @@ contract TestCreditTokenInterestRate is Base {
     }
 
     function testVaryingInterestRate() public {
-
-        settings.setOwner(address(this));
         
         issuer.issueTokens(address(alpha), 100 finney);
         Assert.equal(creditToken.balanceOf(address(alpha)), 100 finney, "alpha credit t0");
