@@ -202,7 +202,7 @@ contract CreditProvider is ManagedContract {
         if (d > 0) {
             burnt = MoreMath.min(value, d);
             setDebt(from, d.sub(burnt));
-            emit BurnDebt(from, value);
+            emit BurnDebt(from, burnt);
         }
     }
 
@@ -215,6 +215,8 @@ contract CreditProvider is ManagedContract {
 
             if (debt > 0 && debt != d) {
                 setDebt(owner, debt);
+                uint diff = debt.sub(d);
+                emit AccumulateDebt(owner, diff);
             }
         }
     }
