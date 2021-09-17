@@ -158,6 +158,8 @@ contract OptionsExchange is ManagedContract {
         public
         returns (address tk)
     {
+        ensureFeedIsAlowed(udlFeed);
+
         (OptionData memory opt, string memory symbol) =
             createOptionInMemory(udlFeed, optType, strike, maturity);
 
@@ -497,7 +499,7 @@ contract OptionsExchange is ManagedContract {
         private 
         returns (address _tk)
     {
-        require(settings.getUdlFeed(opt.udlFeed) > 0, "feed not allowed");
+        ensureFeedIsAlowed(opt.udlFeed);
         require(volume > 0, "invalid volume");
         require(opt.maturity > time.getNow(), "invalid maturity");
 
@@ -732,5 +734,10 @@ contract OptionsExchange is ManagedContract {
     function getUdlNow(OptionData memory opt) private view returns (uint timestamp) {
 
         (timestamp,) = UnderlyingFeed(opt.udlFeed).getLatestPrice();
+    }
+
+    function ensureFeedIsAlowed(address udlFeed) private view {
+        
+        require(settings.getUdlFeed(udlFeed) > 0, "feed not allowed");
     }
 }
