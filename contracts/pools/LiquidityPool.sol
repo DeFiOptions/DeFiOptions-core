@@ -41,7 +41,6 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
     TimeProvider private time;
     ProtocolSettings private settings;
-    CreditProvider private creditProvider;
     YieldTracker private tracker;
 
     mapping(string => PricingParameters) private parameters;
@@ -50,7 +49,8 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     uint internal spread;
     uint internal reserveRatio;
     uint internal withdrawFee;
-    uint private _maturity;
+    uint public capacity;
+    uint public override maturity;
     string[] private optSymbols;
 
     uint private timeBase;
@@ -69,7 +69,6 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         time = TimeProvider(deployer.getContractAddress("TimeProvider"));
         exchange = OptionsExchange(deployer.getContractAddress("OptionsExchange"));
         settings = ProtocolSettings(deployer.getContractAddress("ProtocolSettings"));
-        creditProvider = CreditProvider(deployer.getContractAddress("CreditProvider"));
         tracker = YieldTracker(deployer.getContractAddress("YieldTracker"));
 
         timeBase = 1e18;
@@ -82,6 +81,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         uint _spread,
         uint _reserveRatio,
         uint _withdrawFee,
+        uint _capacity,
         uint _mt
     )
         external
@@ -90,17 +90,13 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         spread = _spread;
         reserveRatio = _reserveRatio;
         withdrawFee = _withdrawFee;
-        _maturity = _mt;
+        capacity = _capacity;
+        maturity = _mt;
     }
 
     function redeemAllowed() override public view returns (bool) {
         
-        return time.getNow() >= _maturity;
-    }
-
-    function maturity() override external view returns (uint) {
-        
-        return _maturity;
+        return time.getNow() >= maturity;
     }
 
     function yield(uint dt) override external view returns (uint y) {
@@ -130,7 +126,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         external
     {
         ensureCaller();
-        require(_mt < _maturity, "invalid maturity");
+        require(_mt < maturity, "invalid maturity");
         require(x.length > 0 && x.length.mul(2) == y.length, "invalid pricing surface");
 
         string memory optSymbol = exchange.getOptionSymbol(
@@ -196,6 +192,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         (uint b0, int po) = getBalanceAndPayout();
         depositTokensInExchange(token, value);
         uint b1 = exchange.balanceOf(address(this));
+        require(b1 <= capacity, "capacity exceeded");
         
         tracker.push(int(b0).add(po), b1.sub(b0).toInt256());
 
@@ -525,8 +522,9 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     function depositTokensInExchange(address token, uint value) private {
         
         IERC20 t = IERC20(token);
-        t.transferFrom(msg.sender, address(creditProvider), value);
-        creditProvider.addBalance(address(this), token, value);
+        t.transferFrom(msg.sender, address(this), value);
+        t.approve(address(exchange), value);
+        exchange.depositTokens(address(this), token, value);
     }
 
     function ensureValidSymbol(string memory optSymbol) private view {

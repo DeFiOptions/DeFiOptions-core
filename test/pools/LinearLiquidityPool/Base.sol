@@ -73,6 +73,7 @@ contract Base {
             spread,
             reserveRatio,
             withdrawFee,
+            uint(-1), // unlimited capacity
             90 days
         );
 
@@ -83,7 +84,7 @@ contract Base {
         time.setFixedTime(0);
     }
 
-    function depositInPool(address to, uint value) internal {
+    function depositInPool(address to, uint value) public {
         
         erc20.issue(address(this), value);
         erc20.approve(address(pool), value);

@@ -48,7 +48,6 @@ contract CreditProvider is ManagedContract {
         callers[address(creditToken)] = 1;
         callers[deployer.getContractAddress("OptionsExchange")] = 1;
         callers[deployer.getContractAddress("UnderlyingVault")] = 1;
-        callers[deployer.getContractAddress("LinearLiquidityPool")] = 1;
 
         ctAddr = address(creditToken);
     }

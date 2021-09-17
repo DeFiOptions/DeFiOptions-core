@@ -28,6 +28,41 @@ contract TestPoolShares is Base {
         Assert.equal(pool.balanceOf(address(alice)), 2 * vBase, "alice shares t2");
     }
 
+    function testDepositCapacity() public {
+
+        pool.setParameters(
+            spread,
+            reserveRatio,
+            withdrawFee,
+            1000e18, // 1k capacity
+            90 days
+        );
+
+        (bool s1,) = address(this).call(
+            abi.encodePacked(
+                this.depositInPool.selector,
+                abi.encode(address(bob), 10e18)
+            )
+        );
+        Assert.isTrue(s1, "desposit whithin capacity");
+
+        (bool s2,) = address(this).call(
+            abi.encodePacked(
+                this.depositInPool.selector,
+                abi.encode(address(bob), 989e18)
+            )
+        );
+        Assert.isTrue(s2, "desposit whithin capacity");
+
+        (bool s3,) = address(this).call(
+            abi.encodePacked(
+                this.depositInPool.selector,
+                abi.encode(address(bob), 2e18)
+            )
+        );
+        Assert.isFalse(s3, "desposit above capacity");
+    }
+
     function testSharesUponProfit() public {
 
         uint vBase = 1e6;
