@@ -16,6 +16,11 @@ contract ChangeInterestRateProposal is Proposal {
         interestRateBase = b;
     }
 
+    function getName() public override returns (string memory) {
+
+        return "Change Debt Interest Rate";
+    }
+
     function execute(ProtocolSettings settings) public override {
         
         require(interestRate > 0, "interest rate value not set");
