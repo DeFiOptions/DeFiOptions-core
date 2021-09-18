@@ -5,7 +5,6 @@ import "../../../contracts/governance/Proposal.sol";
 contract TransferBalanceProposal is Proposal {
 
     uint amount;
-    uint interestRateBase;
 
     function setAmount(uint _amount) public {
 
@@ -21,7 +20,7 @@ contract TransferBalanceProposal is Proposal {
 
     function execute(ProtocolSettings settings) public override {
         
-        require(amount > 0, "interest rate value not set");
+        require(amount > 0, "amount not set");
         settings.transferBalance(address(this), amount);
     }
 }

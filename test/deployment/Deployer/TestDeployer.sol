@@ -73,7 +73,7 @@ contract TestDeployer {
             d.getPayableContractAddress("ManagedContract")
         );
 
-        Assert.equal(p.implementation(), address(c1), "initial implementation");
+        Assert.equal(getImplementation(p), address(c1), "initial implementation");
 
         ManagedContractMock c2 = new ManagedContractMock();
 
@@ -85,7 +85,7 @@ contract TestDeployer {
         );
 
         Assert.isTrue(success, "setImplementation should succed");
-        Assert.equal(p.implementation(), address(c2), "updated implementation");
+        Assert.equal(getImplementation(p), address(c2), "updated implementation");
         Assert.notEqual(address(c1), address(c2), "different addresses");
     }
 
@@ -113,10 +113,48 @@ contract TestDeployer {
         Assert.isFalse(success, "setImplementation should fail");
     }
 
+    function testSetNonUpgradable() public {
+
+        Deployer d = new Deployer(address(0));
+        
+        ManagedContractMock c1 = new ManagedContractMock();
+        d.setContractAddress("ManagedContract", address(c1));
+
+        d.deploy(address(this));
+        Proxy p = Proxy(
+            d.getPayableContractAddress("ManagedContract")
+        );
+
+        ManagedContractMock c2 = new ManagedContractMock();
+
+        (bool s1,) = address(p).call(
+            abi.encodePacked(
+                p.setImplementation.selector,
+                abi.encode(address(c2))
+            )
+        );
+        Assert.isTrue(s1, "setImplementation should succed");
+
+        p.setNonUpgradable();
+
+        (bool s2,) = address(p).call(
+            abi.encodePacked(
+                p.setImplementation.selector,
+                abi.encode(address(c2))
+            )
+        );
+        Assert.isFalse(s2, "setImplementation should fail");
+    }
+
     function testMigrationInitialization() public {
 
         Deployer d = Deployer(DeployedAddresses.Deployer());
         
         d.deploy();
+    }
+
+    function getImplementation(Proxy p) private view returns (address) {
+
+        return ManagedContract(address(p)).getImplementation();
     }
 }

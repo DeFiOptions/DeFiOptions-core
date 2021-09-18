@@ -10,12 +10,14 @@ contract Proxy {
     address private owner;
     address private pendingOwner;
     address private implementation;
-    bool private locked;
-    // -------------------------------------
+    uint private locked; // 1 = Initialized; 2 = Non upgradable
+    // --------------------------------------------------------
 
     event OwnershipTransferRequested(address indexed from, address indexed to);
     
     event OwnershipTransferred(address indexed from, address indexed to);
+
+    event SetNonUpgradable();
 
     event ImplementationUpdated(address indexed from, address indexed to);
 
@@ -51,9 +53,16 @@ contract Proxy {
         emit OwnershipTransferred(oldOwner, msg.sender);
     }
 
+    function setNonUpgradable() public {
+
+        require(msg.sender == owner && locked == 1);
+        locked = 2;
+        emit SetNonUpgradable();
+    }
+
     function setImplementation(address _implementation) public {
 
-        require(msg.sender == owner);
+        require(msg.sender == owner && locked != 2);
         address oldImplementation = implementation;
         implementation = _implementation;
         emit ImplementationUpdated(oldImplementation, implementation);

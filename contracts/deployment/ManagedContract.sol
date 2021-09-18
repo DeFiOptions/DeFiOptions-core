@@ -11,13 +11,13 @@ contract ManagedContract {
     address private owner;
     address private pendingOwner;
     address private implementation;
-    bool private locked;
-    // -------------------------------------
+    uint private locked; // 1 = Initialized; 2 = Non upgradable
+    // --------------------------------------------------------
 
     function initializeAndLock(Deployer deployer) public {
 
-        require(!locked, "initialization locked");
-        locked = true;
+        require(locked == 0, "initialization locked");
+        locked = 1;
         initialize(deployer);
     }
 
@@ -25,12 +25,12 @@ contract ManagedContract {
 
     }
 
-    function getOwner() internal view returns (address) {
+    function getOwner() public view returns (address) {
 
         return owner;
     }
 
-    function getImplementation() internal view returns (address) {
+    function getImplementation() public view returns (address) {
 
         return implementation;
     }
