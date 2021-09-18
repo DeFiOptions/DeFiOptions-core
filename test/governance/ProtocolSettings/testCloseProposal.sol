@@ -1,14 +1,13 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "../../common/samples/ChangeInterestRateProposal.sol";
 import "./Base.sol";
 
 contract TestCloseProposal is Base {
 
     function testCloseProposalBeforeQuorum() public {
         
-        ChangeInterestRateProposal p = createProposal();
+        ChangeInterestRateProposal p = new ChangeInterestRateProposal();
         
         uint newInterestRate     = 10000000098765432;
         uint newInterestRateBase = 10000000000000001;
@@ -27,7 +26,7 @@ contract TestCloseProposal is Base {
 
     function testCloseProposalThenTransferSmallAmountOfGovTokens() public {
         
-        ChangeInterestRateProposal p = createProposal();
+        ChangeInterestRateProposal p = new ChangeInterestRateProposal();
         
         uint newInterestRate     = 10000000012345678;
         uint newInterestRateBase = 10000000000000004;
@@ -54,7 +53,7 @@ contract TestCloseProposal is Base {
 
     function testCloseProposalThenTransferLargerAmountOfGovTokens() public {
         
-        ChangeInterestRateProposal p = createProposal();
+        ChangeInterestRateProposal p = new ChangeInterestRateProposal();
         
         uint newInterestRate     = 10000000012345678;
         uint newInterestRateBase = 10000000000000004;

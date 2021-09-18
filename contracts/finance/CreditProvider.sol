@@ -133,6 +133,7 @@ contract CreditProvider is ManagedContract {
             if (v > 0) {
                 uint fee = MoreMath.min(value.mul(v).div(b), balanceOf(from));
                 value = value.sub(fee);
+                addBalance(address(settings), fee);
                 emit AccrueFees(from, fee);
             }
 

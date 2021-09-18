@@ -1,14 +1,13 @@
 pragma solidity >=0.6.0;
 
 import "truffle/Assert.sol";
-import "../../common/samples/ChangeInterestRateProposal.sol";
 import "./Base.sol";
 
 contract TestCastVote is Base {
 
     function testCastVoteForApproval() public {
         
-        ChangeInterestRateProposal p = createProposal();
+        ChangeInterestRateProposal p = new ChangeInterestRateProposal();
         
         uint newInterestRate     = 10000000098397720;
         uint newInterestRateBase = 10000000000000002;
@@ -35,7 +34,7 @@ contract TestCastVote is Base {
 
     function testCastVoteForRejection() public {
         
-        ChangeInterestRateProposal p = createProposal();
+        ChangeInterestRateProposal p = new ChangeInterestRateProposal();
         
         uint newInterestRate     = 10000000088884444;
         uint newInterestRateBase = 10000000000000003;

@@ -7,7 +7,7 @@ contract TestRegisterProposal is Base {
 
     function testRegisterProposalMeetingMinimumShares() public {
         
-        Proposal p = createProposal();
+        Proposal p = new ChangeInterestRateProposal();
 
         Assert.isFalse(
             manager.isRegisteredProposal(address(p)), "proposal not registered"
@@ -25,7 +25,7 @@ contract TestRegisterProposal is Base {
 
     function testRegisterProposalWithoutMinimumShares() public {
         
-        Proposal p = createProposal();
+        Proposal p = new ChangeInterestRateProposal();
 
         alpha.transfer(address(beta), govToken.balanceOf(address(alpha)) - 5 finney); // 0.5% left
         

@@ -59,6 +59,7 @@ contract ProtocolSettings is ManagedContract {
     event SetSwapRouterInfo(address sender, address router, address token);
     event SetSwapRouterTolerance(address sender, uint r, uint b);
     event SetSwapPath(address sender, address from, address to);
+    event TransferBalance(address sender, address to, uint amount);
     
     constructor(bool _hotVoting) public {
         
@@ -325,6 +326,20 @@ contract ProtocolSettings is ManagedContract {
             path[0] = from;
             path[1] = to;
         }
+    }
+
+    function transferBalance(address to, uint amount) external {
+
+        require(manager.isRegisteredProposal(msg.sender), "sender must be registered proposal");
+        
+        uint total = creditProvider.totalTokenStock();
+        require(total >= amount, "excessive amount");
+        
+        ensureWritePrivilege();
+
+        creditProvider.transferBalance(address(this), to, amount);
+
+        emit TransferBalance(msg.sender, to, amount);
     }
 
     function applyRates(Rate[] storage rates, uint value, uint date) private view returns (uint) {
