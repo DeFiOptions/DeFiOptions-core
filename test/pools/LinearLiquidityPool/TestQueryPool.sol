@@ -25,6 +25,8 @@ contract TestQueryPool is Base {
 
     function testQueryWithFunds() public {
 
+        createTraders();
+
         uint balance = 50 * calcCollateralUnit();
         uint freeBalance = 80 * balance / 100;
         uint r = fractionBase - reserveRatio;
@@ -65,6 +67,8 @@ contract TestQueryPool is Base {
     }
 
     function testQueryHalfway() public {
+
+        createTraders();
 
         uint balance = 1000 * calcCollateralUnit();
         depositInPool(address(bob), balance);

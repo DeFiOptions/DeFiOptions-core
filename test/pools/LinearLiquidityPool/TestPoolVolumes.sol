@@ -7,6 +7,8 @@ contract TestPoolVolumes is Base {
 
     function testPartialBuyingVolume() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -23,6 +25,8 @@ contract TestPoolVolumes is Base {
 
     function testFullBuyingVolume() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -38,6 +42,8 @@ contract TestPoolVolumes is Base {
     }
 
     function testPartialSellingVolume() public {
+
+        createTraders();
 
         addSymbol();
 
@@ -57,6 +63,8 @@ contract TestPoolVolumes is Base {
 
     function testFullSellingVolume() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -74,6 +82,8 @@ contract TestPoolVolumes is Base {
     }
 
     function testPartialBuyingThenFullSellingVolume() public {
+
+        createTraders();
 
         addSymbol();
 

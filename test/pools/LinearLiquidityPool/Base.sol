@@ -77,11 +77,14 @@ contract Base {
             90 days
         );
 
-        bob = createPoolTrader(address(erc20));
-        alice = createPoolTrader(address(erc20));
-
         feed.setPrice(ethInitialPrice);
         time.setFixedTime(0);
+    }
+
+    function createTraders() public {
+        
+        bob = createPoolTrader(address(erc20));
+        alice = createPoolTrader(address(erc20));
     }
 
     function depositInPool(address to, uint value) public {

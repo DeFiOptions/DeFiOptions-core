@@ -11,6 +11,8 @@ contract TestPoolWithdrawal is Base {
 
     function testDepositThenWithdraw() public {
 
+        createTraders();
+
         uint vBase = 1e6;
         
         depositInPool(address(bob), 100 * vBase);
@@ -28,6 +30,8 @@ contract TestPoolWithdrawal is Base {
     }
 
     function testWithdrawOverYield() public {
+
+        createTraders();
 
         cBase = 1e3;
         uint vBase = 1e6;

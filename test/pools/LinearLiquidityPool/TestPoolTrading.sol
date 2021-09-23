@@ -7,6 +7,8 @@ contract TestPoolTrading is Base {
 
     function testBuyOptionsFromPool() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -34,6 +36,8 @@ contract TestPoolTrading is Base {
 
     function testBuyForCheaperPrice() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -55,6 +59,8 @@ contract TestPoolTrading is Base {
     }
 
     function testBuyForHigherPrice() public {
+
+        createTraders();
 
         addSymbol();
 
@@ -79,6 +85,8 @@ contract TestPoolTrading is Base {
     }
 
     function testSellOptionsToPool() public {
+
+        createTraders();
 
         addSymbol();
 
@@ -109,6 +117,8 @@ contract TestPoolTrading is Base {
 
     function testSellForCheapPrice() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -136,6 +146,8 @@ contract TestPoolTrading is Base {
 
     function testSellForHigherPrice() public {
 
+        createTraders();
+
         addSymbol();
 
         uint cUnit = calcCollateralUnit();
@@ -160,6 +172,8 @@ contract TestPoolTrading is Base {
     }
 
     function testBuyFromPoolThenSellBack() public {
+
+        createTraders();
 
         addSymbol();
 
@@ -188,6 +202,8 @@ contract TestPoolTrading is Base {
     }
 
     function testSellToPoolThenBuyBack() public {
+
+        createTraders();
 
         addSymbol();
 

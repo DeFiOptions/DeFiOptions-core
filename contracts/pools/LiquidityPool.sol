@@ -48,7 +48,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
     uint internal spread;
     uint internal reserveRatio;
-    uint internal withdrawFee;
+    uint public withdrawFee;
     uint public capacity;
     uint public override maturity;
     string[] private optSymbols;

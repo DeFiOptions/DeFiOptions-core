@@ -11,6 +11,8 @@ contract TestPoolYield is Base {
 
     function testYieldAfterDeposits() public {
 
+        createTraders();
+
         uint vBase = 1e6;
         time.setTimeOffset(0);
         Assert.equal(pool.yield(365 days), fractionBase, "yield t0");
@@ -29,6 +31,8 @@ contract TestPoolYield is Base {
 
     function testYieldAfterSingleProfit() public {
 
+        createTraders();
+
         cBase = 1e3;
         uint vBase = 1e6;
         time.setTimeOffset(0);
@@ -46,6 +50,8 @@ contract TestPoolYield is Base {
     }
 
     function testYieldAfterMultipleProfits() public {
+
+        createTraders();
 
         cBase = 1e3;
         uint vBase = 1e6;

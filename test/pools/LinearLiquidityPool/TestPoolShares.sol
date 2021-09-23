@@ -10,6 +10,8 @@ contract TestPoolShares is Base {
 
     function testSharesAfterDeposit() public {
 
+        createTraders();
+
         uint vBase = 1e6;
 
         depositInPool(address(bob), 10 * vBase);
@@ -29,6 +31,8 @@ contract TestPoolShares is Base {
     }
 
     function testDepositCapacity() public {
+
+        createTraders();
 
         pool.setParameters(
             spread,
@@ -65,6 +69,8 @@ contract TestPoolShares is Base {
 
     function testSharesUponProfit() public {
 
+        createTraders();
+
         uint vBase = 1e6;
 
         depositInExchangeToPool(10 * vBase); // initial pool balance
@@ -83,6 +89,8 @@ contract TestPoolShares is Base {
     }
 
     function testSharesUponExpectedPayout() public {
+
+        createTraders();
 
         uint vBase = calcCollateralUnit();
 
