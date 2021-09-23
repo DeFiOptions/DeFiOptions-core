@@ -75,6 +75,14 @@ contract ProposalWrapper {
         return status == Status.APPROVED && !closed;
     }
 
+    function isActive() public view returns (bool) {
+
+        return
+            !closed &&
+            status == Status.OPEN &&
+            expiresAt > time.getNow();
+    }
+
     function isClosed() public view returns (bool) {
 
         return closed;
@@ -142,18 +150,12 @@ contract ProposalWrapper {
 
     function ensureIsActive() private view {
 
-        require(
-            !closed &&
-            status == Status.OPEN &&
-            expiresAt > time.getNow(),
-            "ProposalWrapper not active"
-        );
+        require(isActive(), "ProposalWrapper not active");
     }
 
     function update(address voter, int diff) private {
         
-        if (votes[voter] != 0) {
-            ensureIsActive();
+        if (votes[voter] != 0 && isActive()) {
             require(msg.sender == address(manager), "invalid sender");
 
             uint _diff = MoreMath.abs(diff);

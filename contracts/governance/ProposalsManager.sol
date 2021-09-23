@@ -94,7 +94,7 @@ contract ProposalsManager is ManagedContract {
 
         for (uint i = 0; i < proposals.length; i++) {
             ProposalWrapper w = ProposalWrapper(proposals[i]);
-            if (w.isClosed()) {
+            if (!w.isActive()) {
                 Arrays.removeAtIndex(proposals, i);
                 i--;
             } else {
