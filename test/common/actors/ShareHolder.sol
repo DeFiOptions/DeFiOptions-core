@@ -29,11 +29,6 @@ contract ShareHolder {
 
         govToken.delegateTo(to);
     }
-
-    function delegateTo(address to, bool suppresHotVoting) public {
-
-        govToken.delegateTo(to, suppresHotVoting);
-    }
     
     function registerProposal(
         Proposal p,

@@ -75,7 +75,7 @@ contract ProtocolSettings is ManagedContract {
 
         MAX_UINT = uint(-1);
 
-        hotVoting = ProtocolSettings(getImplementation()).allowHotVoting();
+        hotVoting = ProtocolSettings(getImplementation()).isHotVotingAllowed();
 
         minShareForProposal = Rate( // 1%
             100,
@@ -152,10 +152,16 @@ contract ProtocolSettings is ManagedContract {
         emit SetAllowedToken(msg.sender, token, v, b);
     }
 
-    function allowHotVoting() external view returns (bool) {
+    function isHotVotingAllowed() external view returns (bool) {
 
         // IMPORTANT: hot voting should be set to 'false' for mainnet deployment
         return hotVoting;
+    }
+
+    function suppressHotVoting() external {
+
+        // no need to ensure write privilege. can't be undone.
+        hotVoting = false;
     }
 
     function getMinShareForProposal() external view returns (uint v, uint b) {

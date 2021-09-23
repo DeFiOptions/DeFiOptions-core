@@ -115,6 +115,8 @@ contract ProposalWrapper {
 
         ensureIsActive();
 
+        govToken.enforceHotVotingSetting();
+
         uint total = settings.getCirculatingSupply();
 
         uint v;

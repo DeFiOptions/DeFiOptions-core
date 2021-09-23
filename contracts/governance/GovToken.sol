@@ -87,22 +87,13 @@ contract GovToken is ManagedContract, ERC20 {
         return delegated[delegate];
     }
 
-    function delegateTo(address newDelegate) external {
-
-        delegateTo(newDelegate, false);
-    }
-
-    function delegateTo(address newDelegate, bool supressHotVoting) public {
+    function delegateTo(address newDelegate) public {
 
         address oldDelegate = delegation[msg.sender];
 
         require(newDelegate != address(0), "invalid delegate address");
 
-        require(
-            (settings.allowHotVoting() && !supressHotVoting) || // for unit testing purposes only
-            transferBlock[tx.origin] != block.number,
-            "delegation not allowed"
-        );
+        enforceHotVotingSetting();
 
         uint bal = balanceOf(msg.sender);
 
@@ -114,6 +105,15 @@ contract GovToken is ManagedContract, ERC20 {
         delegation[msg.sender] = newDelegate;
 
         emit DelegateTo(msg.sender, oldDelegate, newDelegate, bal);
+    }
+
+    function enforceHotVotingSetting() public view {
+
+        require(
+            settings.isHotVotingAllowed() ||
+            transferBlock[tx.origin] != block.number,
+            "delegation not allowed"
+        );
     }
 
     function calcShare(address owner, uint base) public view returns (uint) {

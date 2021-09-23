@@ -44,24 +44,25 @@ contract TestDelegate is Base {
         ShareHolder s2 = new ShareHolder(address(govToken), address(manager));
         
         govToken.deposit(address(s1), abi.encode(1 ether));
-        bytes4 sig = bytes4(keccak256(bytes("delegateTo(address,bool)")));
 
         (bool r1,) = address(s1).call(
             abi.encodePacked(
-                sig,
-                abi.encode(address(s2), true)
+                s1.delegateTo.selector,
+                abi.encode(address(s2))
             )
         );
         
-        Assert.isFalse(r1, "delegateTo supressing hot voting should fail");
+        Assert.isTrue(r1, "delegateTo not supressing hot voting should succeed");
+
+        settings.suppressHotVoting();
 
         (bool r2,) = address(s1).call(
             abi.encodePacked(
-                sig,
-                abi.encode(address(s2), false)
+                s1.delegateTo.selector,
+                abi.encode(address(s2))
             )
         );
         
-        Assert.isTrue(r2, "delegateTo not supressing hot voting should succeed");
+        Assert.isFalse(r2, "delegateTo supressing hot voting should fail");
     }
 }
