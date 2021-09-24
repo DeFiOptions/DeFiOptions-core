@@ -356,11 +356,11 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 
 | Contract | Address |
 | -------- | ------- |
-| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x3DA6A3Ed1d13623d299273e49FA3A0A0CCEaD6E3](https://kovan.etherscan.io/address/0x3DA6A3Ed1d13623d299273e49FA3A0A0CCEaD6E3) |
-| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xe6db9d13848c795d6bd6c667a06708237fda4ce8](https://kovan.etherscan.io/address/0xe6db9d13848c795d6bd6c667a06708237fda4ce8) |
-| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xd14DDa7DdB47069f213EE12D779F276225B7Ba68](https://kovan.etherscan.io/address/0xd14DDa7DdB47069f213EE12D779F276225B7Ba68) |
-| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xdcA36DA00AeA3061606C2554A0A61bC1ff73BeB9](https://kovan.etherscan.io/address/0xdcA36DA00AeA3061606C2554A0A61bC1ff73BeB9) |
-| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x937984F264EA5fdfaC34A02426d04675142d263B](https://kovan.etherscan.io/address/0x937984F264EA5fdfaC34A02426d04675142d263B) |
+| [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x1233a9d9a02eef1bc24675332684d4bfdd866f8a](https://kovan.etherscan.io/address/0x1233a9d9a02eef1bc24675332684d4bfdd866f8a) |
+| [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xae7512c5d996b12830a282eeb9eecb4cf01207d2](https://kovan.etherscan.io/address/0xae7512c5d996b12830a282eeb9eecb4cf01207d2) |
+| [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xb0be2a679632f028edb4a3e29bb82ac6ed6d84d9](https://kovan.etherscan.io/address/0xb0be2a679632f028edb4a3e29bb82ac6ed6d84d9) |
+| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x3689899A6746cEAb929e26963e5163A183C64f59](https://kovan.etherscan.io/address/0x3689899A6746cEAb929e26963e5163A183C64f59) |
+| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x235b1334D332d5f4C6d28369a358a9FfaCaC9eDd](https://kovan.etherscan.io/address/0x235b1334D332d5f4C6d28369a358a9FfaCaC9eDd) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
@@ -391,10 +391,10 @@ We aim to provide a reliable, bug-free protocol to the community, however to ach
 
 There are a few major technical challenges that need to get dealt with for DeFi Options to offer a fully featured user experience:
 
-* Development of a dapp front-end application to make the exchange accessible to non-developers ([in progress](https://github.com/remote-gildor/DeFiOptions-frontend))
+* ~~Development of a dapp front-end application to make the exchange accessible to non-developers~~
 * ~~Design and implementation of a liquidity pool, which will involve knowledge in finance and option pricing models~~
 * ~~Allow deposit/withdraw of underlying assets (ex: ETH, BTC) so they can be provided as collateral for writing options against them~~
-* Improvement of the incipient governance functionality ([contracts/governance](https://github.com/DeFiOptions/DeFiOptions-core/tree/master/contracts/governance))
+* ~~Improvement of the incipient governance functionality ([contracts/governance](https://github.com/DeFiOptions/DeFiOptions-core/tree/master/contracts/governance))~~
 
 ## Disclaimer
 
