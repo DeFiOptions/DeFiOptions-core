@@ -50,7 +50,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     uint internal reserveRatio;
     uint public withdrawFee;
     uint public capacity;
-    uint public override maturity;
+    uint private _maturity;
     string[] private optSymbols;
 
     uint private timeBase;
@@ -91,12 +91,17 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         reserveRatio = _reserveRatio;
         withdrawFee = _withdrawFee;
         capacity = _capacity;
-        maturity = _mt;
+        _maturity = _mt;
     }
 
     function redeemAllowed() override public view returns (bool) {
         
-        return time.getNow() >= maturity;
+        return time.getNow() >= _maturity;
+    }
+
+    function maturity() override external view returns (uint) {
+        
+        return _maturity;
     }
 
     function yield(uint dt) override external view returns (uint y) {
@@ -126,7 +131,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         external
     {
         ensureCaller();
-        require(_mt < maturity, "invalid maturity");
+        require(_mt < _maturity, "invalid maturity");
         require(x.length > 0 && x.length.mul(2) == y.length, "invalid pricing surface");
 
         string memory optSymbol = exchange.getOptionSymbol(
