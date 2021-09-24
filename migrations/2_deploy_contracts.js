@@ -11,9 +11,6 @@ const UnderlyingVault = artifacts.require("UnderlyingVault");
 const CreditProvider = artifacts.require("CreditProvider");
 const OptionTokenFactory = artifacts.require("OptionTokenFactory");
 const OptionsExchange = artifacts.require("OptionsExchange");
-const LinearInterpolator = artifacts.require("LinearInterpolator");
-const YieldTracker = artifacts.require("YieldTracker");
-const LinearLiquidityPool = artifacts.require("LinearLiquidityPool");
 
 const Stablecoin = artifacts.require("ERC20Mock");
 const UnderlyingToken = artifacts.require("ERC20Mock");
@@ -43,9 +40,6 @@ module.exports = async function(deployer) {
   await deployer.deploy(CreditProvider);
   await deployer.deploy(OptionTokenFactory);
   await deployer.deploy(OptionsExchange);
-  await deployer.deploy(LinearInterpolator);
-  await deployer.deploy(YieldTracker);
-  await deployer.deploy(LinearLiquidityPool);
 
   var d = await Deployer.deployed();
   
@@ -73,7 +67,4 @@ module.exports = async function(deployer) {
   d.addAlias("CreditIssuer", "CreditProvider");
   d.setContractAddress("OptionsExchange", OptionsExchange.address);
   d.setContractAddress("OptionTokenFactory", OptionTokenFactory.address);
-  d.setContractAddress("LinearInterpolator", LinearInterpolator.address);
-  d.setContractAddress("YieldTracker", YieldTracker.address);
-  d.setContractAddress("LinearLiquidityPool", LinearLiquidityPool.address);
 };
