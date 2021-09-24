@@ -49,6 +49,7 @@ contract OptionsExchange is ManagedContract {
     mapping(address => FeedData) private feeds;
     mapping(address => address[]) private book;
     mapping(string => address) private tokenAddress;
+    mapping(address => mapping(address => uint)) private allowed;
     
     uint public volumeBase;
     uint private timeBase;
@@ -57,6 +58,8 @@ contract OptionsExchange is ManagedContract {
     event WithdrawTokens(address indexed from, uint value);
 
     event CreateSymbol(address indexed token, address indexed sender);
+
+    event Approval(address indexed owner, address indexed spender, uint value);
 
     event WriteOptions(
         address indexed token,
@@ -119,6 +122,19 @@ contract OptionsExchange is ManagedContract {
         return creditProvider.balanceOf(owner);
     }
 
+    function allowance(address owner, address spender) external view returns (uint) {
+
+        return allowed[owner][spender];
+    }
+
+    function approve(address spender, uint value) external returns (bool) {
+
+        require(spender != address(0));
+        allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
     function transferBalance(
         address from, 
         address to, 
@@ -126,7 +142,12 @@ contract OptionsExchange is ManagedContract {
     )
         external
     {
-        creditProvider.ensureCaller(msg.sender);
+        uint allw = allowed[from][msg.sender];
+        if (allw >= value) {
+            allowed[from][msg.sender] = allw.sub(value);
+        } else {
+            creditProvider.ensureCaller(msg.sender);
+        }
         creditProvider.transferBalance(from, to, value);
         ensureFunds(from);
     }

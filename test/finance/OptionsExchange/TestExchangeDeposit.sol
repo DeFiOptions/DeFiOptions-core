@@ -49,4 +49,46 @@ contract TestExchangeDeposit is Base {
         Assert.equal(bob.calcSurplus(), 0, "check surplus after withdraw");
         MoreAssert.equal(erc20.balanceOf(address(bob)), sp, cBase, "check tokens after withdraw");
     }
+
+    function testAllowance() public {
+
+        uint vBase = 1e24;
+        
+        depositTokens(address(bob), 10 * vBase);
+
+        Assert.equal(
+            exchange.allowance(address(bob), address(this)), 0, "allowance before aprrove"
+        );
+
+        bob.approve(address(this), 1 * vBase);
+
+        Assert.equal(
+            exchange.allowance(address(bob), address(this)), 1 * vBase, "allowance after aprrove"
+        );
+
+        (bool r1,) = address(exchange).call(
+            abi.encodePacked(
+                bytes4(keccak256("transferBalance(address,address,uint256)")),
+                abi.encode(address(bob), address(this), 1 * vBase)
+            )
+        );
+
+        Assert.isTrue(r1, "transferBalance should succeed");
+
+        Assert.equal(
+            exchange.allowance(address(bob), address(this)), 0, "allowance after transfer"
+        );
+
+        Assert.equal(exchange.balanceOf(address(bob)), 9 * vBase, "bob balance");
+        Assert.equal(exchange.balanceOf(address(this)), 1 * vBase, "test balance");
+
+        (bool r2,) = address(exchange).call(
+            abi.encodePacked(
+                bytes4(keccak256("transferBalance(address,address,uint256)")),
+                abi.encode(address(bob), address(this), 1 * vBase)
+            )
+        );
+
+        Assert.isFalse(r2, "transferBalance should fail");
+    }
 }
