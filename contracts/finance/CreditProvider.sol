@@ -6,12 +6,14 @@ import "../governance/ProtocolSettings.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/TimeProvider.sol";
 import "../utils/MoreMath.sol";
+import "../utils/SafeERC20.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 import "./CreditToken.sol";
 
 contract CreditProvider is ManagedContract {
 
+    using SafeERC20 for IERC20;
     using SafeMath for uint;
     using SignedSafeMath for int;
     
@@ -95,7 +97,7 @@ contract CreditProvider is ManagedContract {
     
     function depositTokens(address to, address token, uint value) external {
 
-        IERC20(token).transferFrom(msg.sender, address(this), value);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), value);
         addBalance(to, token, value, true);
         emit DepositTokens(to, token, value);
     }
@@ -237,7 +239,7 @@ contract CreditProvider is ManagedContract {
             (uint r, uint b) = settings.getTokenRate(tokens[i]);
             if (b != 0) {
                 uint v = MoreMath.min(value, t.balanceOf(address(this)).mul(b).div(r));
-                t.transfer(to, v.mul(r).div(b));
+                t.safeTransfer(to, v.mul(r).div(b));
                 emit WithdrawTokens(to, tokens[i], v.mul(r).div(b));
                 value = value.sub(v);
             }

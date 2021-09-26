@@ -253,7 +253,7 @@ contract OptionsExchange is ManagedContract {
         
         address underlying = getUnderlyingAddr(opt);
         require(underlying != address(0), "underlying token not set");
-        IERC20(underlying).transferFrom(msg.sender, address(vault), volume);
+        IERC20(underlying).safeTransferFrom(msg.sender, address(vault), volume);
         vault.lock(msg.sender, _tk, volume);
 
         writeOptionsInternal(opt, symbol, volume, to);
