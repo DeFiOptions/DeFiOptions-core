@@ -45,6 +45,7 @@ contract ProtocolSettings is ManagedContract {
     address private swapToken;
     Rate private swapTolerance;
 
+    uint private MAX_SUPPLY;
     uint private MAX_UINT;
 
     event SetCirculatingSupply(address sender, uint supply);
@@ -75,6 +76,8 @@ contract ProtocolSettings is ManagedContract {
         govToken = GovToken(deployer.getContractAddress("GovToken"));
 
         MAX_UINT = uint(-1);
+
+        MAX_SUPPLY = 100e6 * 1e18;
 
         hotVoting = ProtocolSettings(getImplementation()).isHotVotingAllowed();
 
@@ -113,6 +116,8 @@ contract ProtocolSettings is ManagedContract {
     function setCirculatingSupply(uint supply) external {
 
         require(supply > circulatingSupply, "cannot decrease supply");
+        require(supply <= MAX_SUPPLY, "max supply surpassed");
+
         ensureWritePrivilege();
         circulatingSupply = supply;
 
