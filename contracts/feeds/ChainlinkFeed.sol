@@ -114,16 +114,19 @@ contract ChainlinkFeed is UnderlyingFeed {
                 uint m = (start.add(end).add(1)).div(2);
                 Sample memory s = samples[m];
 
-                if (s.timestamp > position)
-                    end = m;
-                else
-                    start = m;
-
                 if ((s.timestamp == position) || (end == m)) {
+                    if (samples[start].timestamp == position) {
+                        s = samples[start];
+                    }
                     timestamp = s.timestamp;
                     price = s.price;
                     break;
                 }
+
+                if (s.timestamp > position)
+                    end = m;
+                else
+                    start = m;
             }
         }
     }
