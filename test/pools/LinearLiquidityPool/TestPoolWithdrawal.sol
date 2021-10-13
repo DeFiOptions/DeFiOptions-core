@@ -22,8 +22,15 @@ contract TestPoolWithdrawal is Base {
         Assert.equal(exchange.balanceOf(address(pool)), 100 * vBase, "pool initial exchange balance");
 
         depositInPool(address(alice), 100 * vBase);
+
+        uint bal = pool.balanceOf(address(bob));
+        uint total1 = pool.totalSupply();
+
         bob.withdrawFromPool();
 
+        uint total2 = pool.totalSupply();
+
+        Assert.equal(total1, total2 + bal, "pool total supply");
         Assert.equal(pool.valueOf(address(bob)), 0, "bob final pool value");
         Assert.equal(exchange.balanceOf(address(bob)), 97 * vBase, "bob final exchange balance");
         Assert.equal(exchange.balanceOf(address(pool)), 103 * vBase, "pool final exchange balance");

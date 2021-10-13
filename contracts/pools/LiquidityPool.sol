@@ -10,7 +10,6 @@ import "../interfaces/UnderlyingFeed.sol";
 import "../utils/ERC20.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeCast.sol";
-import "../utils/SafeERC20.sol";
 import "../utils/SafeMath.sol";
 import "../utils/SignedSafeMath.sol";
 
@@ -228,10 +227,11 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         require(discountedValue <= calcFreeBalance(), "insufficient pool balance");
 
         (uint b0, int po) = getBalanceAndPayout();
-        exchange.transferBalance(address(this), msg.sender, discountedValue);
+        exchange.transferBalance(msg.sender, discountedValue);
         tracker.push(int(b0).add(po), -(val.toInt256()));
         
         removeBalance(msg.sender, amount);
+        _totalSupply = _totalSupply.sub(amount);
         emitTransfer(msg.sender, address(0), amount);
     }
 
