@@ -171,8 +171,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
     function removeSymbol(string calldata optSymbol) external {
 
         ensureCaller();
-        PricingParameters memory empty;
-        parameters[optSymbol] = empty;
+        delete parameters[optSymbol];
         Arrays.removeItem(optSymbols, optSymbol);
         emit RemoveSymbol(optSymbol);
     }
@@ -265,18 +264,19 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
         b = true;
 
-        PricingParameters memory param = parameters[optSymbol];
-
-        if (param.maturity <= time.getNow()) {
+        if (parameters[optSymbol].maturity <= time.getNow()) {
             
             b = false;
 
         } else if (op == Operation.BUY || op == Operation.SELL) {
 
-            if (!isInRange(optSymbol, op, param.udlFeed)) {
+            if (!isInRange(optSymbol, op, parameters[optSymbol].udlFeed)) {
                 b = false;
             } else {
-                b = getAvailableStock(optSymbol, param, op) > 0;
+                uint stock = op == Operation.BUY ?
+                    uint(parameters[optSymbol].buyStock) :
+                    uint(parameters[optSymbol].sellStock);
+                b = getAvailableStock(optSymbol, stock, op) > 0;
             }
         }
     }
@@ -292,7 +292,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         price = calcOptPrice(param, Operation.BUY);
         volume = MoreMath.min(
             calcVolume(optSymbol, param, price, Operation.BUY),
-            getAvailableStock(optSymbol, param, Operation.BUY)
+            getAvailableStock(optSymbol, uint(param.buyStock), Operation.BUY)
         );
     }
 
@@ -307,7 +307,7 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
         price = calcOptPrice(param, Operation.SELL);
         volume = MoreMath.min(
             calcVolume(optSymbol, param, price, Operation.SELL),
-            getAvailableStock(optSymbol, param, Operation.SELL)
+            getAvailableStock(optSymbol, uint(param.sellStock), Operation.SELL)
         );
     }
     
@@ -465,23 +465,20 @@ abstract contract LiquidityPool is ManagedContract, RedeemableToken, ILiquidityP
 
     function getAvailableStock(
         string memory optSymbol,
-        PricingParameters memory param,
+        uint stock,
         Operation op
     )
         private
         view
         returns (uint)
-    {    
-        uint stock = 0;
+    { 
         uint bal = 0;
         OptionToken tk = OptionToken(
             exchange.resolveToken(optSymbol)
         );
         if (op == Operation.BUY) {
-            stock = uint(param.buyStock);
             bal = tk.writtenVolume(address(this));
         } else {
-            stock = uint(param.sellStock);
             bal = tk.balanceOf(address(this));
         }
         return stock > bal ? stock - bal : 0;

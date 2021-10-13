@@ -22,7 +22,7 @@ abstract contract RedeemableToken is ERC20 {
 
     function redeem(address[] memory owners) public returns (uint value) {
 
-        require(redeemAllowed(), "redeemd not allowed");
+        require(redeemAllowed(), "redeem not allowed");
 
         uint valTotal = exchange.balanceOf(address(this));
         uint supplyTotal = _totalSupply;

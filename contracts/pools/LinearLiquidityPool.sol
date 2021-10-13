@@ -56,11 +56,16 @@ contract LinearLiquidityPool is LiquidityPool {
         internal
         override
         view
-        returns (uint price)
+        returns (uint)
     {
-        uint f = op == Operation.BUY ? spread.add(fractionBase) : fractionBase.sub(spread);
-        int udlPrice = getUdlPrice(p.udlFeed);
-        price = interpolator.interpolate(udlPrice, p.t0, p.t1, p.x, p.y, f);
+        return interpolator.interpolate(
+            getUdlPrice(p.udlFeed),
+            p.t0,
+            p.t1,
+            p.x,
+            p.y,
+            op == Operation.BUY ? spread.add(fractionBase) : fractionBase.sub(spread)
+        );
     }
 
     function calcVolume(
@@ -74,7 +79,6 @@ contract LinearLiquidityPool is LiquidityPool {
         view
         returns (uint volume)
     {
-        uint fb = calcFreeBalance();
         uint r = fractionBase.sub(reserveRatio);
 
         uint coll = exchange.calcCollateral(
@@ -88,7 +92,7 @@ contract LinearLiquidityPool is LiquidityPool {
         if (op == Operation.BUY) {
 
             volume = coll <= price ? uint(-1) :
-                fb.mul(volumeBase).div(
+                calcFreeBalance().mul(volumeBase).div(
                     coll.sub(price.mul(r).div(fractionBase))
                 );
 
