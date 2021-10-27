@@ -15,7 +15,8 @@ module.exports = {
       },
       network_id: 42,
       networkCheckTimeout: 1000000,
-      timeoutBlocks: 200
+      timeoutBlocks: 200,
+      gasPrice: 1e9 // 1 gewi
     },
   
     matic: {

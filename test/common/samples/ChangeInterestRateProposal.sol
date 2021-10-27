@@ -16,7 +16,7 @@ contract ChangeInterestRateProposal is Proposal {
         interestRateBase = b;
     }
 
-    function getName() public override returns (string memory) {
+    function getName() public override view returns (string memory) {
 
         return "Change Debt Interest Rate";
     }

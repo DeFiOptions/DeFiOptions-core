@@ -92,6 +92,8 @@ contract ProposalsManager is ManagedContract {
 
     function update(address from, address to, uint value) public {
 
+        require(msg.sender == address(govToken), "invalid sender");
+
         for (uint i = 0; i < proposals.length; i++) {
             ProposalWrapper w = ProposalWrapper(proposals[i]);
             if (!w.isActive()) {

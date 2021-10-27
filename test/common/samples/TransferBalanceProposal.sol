@@ -13,7 +13,7 @@ contract TransferBalanceProposal is Proposal {
         amount = _amount;
     }
 
-    function getName() public override returns (string memory) {
+    function getName() public override view returns (string memory) {
 
         return "Transfer Balance";
     }
