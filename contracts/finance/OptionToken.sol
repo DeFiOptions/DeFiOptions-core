@@ -98,10 +98,10 @@ contract OptionToken is RedeemableToken {
         return _unliquidatedVolume == 0;
     }
 
-    function afterRedeem(address owner, uint, uint value) override internal {
+    function afterRedeem(address owner, uint bal, uint) override internal {
 
         exchange.cleanUp(owner, address(this));
-        emit Transfer(owner, address(0), value);
+        emit Transfer(owner, address(0), bal);
     }
 
     function emitTransfer(address from, address to, uint value) override internal {

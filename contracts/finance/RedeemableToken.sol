@@ -55,7 +55,8 @@ abstract contract RedeemableToken is ERC20 {
         afterRedeem(owner, bal, val);
     }
 
-    function afterRedeem(address owner, uint bal, uint val) virtual internal {
+    function afterRedeem(address owner, uint bal, uint) virtual internal {
 
+        emitTransfer(owner, address(0), bal);
     }
 }
