@@ -24,7 +24,7 @@ jobs:
       # Replace expensive function calls to reduce compiled contract size and prevent
       # running out of gas while migrating contracts for test run
       - run: (Get-Content .\contracts\pools\LiquidityPool.sol).replace('.safeApprove', '.approve').replace('.safeTransferFrom', '.transferFrom') | Set-Content .\contracts\pools\LiquidityPool.sol
-      - run: truffle test .\test\pools\LinearLiquidityPool\TestMulticoinTrading.sol .\test\pools\LinearLiquidityPool\TestPoolAvailability.sol .\test\pools\LinearLiquidityPool\TestPoolShares.sol .\test\pools\LinearLiquidityPool\TestPoolTrading.sol .\test\pools\LinearLiquidityPool\TestPoolVolumes.sol .\test\pools\LinearLiquidityPool\TestPoolYield.sol .\test\pools\LinearLiquidityPool\TestQueryPool.sol --compile-all
+      - run: truffle test .\test\pools\LinearLiquidityPool\TestMulticoinTrading.sol .\test\pools\LinearLiquidityPool\TestPoolAvailability.sol .\test\pools\LinearLiquidityPool\TestPoolShares.sol .\test\pools\LinearLiquidityPool\TestPoolTrading.sol .\test\pools\LinearLiquidityPool\TestPoolVolumes.sol .\test\pools\LinearLiquidityPool\TestPoolWithdrawal.sol .\test\pools\LinearLiquidityPool\TestPoolYield.sol .\test\pools\LinearLiquidityPool\TestQueryPool.sol --compile-all
       
       # Effectively disabling migration of liquidity pool contracts to prevent running
       # out of gas while migrating contracts for test run
