@@ -359,8 +359,8 @@ The Options Exchange is available on kovan testnet for validation. Contract addr
 | [OptionsExchange](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/OptionsExchange.sol)         | [0x1233a9d9a02eef1bc24675332684d4bfdd866f8a](https://kovan.etherscan.io/address/0x1233a9d9a02eef1bc24675332684d4bfdd866f8a) |
 | [CreditToken](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/finance/CreditToken.sol)                 | [0xae7512c5d996b12830a282eeb9eecb4cf01207d2](https://kovan.etherscan.io/address/0xae7512c5d996b12830a282eeb9eecb4cf01207d2) |
 | [Linear Liquidity Pool](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/pools/LinearLiquidityPool.sol) | [0xb0be2a679632f028edb4a3e29bb82ac6ed6d84d9](https://kovan.etherscan.io/address/0xb0be2a679632f028edb4a3e29bb82ac6ed6d84d9) |
-| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x3689899A6746cEAb929e26963e5163A183C64f59](https://kovan.etherscan.io/address/0x3689899A6746cEAb929e26963e5163A183C64f59) |
-| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x235b1334D332d5f4C6d28369a358a9FfaCaC9eDd](https://kovan.etherscan.io/address/0x235b1334D332d5f4C6d28369a358a9FfaCaC9eDd) |
+| [ETH/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0xF6DF43F27d51289703C2A93289D53C4D5AC79b7d](https://kovan.etherscan.io/address/0xF6DF43F27d51289703C2A93289D53C4D5AC79b7d) |
+| [BTC/USD feed](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/contracts/interfaces/UnderlyingFeed.sol)          | [0x261E05174813A0a6dafE208830410768b709E6ca](https://kovan.etherscan.io/address/0x261E05174813A0a6dafE208830410768b709E6ca) |
 | [Fakecoin](https://github.com/DeFiOptions/DeFiOptions-core/blob/master/test/common/mock/ERC20Mock.sol)                       | [0xB51E93aA4B4B411A36De9343128299B483DBA133](https://kovan.etherscan.io/address/0xB51E93aA4B4B411A36De9343128299B483DBA133) |
 
 A freely issuable ERC20 fake stablecoin ("fakecoin") is provided for convenience. Simply issue fakecoin tokens for an address you own to be able to interact with the exchange for depositing funds, writing options and evaluate its functionality:
@@ -376,7 +376,7 @@ fakecoin.issue(to, value);
 
 Did you like this project and wanna get involved? There are a couple of ways in which you can contribute! See below.
 
-Before starting simply [shoot me a message](mailto:thomas.vilhena@protonmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute so we can arrange a plan accordingly.</i>
+Before starting simply [shoot me a message](mailto:defi-options@protonmail.com?subject=DeFiOptions%20%7C%20Interested%20Contributor) describing how do you wish to contribute so we can arrange a plan accordingly.</i>
 
 ### Validate code
 
