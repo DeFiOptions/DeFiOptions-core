@@ -297,7 +297,7 @@ contract OptionsExchange is ManagedContract {
         if (coll > 0) {
             uint c = collateral[owner];
             collateral[owner] = c.sub(
-                MoreMath.min(c, calcCollateral(opt, coll))
+                MoreMath.min(c, calcCollateral(opt, coll, false))
             );
         }
     }
@@ -314,6 +314,8 @@ contract OptionsExchange is ManagedContract {
     function liquidateExpired(address _tk, address[] calldata owners) external {
 
         OptionData memory opt = options[_tk];
+        require(opt.udlFeed != address(0), "token not found");
+
         OptionToken tk = OptionToken(_tk);
         require(getUdlNow(opt) >= opt.maturity, "option not expired");
         uint iv = uint(calcIntrinsicValue(opt));
@@ -397,7 +399,7 @@ contract OptionsExchange is ManagedContract {
         returns (uint)
     {
         (OptionData memory opt,) = createOptionInMemory(udlFeed, optType, strike, maturity);
-        return calcCollateral(opt, volume);
+        return calcCollateral(opt, volume, true);
     }
 
     function calcExpectedPayout(address owner) external view returns (int payout) {
@@ -545,7 +547,7 @@ contract OptionsExchange is ManagedContract {
         uint v = MoreMath.min(volume, tk.uncoveredVolume(msg.sender));
         if (v > 0) {
             collateral[msg.sender] = collateral[msg.sender].add(
-                calcCollateral(opt, v)
+                calcCollateral(opt, v, true)
             );
         }
 
@@ -686,7 +688,8 @@ contract OptionsExchange is ManagedContract {
 
     function calcCollateral(
         OptionData memory opt,
-        uint volume
+        uint volume,
+        bool includeIV
     )
         private
         view
@@ -697,9 +700,15 @@ contract OptionsExchange is ManagedContract {
             fd = getFeedData(opt.udlFeed);
         }
 
-        int coll = calcIntrinsicValue(opt).mul(int(volume)).add(
-            int(calcCollateral(fd.upperVol, volume, opt))
-        ).div(int(volumeBase));
+        int coll = int(calcCollateral(fd.upperVol, volume, opt));
+
+        if (includeIV) {
+            coll = coll.add(
+                calcIntrinsicValue(opt).mul(int(volume))
+            );
+        }
+
+        coll = coll.div(int(volumeBase));
 
         if (opt._type == OptionType.PUT) {
             int max = int(uint(opt.strike).mul(volume).div(volumeBase));
