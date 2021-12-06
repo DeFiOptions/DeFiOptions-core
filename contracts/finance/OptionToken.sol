@@ -78,7 +78,10 @@ contract OptionToken is RedeemableToken {
 
         exchange.release(owner, udl, coll);
         exchange.cleanUp(owner, address(this));
-        emit Transfer(owner, address(0), value);
+
+        if (msg.sender == owner) {
+            emit Transfer(owner, address(0), value);
+        }
     }
 
     function writtenVolume(address owner) external view returns (uint) {
