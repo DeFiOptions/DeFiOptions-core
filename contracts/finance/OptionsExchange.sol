@@ -4,6 +4,7 @@ import "../deployment/Deployer.sol";
 import "../deployment/ManagedContract.sol";
 import "../governance/ProtocolSettings.sol";
 import "../utils/ERC20.sol";
+import "../interfaces/ILiquidityPool.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
 import "../utils/Arrays.sol";
@@ -414,8 +415,10 @@ contract OptionsExchange is ManagedContract {
             uint written = tk.writtenVolume(owner);
             uint holding = tk.balanceOf(owner);
 
+            int price = tryQueryPoolPrice(owner, getOptionSymbol(opt));
+
             payout = payout.add(
-                calcIntrinsicValue(opt).mul(
+                (price != 0 ? price : calcIntrinsicValue(opt)).mul(
                     int(holding).sub(int(written))
                 )
             );
@@ -552,6 +555,36 @@ contract OptionsExchange is ManagedContract {
         }
 
         emit WriteOptions(_tk, msg.sender, to, volume);
+    }
+
+    function tryQueryPoolPrice(
+        address poolAddr,
+        string memory symbol
+    )
+        private
+        view
+        returns (int)
+    {
+        uint price = 0;
+        ILiquidityPool pool = ILiquidityPool(poolAddr);
+        
+        try pool.queryBuy(symbol)
+            returns (uint _price, uint)
+        {
+            price += _price;
+        } catch (bytes memory /*lowLevelData*/) {
+            return 0;
+        }
+        
+        try pool.querySell(symbol)
+            returns (uint _price, uint)
+        {
+            price += _price;
+        } catch (bytes memory /*lowLevelData*/) {
+            return 0;
+        }
+
+        return int(price).div(2);
     }
 
     function liquidateOptions(
