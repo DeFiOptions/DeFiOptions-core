@@ -147,7 +147,11 @@ contract UnderlyingVault is ManagedContract {
         }
 
         (uint r, uint b) = settings.getTokenRate(path[path.length - 1]);
-        IERC20(path[0]).safeApprove(address(router), amountInMax);
+        IERC20 tk = IERC20(path[0]);
+        if (tk.allowance(address(this), address(router)) > 0) {
+            tk.safeApprove(address(router), 0);
+        }
+        tk.safeApprove(address(router), amountInMax);
 
         _out = amountOut;
         _in = router.swapTokensForExactTokens(
