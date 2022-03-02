@@ -10,7 +10,7 @@ contract TestCoveredOption is Base {
     function testWriteCoveredCall() public {
 
         underlying.reset(address(this));
-        underlying.issue(address(this), volumeBase);
+        underlying.issue(address(this), underlyingBase);
 
         address _tk = writeCovered(1, ethInitialPrice, 10 days);
 
@@ -25,7 +25,7 @@ contract TestCoveredOption is Base {
     function testBurnCoveredCall() public {
 
         underlying.reset(address(this));
-        underlying.issue(address(this), 2 * volumeBase);
+        underlying.issue(address(this), 2 * underlyingBase);
 
         address _tk = writeCovered(2, ethInitialPrice, 10 days);
 
@@ -34,7 +34,7 @@ contract TestCoveredOption is Base {
         
         Assert.equal(volumeBase, tk.balanceOf(address(this)), "tk balance t0");
         Assert.equal(volumeBase, tk.writtenVolume(address(this)), "tk writtenVolume t0");
-        Assert.equal(volumeBase, underlying.balanceOf(address(this)), "underlying balance t0");
+        Assert.equal(underlyingBase, underlying.balanceOf(address(this)), "underlying balance t0");
         Assert.equal(0, tk.uncoveredVolume(address(this)), "tk uncoveredVolume t0");
         Assert.equal(0, exchange.calcCollateral(address(this)), "exchange collateral t0");
 
@@ -42,7 +42,7 @@ contract TestCoveredOption is Base {
         
         Assert.equal(0, tk.balanceOf(address(this)), "tk balance t1");
         Assert.equal(0, tk.writtenVolume(address(this)), "tk writtenVolume t1");
-        Assert.equal(2 * volumeBase, underlying.balanceOf(address(this)), "underlying balance t1");
+        Assert.equal(2 * underlyingBase, underlying.balanceOf(address(this)), "underlying balance t1");
         Assert.equal(0, tk.uncoveredVolume(address(this)), "tk uncoveredVolume t1");
         Assert.equal(0, exchange.calcCollateral(address(this)), "exchange collateral t1");
     }
@@ -67,7 +67,7 @@ contract TestCoveredOption is Base {
         Assert.equal(exchange.calcCollateral(address(this)), ct20, "writer collateral t0");
 
         underlying.reset(address(this));
-        underlying.issue(address(this), 2 * volumeBase);
+        underlying.issue(address(this), 2 * underlyingBase);
 
         address _tk2 = writeCovered(2, ethInitialPrice, 10 days);
 
@@ -106,7 +106,7 @@ contract TestCoveredOption is Base {
         Assert.equal(exchange.calcCollateral(address(this)), ct20, "writer collateral t0");
 
         underlying.reset(address(this));
-        underlying.issue(address(this), 2 * volumeBase);
+        underlying.issue(address(this), 2 * underlyingBase);
 
         settings.setSwapRouterInfo(router, address(erc20));
         settings.setSwapRouterTolerance(105e4, 1e6);
@@ -145,9 +145,18 @@ contract TestCoveredOption is Base {
         public
         returns (address _tk)
     {
-        IERC20(
-            UnderlyingFeed(feed).getUnderlyingAddr()
-        ).approve(address(exchange), volume * volumeBase);
+        ERC20Mock mock = ERC20Mock(UnderlyingFeed(feed).getUnderlyingAddr());
+
+        uint f = volumeBase;
+        uint d = mock.decimals();
+        if (d < 18) {
+            f = f / (10 ** (18 - d));
+        }
+        if (d > 18) {
+            f = f * (10 ** (d - 18));
+        }
+
+        mock.approve(address(exchange), volume * f);
         
         _tk = exchange.writeCovered(
             address(feed),

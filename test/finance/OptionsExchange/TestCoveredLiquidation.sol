@@ -10,7 +10,7 @@ contract TestCoveredLiquidation is Base {
     function testLiquidationBeforeAllowed() public {
         
         underlying.reset(address(this));
-        underlying.issue(address(this), 3 * volumeBase);
+        underlying.issue(address(this), 3 * underlyingBase);
 
         address _tk = writeCovered(3, ethInitialPrice, 10 days);
 
@@ -34,7 +34,7 @@ contract TestCoveredLiquidation is Base {
     function testLiquidationAtMaturityOTM() public {
         
         underlying.reset(address(this));
-        underlying.issue(address(this), 2 * volumeBase);
+        underlying.issue(address(this), 2 * underlyingBase);
         
         int step = 40e18;
 
@@ -53,7 +53,7 @@ contract TestCoveredLiquidation is Base {
         exchange.liquidateOptions(_tk, address(this));
 
         uint b1 = underlying.balanceOf(address(this));
-        Assert.equal(b1, 2 * volumeBase, "underlying after liquidation");
+        Assert.equal(b1, 2 * underlyingBase, "underlying after liquidation");
 
         Assert.equal(exchange.calcCollateral(address(this)), 0, "writer final collateral");
         Assert.equal(alice.calcCollateral(), 0, "alice final collateral");
@@ -65,7 +65,7 @@ contract TestCoveredLiquidation is Base {
     function testLiquidateMultipleITM() public {
         
         underlying.reset(address(this));
-        underlying.issue(address(this), 4 * volumeBase);
+        underlying.issue(address(this), 4 * underlyingBase);
 
         settings.setSwapRouterInfo(router, address(erc20));
         settings.setSwapRouterTolerance(105e4, 1e6);

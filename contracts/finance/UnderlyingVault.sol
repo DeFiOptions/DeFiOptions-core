@@ -6,6 +6,7 @@ import "../interfaces/IERC20.sol";
 import "../interfaces/IUniswapV2Router01.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
+import "../utils/Convert.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeERC20.sol";
 import "../utils/SafeMath.sol";
@@ -97,7 +98,7 @@ contract UnderlyingVault is ManagedContract {
                 balance,
                 amountOut
             );
-
+            
             allocation[owner][token] = allocation[owner][token].sub(_in);
             emit Liquidate(owner, token, _in, _out);
         }
@@ -115,9 +116,13 @@ contract UnderlyingVault is ManagedContract {
         value = MoreMath.min(bal, value);
 
         if (bal > 0) {
-            address underlying = UnderlyingFeed(feed).getUnderlyingAddr();
+
             allocation[owner][token] = bal.sub(value);
-            IERC20(underlying).safeTransfer(owner, value);
+            
+            address underlying = UnderlyingFeed(feed).getUnderlyingAddr();
+            uint v = Convert.from18DecimalsBase(underlying, value);
+            IERC20(underlying).safeTransfer(owner, v);
+            
             emit Release(owner, token, value);
         }
     }
@@ -135,18 +140,21 @@ contract UnderlyingVault is ManagedContract {
     {
         require(path.length >= 2, "invalid swap path");
         
+        (uint r, uint b) = settings.getTokenRate(path[path.length - 1]);
+
+        uint udlBalance = Convert.from18DecimalsBase(path[0], balance);
+        
         uint amountInMax = getAmountInMax(
             price,
             amountOut,
             path
         );
 
-        if (amountInMax > balance) {
-            amountOut = amountOut.mul(balance).div(amountInMax);
-            amountInMax = balance;
+        if (amountInMax > udlBalance) {
+            amountOut = amountOut.mul(udlBalance).div(amountInMax);
+            amountInMax = udlBalance;
         }
 
-        (uint r, uint b) = settings.getTokenRate(path[path.length - 1]);
         IERC20 tk = IERC20(path[0]);
         if (tk.allowance(address(this), address(router)) > 0) {
             tk.safeApprove(address(router), 0);
@@ -161,6 +169,7 @@ contract UnderlyingVault is ManagedContract {
             address(creditProvider),
             time.getNow()
         )[0];
+        _in = Convert.to18DecimalsBase(path[0], _in);
 
         if (amountOut > 0) {
             creditProvider.addBalance(owner, path[path.length - 1], amountOut.mul(r).div(b));

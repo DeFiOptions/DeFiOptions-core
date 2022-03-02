@@ -7,6 +7,7 @@ import "../interfaces/ILiquidityPool.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
 import "../utils/Arrays.sol";
+import "../utils/Convert.sol";
 import "../utils/ERC20.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeCast.sol";
@@ -254,10 +255,13 @@ contract OptionsExchange is ManagedContract {
         
         address underlying = getUnderlyingAddr(opt);
         require(underlying != address(0), "underlying token not set");
-        IERC20(underlying).safeTransferFrom(msg.sender, address(vault), volume);
-        vault.lock(msg.sender, _tk, volume);
 
+        uint v = Convert.from18DecimalsBase(underlying, volume);
+        IERC20(underlying).safeTransferFrom(msg.sender, address(vault), v);
+
+        vault.lock(msg.sender, _tk, volume);
         writeOptionsInternal(opt, symbol, volume, to);
+
         ensureFunds(msg.sender);
     }
     

@@ -24,6 +24,7 @@ contract Base {
     uint cBase = 1e8; // comparison base
     uint volumeBase = 1e18;
     uint timeBase = 1 hours;
+    uint underlyingBase;
 
     address[] traders;
     address router;
@@ -64,6 +65,7 @@ contract Base {
         settings.setUdlFeed(address(feed), 1);
 
         underlying = ERC20Mock(feed.getUnderlyingAddr());
+        underlyingBase = 10 ** uint(underlying.decimals());
         underlying.reset();
 
         bob = createTrader();
