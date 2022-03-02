@@ -3,11 +3,11 @@ pragma solidity >=0.6.0;
 import "../deployment/Deployer.sol";
 import "../deployment/ManagedContract.sol";
 import "../governance/ProtocolSettings.sol";
-import "../utils/ERC20.sol";
 import "../interfaces/ILiquidityPool.sol";
 import "../interfaces/TimeProvider.sol";
 import "../interfaces/UnderlyingFeed.sol";
 import "../utils/Arrays.sol";
+import "../utils/ERC20.sol";
 import "../utils/MoreMath.sol";
 import "../utils/SafeCast.sol";
 import "../utils/SafeERC20.sol";
@@ -415,10 +415,10 @@ contract OptionsExchange is ManagedContract {
             uint written = tk.writtenVolume(owner);
             uint holding = tk.balanceOf(owner);
 
-            int price = tryQueryPoolPrice(owner, getOptionSymbol(opt));
+            int price = queryPoolPrice(owner, getOptionSymbol(opt));
 
             payout = payout.add(
-                (price != 0 ? price : calcIntrinsicValue(opt)).mul(
+                price.mul(
                     int(holding).sub(int(written))
                 )
             );
@@ -557,7 +557,7 @@ contract OptionsExchange is ManagedContract {
         emit WriteOptions(_tk, msg.sender, to, volume);
     }
 
-    function tryQueryPoolPrice(
+    function queryPoolPrice(
         address poolAddr,
         string memory symbol
     )
@@ -568,21 +568,11 @@ contract OptionsExchange is ManagedContract {
         uint price = 0;
         ILiquidityPool pool = ILiquidityPool(poolAddr);
         
-        try pool.queryBuy(symbol)
-            returns (uint _price, uint)
-        {
-            price += _price;
-        } catch (bytes memory /*lowLevelData*/) {
-            return 0;
-        }
+        (uint _buyPrice,) = pool.queryBuy(symbol);
+        price = price.add(_buyPrice);
         
-        try pool.querySell(symbol)
-            returns (uint _price, uint)
-        {
-            price += _price;
-        } catch (bytes memory /*lowLevelData*/) {
-            return 0;
-        }
+        (uint _sellPrice,) = pool.querySell(symbol);
+        price = price.add(_sellPrice);
 
         return int(price).div(2);
     }

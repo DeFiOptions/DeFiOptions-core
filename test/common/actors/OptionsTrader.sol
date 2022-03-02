@@ -100,4 +100,26 @@ contract OptionsTrader {
         
         return exchange.calcDebt(addr);
     }
+
+    function queryBuy(string memory symbol)
+        public
+        view
+        returns (uint price, uint volume)
+    {
+        price = uint(exchange.calcIntrinsicValue(
+            exchange.resolveToken(symbol)
+        ));
+        volume = 0;
+    }
+
+    function querySell(string memory symbol)
+        public
+        view
+        returns (uint price, uint volume)
+    {    
+        price = uint(exchange.calcIntrinsicValue(
+            exchange.resolveToken(symbol)
+        ));
+        volume = 0;
+    }
 }
