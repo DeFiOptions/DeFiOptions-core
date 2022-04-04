@@ -1,7 +1,0 @@
-{
-    "files.exclude": {
-        "**/.gitignore": true,
-        "**/build": true,
-        "**/node_modules": true
-    }
-}
